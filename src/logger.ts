@@ -6,6 +6,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { GenerationResult } from "./tts/types";
 
 export class VoiceLogger {
   private logPath: string;
@@ -39,5 +40,16 @@ export class VoiceLogger {
 
   logDebug(message: string) {
     this.writeLog("DEBUG", message);
+  }
+
+  logEngineEvent(engineId: string, phase: string, message: string) {
+    this.writeLog("INFO", `Engine=${engineId} | Fase=${phase} | ${message}`);
+  }
+
+  logGeneration(result: GenerationResult) {
+    this.writeLog(
+      "INFO",
+      `Engine=${result.engineId} | geração=${result.generationMs}ms | arquivo=${result.filePath} | cache=${result.cached}`
+    );
   }
 }

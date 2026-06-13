@@ -46,14 +46,15 @@ function describeEditorStateExtensions(state: unknown): unknown {
     };
   }
 
-  const fieldAddress = config.address?.[highlightField.id];
+  const highlightFieldId = (highlightField as any).id;
+  const fieldAddress = highlightFieldId ? config.address?.[highlightFieldId] : undefined;
   const knownFieldIds = config.address
     ? Object.keys(config.address).filter((key) => config.address[key] != null)
     : [];
 
   return {
     available: true,
-    highlightFieldId: highlightField.id,
+    highlightFieldId,
     highlightFieldAddress: fieldAddress ?? null,
     highlightFieldPresentInConfig: fieldAddress != null,
     knownStateFieldIds: knownFieldIds,

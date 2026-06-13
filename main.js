@@ -342,11 +342,10 @@ __export(main_exports, {
   default: () => ObsidianVoicePlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_child_process = require("child_process");
-var fs4 = __toESM(require("fs"));
-var path3 = __toESM(require("path"));
-var os = __toESM(require("os"));
-var import_obsidian3 = require("obsidian");
+var fs6 = __toESM(require("fs"));
+var os2 = __toESM(require("os"));
+var path5 = __toESM(require("path"));
+var import_obsidian4 = require("obsidian");
 
 // src/audio-player.ts
 var fs = __toESM(require("fs"));
@@ -1491,6 +1490,15 @@ var VoiceLogger = class {
   logDebug(message) {
     this.writeLog("DEBUG", message);
   }
+  logEngineEvent(engineId, phase, message) {
+    this.writeLog("INFO", `Engine=${engineId} | Fase=${phase} | ${message}`);
+  }
+  logGeneration(result) {
+    this.writeLog(
+      "INFO",
+      `Engine=${result.engineId} | gera\xE7\xE3o=${result.generationMs}ms | arquivo=${result.filePath} | cache=${result.cached}`
+    );
+  }
 };
 
 // src/editor-highlighter.ts
@@ -1528,11 +1536,12 @@ function describeEditorStateExtensions(state) {
       reason: "state.config n\xE3o est\xE1 acess\xEDvel"
     };
   }
-  const fieldAddress = (_a = config.address) == null ? void 0 : _a[highlightField.id];
+  const highlightFieldId = highlightField.id;
+  const fieldAddress = highlightFieldId ? (_a = config.address) == null ? void 0 : _a[highlightFieldId] : void 0;
   const knownFieldIds = config.address ? Object.keys(config.address).filter((key) => config.address[key] != null) : [];
   return {
     available: true,
-    highlightFieldId: highlightField.id,
+    highlightFieldId,
     highlightFieldAddress: fieldAddress != null ? fieldAddress : null,
     highlightFieldPresentInConfig: fieldAddress != null,
     knownStateFieldIds: knownFieldIds,
@@ -1717,14 +1726,275 @@ var EditorHighlighter = class {
   }
 };
 
+// src/tts/pipeline-service.ts
+var fs4 = __toESM(require("fs"));
+var os = __toESM(require("os"));
+var path3 = __toESM(require("path"));
+var import_obsidian3 = require("obsidian");
+
+// src/tts/circuit-breaker.ts
+var CircuitBreaker = class {
+  constructor(failureThreshold = 3, cooldownMs = 6e4) {
+    this.failureThreshold = failureThreshold;
+    this.cooldownMs = cooldownMs;
+    this.failures = 0;
+    this.openedAt = 0;
+    this.state = "closed";
+  }
+  getState() {
+    if (this.state === "open" && Date.now() - this.openedAt >= this.cooldownMs) {
+      this.state = "half-open";
+    }
+    return this.state;
+  }
+  canExecute() {
+    return this.getState() !== "open";
+  }
+  recordSuccess() {
+    this.failures = 0;
+    this.state = "closed";
+    this.openedAt = 0;
+  }
+  recordFailure() {
+    this.failures += 1;
+    if (this.failures >= this.failureThreshold) {
+      this.state = "open";
+      this.openedAt = Date.now();
+    }
+  }
+};
+
+// src/tts/pipeline-service.ts
+var TTSPipelineService = class {
+  constructor(vault, queue, engine, logger, getSpeed) {
+    this.vault = vault;
+    this.queue = queue;
+    this.engine = engine;
+    this.logger = logger;
+    this.getSpeed = getSpeed;
+    this.nextChunkPromise = null;
+    this.session = null;
+    this.breaker = new CircuitBreaker();
+  }
+  async validate() {
+    return this.engine.validate();
+  }
+  async start() {
+    await this.stop();
+    this.session = this.engine.createSession();
+    this.logger.logEngineEvent(this.engine.id, "session", "warming");
+    await this.session.warmup();
+    this.logger.logEngineEvent(this.engine.id, "session", "ready");
+    this.nextChunkPromise = this.prefetchNextChunk();
+  }
+  async stop() {
+    if (this.session) {
+      this.session.abort();
+      await this.session.dispose();
+      this.session = null;
+    }
+    await this.cleanupPrefetchedChunk();
+  }
+  async getNextChunk() {
+    if (!this.nextChunkPromise) this.nextChunkPromise = this.prefetchNextChunk();
+    const currentPromise = this.nextChunkPromise;
+    this.nextChunkPromise = null;
+    return currentPromise;
+  }
+  prefetch() {
+    this.nextChunkPromise = this.prefetchNextChunk();
+  }
+  holdChunk(chunk) {
+    this.nextChunkPromise = Promise.resolve(chunk);
+  }
+  async resetPrefetch() {
+    await this.cleanupPrefetchedChunk();
+  }
+  async runTest(text, outputFile, speed) {
+    if (!this.session) this.session = this.engine.createSession();
+    await this.session.warmup();
+    return this.generate(text, outputFile, speed);
+  }
+  async prefetchNextChunk() {
+    const chunk = this.queue.getNextChunk();
+    if (chunk === null) return null;
+    const cacheDir = path3.join(os.tmpdir(), "ObsidianVoiceCache");
+    if (!fs4.existsSync(cacheDir)) fs4.mkdirSync(cacheDir, { recursive: true });
+    const filename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
+    const absolutePath = path3.join(cacheDir, filename);
+    try {
+      const metadata = await this.generate(chunk.text, absolutePath, this.getSpeed());
+      return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
+    } catch (error) {
+      const message = (error == null ? void 0 : error.message) || String(error);
+      this.logger.logEngineEvent(this.engine.id, "generation", message);
+      return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message };
+    }
+  }
+  async generate(text, outputFile, speed) {
+    if (!this.breaker.canExecute()) throw new Error(`TTS engine circuit is ${this.breaker.getState()}. Try again later.`);
+    if (!this.session) this.session = this.engine.createSession();
+    try {
+      const result = await this.session.generate({ text, outputFile, speed });
+      this.breaker.recordSuccess();
+      this.logger.logGeneration(result);
+      return result;
+    } catch (error) {
+      this.breaker.recordFailure();
+      throw error;
+    }
+  }
+  toResourcePath(absolutePath) {
+    if (this.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
+      const basePath = this.vault.adapter.getBasePath();
+      const relativePath = path3.relative(basePath, absolutePath);
+      return this.vault.adapter.getResourcePath(relativePath);
+    }
+    return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
+  }
+  async cleanupPrefetchedChunk() {
+    if (!this.nextChunkPromise) return;
+    const chunk = await this.nextChunkPromise;
+    this.nextChunkPromise = null;
+    if ((chunk == null ? void 0 : chunk.absolutePath) && fs4.existsSync(chunk.absolutePath)) fs4.unlinkSync(chunk.absolutePath);
+  }
+};
+
+// src/tts/engine/piper-engine.ts
+var fs5 = __toESM(require("fs"));
+var path4 = __toESM(require("path"));
+
+// src/tts/runtime/subprocess-runtime.ts
+var import_child_process = require("child_process");
+var SubprocessRuntime = class {
+  constructor(logger) {
+    this.logger = logger;
+    this.child = null;
+  }
+  run(request) {
+    this.logger.logDebug(`[Runtime:subprocess] Executando comando: ${request.command}`);
+    return new Promise((resolve3, reject) => {
+      const child = (0, import_child_process.exec)(request.command, request.cwd ? { cwd: request.cwd } : {}, (error, _stdout, stderr) => {
+        this.child = null;
+        if (error) {
+          this.logger.logError(stderr || error.message);
+          this.logger.logExit(error.code || 1);
+          reject(new Error(error.message));
+          return;
+        }
+        this.logger.logExit(0);
+        resolve3();
+      });
+      this.child = child;
+      if (child.stdin) {
+        child.stdin.on("error", (e) => this.logger.logError(`Erro no stdin do subprocesso TTS: ${e.message}`));
+        child.stdin.write(request.input, "utf-8");
+        child.stdin.end();
+      }
+    });
+  }
+  abort() {
+    if (!this.child) return;
+    this.child.kill();
+    this.child = null;
+  }
+};
+
+// src/tts/engine/piper-engine.ts
+var PiperEngine = class {
+  constructor(options) {
+    this.options = options;
+    this.id = "piper";
+    this.name = "Piper";
+    this.version = "1";
+    this.health = { state: "degraded" };
+  }
+  getCapabilities() {
+    return {
+      outputModes: ["wav-file"],
+      supportsRealtime: false,
+      supportsVoiceSwitch: true,
+      supportsSpeedControl: true
+    };
+  }
+  getHealth() {
+    return { ...this.health };
+  }
+  async validate() {
+    const { piperPath } = this.options;
+    const resolvedModel = this.resolveModelPath();
+    const isPiperCommand = this.isCommand(piperPath);
+    const piperExists = !!piperPath && (isPiperCommand || fs5.existsSync(this.resolvePiperPath()));
+    const modelExists = !!resolvedModel && fs5.existsSync(resolvedModel);
+    if (!piperExists || !modelExists) {
+      const error = "Piper executable or voice model is missing.";
+      this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
+      return { ok: false, error };
+    }
+    this.health = { state: "healthy", lastValidation: Date.now() };
+    return { ok: true };
+  }
+  createSession() {
+    return new PiperEngineSession(this, new SubprocessRuntime(this.options.logger));
+  }
+  buildCommand(outputFile, speed) {
+    const resolvedPiper = this.resolvePiperPath();
+    const resolvedModel = this.resolveModelPath();
+    const lengthScale = (1 / speed).toFixed(4);
+    return {
+      command: `"${resolvedPiper}" --model "${resolvedModel}" --length_scale ${lengthScale} --output_file "${outputFile}"`,
+      cwd: this.options.basePath
+    };
+  }
+  resolvePiperPath() {
+    const { piperPath, basePath } = this.options;
+    if (this.isCommand(piperPath) || path4.isAbsolute(piperPath) || !basePath) return piperPath;
+    return path4.resolve(basePath, piperPath);
+  }
+  resolveModelPath() {
+    const { piperPath, selectedVoice, basePath } = this.options;
+    if (!selectedVoice || !piperPath) return "";
+    const isPiperCommand = this.isCommand(piperPath);
+    let modelDir = isPiperCommand ? "" : path4.dirname(this.resolvePiperPath());
+    if (modelDir && !path4.isAbsolute(modelDir) && basePath) modelDir = path4.resolve(basePath, modelDir);
+    return modelDir ? path4.join(modelDir, selectedVoice) : selectedVoice;
+  }
+  isCommand(piperPath) {
+    return !piperPath.includes("/") && !piperPath.includes("\\");
+  }
+};
+var PiperEngineSession = class {
+  constructor(engine, runtime) {
+    this.engine = engine;
+    this.runtime = runtime;
+  }
+  async warmup() {
+  }
+  async generate(request) {
+    const startedAt = Date.now();
+    const { command, cwd } = this.engine.buildCommand(request.outputFile, request.speed);
+    await this.runtime.run({ command, cwd, input: request.text });
+    return {
+      filePath: request.outputFile,
+      generationMs: Date.now() - startedAt,
+      engineId: this.engine.id,
+      cached: false
+    };
+  }
+  abort() {
+    this.runtime.abort();
+  }
+  dispose() {
+    this.abort();
+  }
+};
+
 // src/main.ts
-var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
+var ObsidianVoicePlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);
     this.queue = new ObsidianVoiceQueue();
     this.playerState = "aguardando";
-    this.nextChunkPromise = null;
-    this.piperProcess = null;
     this.currentParagraphText = "";
     this.activeEditor = null;
     this.lastNarratedPath = null;
@@ -1752,11 +2022,12 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
     this.registerEditorExtension([highlightField]);
     this.audioPlayer = new ObsidianAudioPlayer(this.app.vault);
     let basePath = "";
-    if (this.app.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
+    if (this.app.vault.adapter instanceof import_obsidian4.FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
     }
     this.logger = new VoiceLogger(basePath || process.cwd());
     this.highlighter.setLogger(this.logger);
+    this.rebuildTTSPipeline();
     this.addRibbonIcon("headphones", t("commands.ribbon_narrate"), () => this.narrarNotaAtual());
     this.widget = new ObsidianVoiceWidget(
       () => this.togglePlayPause(),
@@ -1804,7 +2075,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
       callback: () => {
         this.queue.readOnlyHighlights = !this.queue.readOnlyHighlights;
         const estado = this.queue.readOnlyHighlights ? t("notices.enabled") : t("notices.disabled");
-        new import_obsidian3.Notice(t("notices.summary_mode", { state: estado }));
+        new import_obsidian4.Notice(t("notices.summary_mode", { state: estado }));
         this.widget.setResumoAtivo(this.queue.readOnlyHighlights);
         if (this.playerState === "tocando" || this.playerState === "pausado") {
           this.pararNarracao().then(() => this.narrarNotaAtual());
@@ -1815,7 +2086,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
       id: "play-from-selection",
       name: t("commands.play_from_selection"),
       hotkeys: [],
-      editorCallback: async (editor, view) => {
+      editorCallback: async (editor) => {
         const cursor = editor.getCursor();
         const currentLineText = editor.getLine(cursor.line);
         if (this.playerState === "tocando" || this.playerState === "pausado") {
@@ -1847,7 +2118,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
       if (target && target.closest("#obsidian-voice-widget")) {
         return;
       }
-      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian4.MarkdownView);
       if (!activeView) return;
       const editor = activeView.editor;
       const view = editor.cm;
@@ -1898,16 +2169,12 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
   async onunload() {
     this.audioPlayer.stop();
     this.queue.reset();
-    if (this.piperProcess) {
-      this.piperProcess.kill();
-      this.piperProcess = null;
-    }
+    await this.ttsPipeline.stop();
     if (this.userScrollTimeout) {
       clearTimeout(this.userScrollTimeout);
       this.userScrollTimeout = null;
     }
     this.unregisterScrollListeners();
-    await this.cleanupPrefetchedChunk();
     this.widget.hide();
     this.activeEditor = this.getActiveEditor();
     if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
@@ -1915,23 +2182,22 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
     console.log("[Obsidian Voice] Plugin descarregado.");
   }
   // ── Estado do Player ─────────────────────────────────────
+  getPlayerState() {
+    return this.playerState;
+  }
   updatePlayerState(state) {
     this.playerState = state;
     this.widget.show(state, activeDocument.body);
   }
   async pararNarracao() {
     await this.pararNarracaoSilenciosamente();
-    new import_obsidian3.Notice(t("notices.narration_stopped"));
+    new import_obsidian4.Notice(t("notices.narration_stopped"));
     console.log("[Obsidian Voice] Narra\xE7\xE3o interrompida pelo usu\xE1rio.");
   }
   async pararNarracaoSilenciosamente() {
     this.queue.reset();
     this.audioPlayer.stop();
-    if (this.piperProcess) {
-      this.piperProcess.kill();
-      this.piperProcess = null;
-    }
-    await this.cleanupPrefetchedChunk();
+    await this.ttsPipeline.stop();
     this.unregisterScrollListeners();
     this.updatePlayerState("aguardando");
     this.activeEditor = this.getActiveEditor();
@@ -1942,7 +2208,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
   onResumoToggle(active) {
     this.queue.readOnlyHighlights = active;
     const estado = active ? t("notices.enabled") : t("notices.disabled");
-    new import_obsidian3.Notice(t("notices.summary_mode", { state: estado }));
+    new import_obsidian4.Notice(t("notices.summary_mode", { state: estado }));
     if (this.playerState === "tocando") {
       this.pararNarracao().then(() => this.narrarNotaAtual());
     } else if (this.playerState === "pausado") {
@@ -1963,7 +2229,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
     this.settings.enableTeleprompterMode = active;
     await this.saveSettings();
     const estado = active ? t("notices.enabled") : t("notices.disabled");
-    new import_obsidian3.Notice(t("notices.teleprompter_mode", { state: estado }));
+    new import_obsidian4.Notice(t("notices.teleprompter_mode", { state: estado }));
   }
   /** Callback do slider de velocidade: aplica imediatamente no chunk em reprodução. */
   onSpeedChange(speed) {
@@ -1994,9 +2260,6 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
         }
       } else {
         this.updatePlayerState("tocando");
-        if (!this.nextChunkPromise) {
-          this.nextChunkPromise = this.prefetchNextChunk();
-        }
         this.playNextParagraph();
       }
     }
@@ -2004,8 +2267,8 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
   // ── Narração Principal ───────────────────────────────────
   async narrarNotaAtual() {
     const activeFile = this.app.workspace.getActiveFile();
-    if (!(activeFile instanceof import_obsidian3.TFile)) {
-      new import_obsidian3.Notice(t("notices.no_active_note"));
+    if (!(activeFile instanceof import_obsidian4.TFile)) {
+      new import_obsidian4.Notice(t("notices.no_active_note"));
       return;
     }
     this.activeEditor = this.getActiveEditor();
@@ -2016,7 +2279,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
     const conteudo = await this.app.vault.read(activeFile);
     const textoLimpo = this.cleanMarkdown(conteudo);
     if (!textoLimpo) {
-      new import_obsidian3.Notice(t("notices.empty_note"));
+      new import_obsidian4.Notice(t("notices.empty_note"));
       return;
     }
     const valido = await this.validarConfiguracoes();
@@ -2025,10 +2288,10 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
     this.updatePlayerState("tocando");
     this.registerScrollListeners();
     const mesmaNote = this.lastNarratedPath === activeFile.path;
-    new import_obsidian3.Notice(mesmaNote ? t("notices.restarting") : t("notices.starting_narration"));
+    new import_obsidian4.Notice(mesmaNote ? t("notices.restarting") : t("notices.starting_narration"));
     this.lastNarratedPath = activeFile.path;
     console.log(`[Obsidian Voice] Narrando: ${activeFile.name}`);
-    this.nextChunkPromise = this.prefetchNextChunk();
+    await this.ttsPipeline.start();
     this.playNextParagraph();
   }
   cleanMarkdown(text) {
@@ -2036,48 +2299,26 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
   }
   // ── Validação ────────────────────────────────────────────
   async validarConfiguracoes() {
-    const { piperPath, selectedVoice } = this.settings;
-    if (!piperPath || !selectedVoice) {
-      new import_obsidian3.Notice(t("notices.missing_configuration"));
-      return false;
-    }
-    const isPiperCommand = !piperPath.includes("/") && !piperPath.includes("\\");
-    const resolvedModel = this.resolveModelPath();
-    const piperExiste = isPiperCommand || fs4.existsSync(piperPath);
-    const modelExiste = !resolvedModel || fs4.existsSync(resolvedModel);
-    if (!piperExiste || !modelExiste) {
-      new import_obsidian3.Notice(t("notices.piper_or_model_missing"));
+    this.rebuildTTSPipeline();
+    const result = await this.ttsPipeline.validate();
+    if (!result.ok) {
+      new import_obsidian4.Notice(t("notices.piper_or_model_missing"));
+      if (result.error) this.logger.logError(result.error);
       return false;
     }
     return true;
   }
-  resolveModelPath() {
-    const { piperPath, selectedVoice } = this.settings;
-    if (!selectedVoice || !piperPath) return "";
-    const isPiperCommand = !piperPath.includes("/") && !piperPath.includes("\\");
-    let modelDir = isPiperCommand ? "" : path3.dirname(piperPath);
-    if (modelDir && !path3.isAbsolute(modelDir) && this.app.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
-      const basePath = this.app.vault.adapter.getBasePath();
-      modelDir = path3.resolve(basePath, modelDir);
-    }
-    return modelDir ? path3.join(modelDir, selectedVoice) : selectedVoice;
-  }
   // ── Pipeline de Áudio com Pre-fetching ───────────────────
   async playNextParagraph() {
     if (this.playerState === "pausado") return;
-    if (!this.nextChunkPromise) {
-      this.nextChunkPromise = this.prefetchNextChunk();
-    }
-    const currentPromise = this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    const chunk = await currentPromise;
+    const chunk = await this.ttsPipeline.getNextChunk();
     if (chunk === null) {
       this.queue.reset();
       this.updatePlayerState("aguardando");
       this.activeEditor = this.getActiveEditor();
       if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
       this.activeEditor = null;
-      new import_obsidian3.Notice(t("notices.narration_finished"));
+      new import_obsidian4.Notice(t("notices.narration_finished"));
       console.log("[Obsidian Voice] Fila encerrada.");
       return;
     }
@@ -2087,19 +2328,19 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
       this.activeEditor = this.getActiveEditor();
       if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
       this.activeEditor = null;
-      new import_obsidian3.Notice(t("notices.narration_error", { error: chunk.error }));
+      new import_obsidian4.Notice(t("notices.narration_error", { error: chunk.error }));
       console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
       try {
-        if (fs4.existsSync(chunk.absolutePath)) fs4.unlinkSync(chunk.absolutePath);
+        if (fs6.existsSync(chunk.absolutePath)) fs6.unlinkSync(chunk.absolutePath);
       } catch (_) {
       }
       return;
     }
-    if (this.playerState === "pausado") {
-      this.nextChunkPromise = Promise.resolve(chunk);
+    if (this.getPlayerState() === "pausado") {
+      this.ttsPipeline.holdChunk(chunk);
       return;
     }
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.ttsPipeline.prefetch();
     this.currentParagraphText = chunk.text;
     this.activeEditor = this.getActiveEditor();
     if (this.activeEditor) {
@@ -2117,117 +2358,60 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
   async jumpToLine(lineNumber) {
     console.log(`[Obsidian Voice] Pulando para a linha: ${lineNumber}`);
     this.audioPlayer.stop();
-    await this.cleanupPrefetchedChunk();
+    await this.ttsPipeline.resetPrefetch();
     const targetIndex = this.queue.getChunkIndexByLine(lineNumber);
     this.queue.setCurrentIndex(targetIndex);
     this.updatePlayerState("tocando");
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
   async jumpToChapter(chunkIndex) {
     console.log(`[Obsidian Voice] Pulando para o cap\xEDtulo no chunk index: ${chunkIndex}`);
     this.audioPlayer.stop();
-    await this.cleanupPrefetchedChunk();
+    await this.ttsPipeline.resetPrefetch();
     this.queue.setCurrentIndex(chunkIndex);
     this.updatePlayerState("tocando");
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
-  prefetchNextChunk() {
-    const chunk = this.queue.getNextChunk();
-    if (chunk === null) return Promise.resolve(null);
-    const cacheDir = path3.join(os.tmpdir(), "ObsidianVoiceCache");
-    if (!fs4.existsSync(cacheDir)) fs4.mkdirSync(cacheDir, { recursive: true });
-    const chunkFilename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
-    const absoluteChunkPath = path3.join(cacheDir, chunkFilename);
-    const speed = this.widget.getSpeed();
-    return new Promise((resolve3) => {
-      this.runPiper(chunk.text, absoluteChunkPath, speed, {
-        onSuccess: () => {
-          const resourcePath = this.toResourcePath(absoluteChunkPath);
-          resolve3({ resourcePath, absolutePath: absoluteChunkPath, filename: chunkFilename, text: chunk.text });
-        },
-        onError: (msg) => {
-          console.error("[Obsidian Voice] Erro ao pr\xE9-gerar chunk:", msg);
-          resolve3({ resourcePath: "", absolutePath: absoluteChunkPath, filename: chunkFilename, text: chunk.text, error: msg });
-        }
-      });
-    });
-  }
-  toResourcePath(absolutePath) {
-    if (this.app.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
-      const basePath = this.app.vault.adapter.getBasePath();
-      const relativePath = path3.relative(basePath, absolutePath);
-      return this.app.vault.adapter.getResourcePath(relativePath);
-    }
-    return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
-  }
-  async cleanupPrefetchedChunk() {
-    if (!this.nextChunkPromise) return;
-    const chunk = await this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    if (chunk == null ? void 0 : chunk.absolutePath) {
-      try {
-        if (fs4.existsSync(chunk.absolutePath)) {
-          fs4.unlinkSync(chunk.absolutePath);
-          console.log("[Obsidian Voice] Chunk pr\xE9-gerado removido:", chunk.absolutePath);
-        }
-      } catch (e) {
-        console.warn("[Obsidian Voice] N\xE3o foi poss\xEDvel remover o chunk pr\xE9-gerado:", e);
-      }
-    }
-  }
   // ── Motor Piper ──────────────────────────────────────────
-  runPiperTest() {
+  async runPiperTest() {
+    const valido = await this.validarConfiguracoes();
+    if (!valido) return;
     const texto = "Teste de \xE1udio do Obsidian Voice";
-    new import_obsidian3.Notice(t("notices.generating_audio"));
-    const cacheDir = path3.join(os.tmpdir(), "ObsidianVoiceCache");
-    if (!fs4.existsSync(cacheDir)) fs4.mkdirSync(cacheDir, { recursive: true });
-    const testFile = path3.join(cacheDir, "teste.wav");
-    this.runPiper(texto, testFile, 1, {
-      onSuccess: () => {
-        new import_obsidian3.Notice(t("notices.audio_generated"));
-        try {
-          if (fs4.existsSync(testFile)) fs4.unlinkSync(testFile);
-        } catch (_) {
-        }
-      },
-      onError: (msg) => new import_obsidian3.Notice(t("notices.audio_generation_error", { error: msg }))
-    });
+    new import_obsidian4.Notice(t("notices.generating_audio"));
+    const cacheDir = path5.join(os2.tmpdir(), "ObsidianVoiceCache");
+    if (!fs6.existsSync(cacheDir)) fs6.mkdirSync(cacheDir, { recursive: true });
+    const testFile = path5.join(cacheDir, "teste.wav");
+    try {
+      await this.ttsPipeline.runTest(texto, testFile, 1);
+      new import_obsidian4.Notice(t("notices.audio_generated"));
+      try {
+        if (fs6.existsSync(testFile)) fs6.unlinkSync(testFile);
+      } catch (_) {
+      }
+    } catch (error) {
+      new import_obsidian4.Notice(t("notices.audio_generation_error", { error: (error == null ? void 0 : error.message) || String(error) }));
+    }
   }
-  runPiper(texto, outputFile, speed, callbacks) {
-    const { piperPath } = this.settings;
-    const resolvedModel = this.resolveModelPath();
-    const isPiperCommand = !piperPath.includes("/") && !piperPath.includes("\\");
-    let resolvedPiper = piperPath;
+  rebuildTTSPipeline() {
     let basePath = "";
-    if (this.app.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
+    if (this.app.vault.adapter instanceof import_obsidian4.FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
-      if (!isPiperCommand && !path3.isAbsolute(piperPath)) {
-        resolvedPiper = path3.resolve(basePath, piperPath);
-      }
     }
-    const lengthScale = (1 / speed).toFixed(4);
-    const comando = `"${resolvedPiper}" --model "${resolvedModel}" --length_scale ${lengthScale} --output_file "${outputFile}"`;
-    const options = basePath ? { cwd: basePath } : {};
-    this.logger.logTentativa(texto, comando);
-    const child = (0, import_child_process.exec)(comando, options, (erro, _stdout, stderr) => {
-      this.piperProcess = null;
-      if (erro) {
-        this.logger.logError(stderr || erro.message);
-        this.logger.logExit(erro.code || 1);
-        callbacks.onError(erro.message);
-        return;
-      }
-      this.logger.logExit(0);
-      callbacks.onSuccess();
+    const engine = new PiperEngine({
+      piperPath: this.settings.piperPath,
+      selectedVoice: this.settings.selectedVoice,
+      basePath,
+      logger: this.logger
     });
-    this.piperProcess = child;
-    if (child.stdin) {
-      child.stdin.on("error", (e) => this.logger.logError(`Erro no stdin do Piper: ${e.message}`));
-      child.stdin.write(texto, "utf-8");
-      child.stdin.end();
-    }
+    this.ttsPipeline = new TTSPipelineService(
+      this.app.vault,
+      this.queue,
+      engine,
+      this.logger,
+      () => this.widget.getSpeed()
+    );
   }
   getActiveEditor() {
     const activeFile = this.app.workspace.getActiveFile();
@@ -2235,7 +2419,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
     let editor = null;
     this.app.workspace.iterateAllLeaves((leaf) => {
       var _a;
-      if (leaf.view instanceof import_obsidian3.MarkdownView && ((_a = leaf.view.file) == null ? void 0 : _a.path) === activeFile.path) {
+      if (leaf.view instanceof import_obsidian4.MarkdownView && ((_a = leaf.view.file) == null ? void 0 : _a.path) === activeFile.path) {
         editor = leaf.view.editor;
       }
     });
@@ -2244,7 +2428,7 @@ var ObsidianVoicePlugin = class extends import_obsidian3.Plugin {
   registerScrollListeners() {
     var _a;
     this.unregisterScrollListeners();
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian4.MarkdownView);
     const containerEl = (_a = activeView == null ? void 0 : activeView.containerEl) != null ? _a : null;
     if (!containerEl) return;
     this.scrollListenerEl = containerEl;

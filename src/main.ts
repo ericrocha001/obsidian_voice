@@ -5,10 +5,9 @@
 // 3. Orquestrar a narração de notas Markdown limpas controlando o estado global do player.
 // 4. Gerenciar a coexistência entre scroll automático (Teleprompter) e rolagem manual do usuário.
 
-import { ChildProcess, exec } from "child_process";
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 import { Editor, FileSystemAdapter, MarkdownView, Notice, Plugin, setIcon, TFile } from "obsidian";
 import { EditorView } from "@codemirror/view";
 import { ObsidianAudioPlayer } from "./audio-player";
@@ -18,22 +17,21 @@ import { ObsidianVoiceSettingTab, ObsidianVoiceSettings, DEFAULT_SETTINGS } from
 import { VoiceLogger } from "./logger";
 import { EditorHighlighter, highlightField } from "./editor-highlighter";
 import { initializeI18n, t } from "./i18n";
+import { TTSPipelineService, ChunkResult } from "./tts/pipeline-service";
+import { PiperEngine } from "./tts/engine/piper-engine";
 
 export type PlayerState = "aguardando" | "tocando" | "pausado";
 
-type ChunkResult = { resourcePath: string; absolutePath: string; filename: string; text: string; error?: string } | null;
-
 export default class ObsidianVoicePlugin extends Plugin {
-  settings: ObsidianVoiceSettings;
+  settings!: ObsidianVoiceSettings;
 
-  private audioPlayer: ObsidianAudioPlayer;
+  private audioPlayer!: ObsidianAudioPlayer;
   private queue = new ObsidianVoiceQueue();
-  private widget: ObsidianVoiceWidget;
-  private logger: VoiceLogger;
-  private highlighter: EditorHighlighter;
+  private widget!: ObsidianVoiceWidget;
+  private logger!: VoiceLogger;
+  private highlighter!: EditorHighlighter;
   private playerState: PlayerState = "aguardando";
-  private nextChunkPromise: Promise<ChunkResult> | null = null;
-  private piperProcess: ChildProcess | null = null;
+  private ttsPipeline!: TTSPipelineService;
   private currentParagraphText = "";
   private activeEditor: import("obsidian").Editor | null = null;
   private lastNarratedPath: string | null = null;   // Rastreia a nota narrada por último
@@ -61,6 +59,7 @@ export default class ObsidianVoicePlugin extends Plugin {
     }
     this.logger = new VoiceLogger(basePath || process.cwd());
     this.highlighter.setLogger(this.logger);
+    this.rebuildTTSPipeline();
 
     // ── Ribbon ──────────────────────────────────────────────
     this.addRibbonIcon("headphones", t("commands.ribbon_narrate"), () => this.narrarNotaAtual());
@@ -141,7 +140,7 @@ export default class ObsidianVoicePlugin extends Plugin {
       id: "play-from-selection",
       name: t("commands.play_from_selection"),
       hotkeys: [],
-      editorCallback: async (editor: Editor, view: MarkdownView) => {
+      editorCallback: async (editor: Editor) => {
         const cursor = editor.getCursor();
         const currentLineText = editor.getLine(cursor.line);
 
@@ -247,16 +246,12 @@ export default class ObsidianVoicePlugin extends Plugin {
   async onunload() {
     this.audioPlayer.stop();
     this.queue.reset();
-    if (this.piperProcess) {
-      this.piperProcess.kill();
-      this.piperProcess = null;
-    }
+    await this.ttsPipeline.stop();
     if (this.userScrollTimeout) {
       clearTimeout(this.userScrollTimeout);
       this.userScrollTimeout = null;
     }
     this.unregisterScrollListeners();
-    await this.cleanupPrefetchedChunk();
     this.widget.hide();
 
     this.activeEditor = this.getActiveEditor();
@@ -267,6 +262,10 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   // ── Estado do Player ─────────────────────────────────────
+
+  private getPlayerState(): PlayerState {
+    return this.playerState;
+  }
 
   private updatePlayerState(state: PlayerState) {
     this.playerState = state;
@@ -283,11 +282,7 @@ export default class ObsidianVoicePlugin extends Plugin {
   private async pararNarracaoSilenciosamente() {
     this.queue.reset();
     this.audioPlayer.stop();
-    if (this.piperProcess) {
-      this.piperProcess.kill();
-      this.piperProcess = null;
-    }
-    await this.cleanupPrefetchedChunk();
+    await this.ttsPipeline.stop();
     this.unregisterScrollListeners();
     this.updatePlayerState("aguardando");
 
@@ -365,9 +360,6 @@ export default class ObsidianVoicePlugin extends Plugin {
       } else {
         // O chunk foi descartado (ex: após um pulo): reinicia a partir do índice atual da fila
         this.updatePlayerState("tocando");
-        if (!this.nextChunkPromise) {
-          this.nextChunkPromise = this.prefetchNextChunk();
-        }
         this.playNextParagraph();
       }
     }
@@ -410,7 +402,7 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.lastNarratedPath = activeFile.path;
     console.log(`[Obsidian Voice] Narrando: ${activeFile.name}`);
 
-    this.nextChunkPromise = this.prefetchNextChunk();
+    await this.ttsPipeline.start();
     this.playNextParagraph();
   }
 
@@ -427,41 +419,14 @@ export default class ObsidianVoicePlugin extends Plugin {
   // ── Validação ────────────────────────────────────────────
 
   private async validarConfiguracoes(): Promise<boolean> {
-    const { piperPath, selectedVoice } = this.settings;
-
-    if (!piperPath || !selectedVoice) {
-      new Notice(t("notices.missing_configuration"));
-      return false;
-    }
-
-    const isPiperCommand = !piperPath.includes("/") && !piperPath.includes("\\");
-    const resolvedModel = this.resolveModelPath();
-
-    const piperExiste = isPiperCommand || fs.existsSync(piperPath);
-    const modelExiste = !resolvedModel || fs.existsSync(resolvedModel);
-
-    if (!piperExiste || !modelExiste) {
+    this.rebuildTTSPipeline();
+    const result = await this.ttsPipeline.validate();
+    if (!result.ok) {
       new Notice(t("notices.piper_or_model_missing"));
+      if (result.error) this.logger.logError(result.error);
       return false;
     }
-
     return true;
-  }
-
-  private resolveModelPath(): string {
-    const { piperPath, selectedVoice } = this.settings;
-    if (!selectedVoice || !piperPath) return "";
-    const isPiperCommand = !piperPath.includes("/") && !piperPath.includes("\\");
-    
-    let modelDir = isPiperCommand ? "" : path.dirname(piperPath);
-    
-    // Se modelDir não for absoluto e existir basePath do Vault, resolve em relação ao vault
-    if (modelDir && !path.isAbsolute(modelDir) && this.app.vault.adapter instanceof FileSystemAdapter) {
-      const basePath = this.app.vault.adapter.getBasePath();
-      modelDir = path.resolve(basePath, modelDir);
-    }
-    
-    return modelDir ? path.join(modelDir, selectedVoice) : selectedVoice;
   }
 
   // ── Pipeline de Áudio com Pre-fetching ───────────────────
@@ -469,13 +434,7 @@ export default class ObsidianVoicePlugin extends Plugin {
   private async playNextParagraph() {
     if (this.playerState === "pausado") return;
 
-    if (!this.nextChunkPromise) {
-      this.nextChunkPromise = this.prefetchNextChunk();
-    }
-
-    const currentPromise = this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    const chunk = await currentPromise;
+    const chunk = await this.ttsPipeline.getNextChunk();
 
     if (chunk === null) {
       this.queue.reset();
@@ -501,13 +460,13 @@ export default class ObsidianVoicePlugin extends Plugin {
     }
 
     // Se o usuário pausou enquanto o áudio estava sendo gerado, interrompe a reprodução e guarda o chunk
-    if (this.playerState === "pausado") {
-      this.nextChunkPromise = Promise.resolve(chunk);
+    if (this.getPlayerState() === "pausado") {
+      this.ttsPipeline.holdChunk(chunk);
       return;
     }
 
     // Inicia a geração do próximo chunk em segundo plano enquanto toca o atual
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.ttsPipeline.prefetch();
 
     // Destaca o parágrafo atual usando o editor capturado no início da narração
     this.currentParagraphText = chunk.text;
@@ -529,142 +488,70 @@ export default class ObsidianVoicePlugin extends Plugin {
   private async jumpToLine(lineNumber: number) {
     console.log(`[Obsidian Voice] Pulando para a linha: ${lineNumber}`);
     this.audioPlayer.stop();
-    await this.cleanupPrefetchedChunk();
+    await this.ttsPipeline.resetPrefetch();
 
     const targetIndex = this.queue.getChunkIndexByLine(lineNumber);
     this.queue.setCurrentIndex(targetIndex);
 
     this.updatePlayerState("tocando");
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
 
   private async jumpToChapter(chunkIndex: number) {
     console.log(`[Obsidian Voice] Pulando para o capítulo no chunk index: ${chunkIndex}`);
     this.audioPlayer.stop();
-    await this.cleanupPrefetchedChunk();
+    await this.ttsPipeline.resetPrefetch();
 
     this.queue.setCurrentIndex(chunkIndex);
 
     this.updatePlayerState("tocando");
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
 
-  private prefetchNextChunk(): Promise<ChunkResult> {
-    const chunk = this.queue.getNextChunk();
-    if (chunk === null) return Promise.resolve(null);
-
-    const cacheDir = path.join(os.tmpdir(), "ObsidianVoiceCache");
-    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
-
-    const chunkFilename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
-    const absoluteChunkPath = path.join(cacheDir, chunkFilename);
-    const speed = this.widget.getSpeed();
-
-    return new Promise((resolve) => {
-      this.runPiper(chunk.text, absoluteChunkPath, speed, {
-        onSuccess: () => {
-          const resourcePath = this.toResourcePath(absoluteChunkPath);
-          resolve({ resourcePath, absolutePath: absoluteChunkPath, filename: chunkFilename, text: chunk.text });
-        },
-        onError: (msg) => {
-          console.error("[Obsidian Voice] Erro ao pré-gerar chunk:", msg);
-          resolve({ resourcePath: "", absolutePath: absoluteChunkPath, filename: chunkFilename, text: chunk.text, error: msg });
-        },
-      });
-    });
-  }
-
-  private toResourcePath(absolutePath: string): string {
-    if (this.app.vault.adapter instanceof FileSystemAdapter) {
-      const basePath = this.app.vault.adapter.getBasePath();
-      const relativePath = path.relative(basePath, absolutePath);
-      return this.app.vault.adapter.getResourcePath(relativePath);
-    }
-    return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
-  }
-
-  private async cleanupPrefetchedChunk() {
-    if (!this.nextChunkPromise) return;
-    const chunk = await this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    if (chunk?.absolutePath) {
-      try {
-        if (fs.existsSync(chunk.absolutePath)) {
-          fs.unlinkSync(chunk.absolutePath);
-          console.log("[Obsidian Voice] Chunk pré-gerado removido:", chunk.absolutePath);
-        }
-      } catch (e) {
-        console.warn("[Obsidian Voice] Não foi possível remover o chunk pré-gerado:", e);
-      }
-    }
-  }
 
   // ── Motor Piper ──────────────────────────────────────────
 
-  private runPiperTest() {
+  private async runPiperTest() {
+    const valido = await this.validarConfiguracoes();
+    if (!valido) return;
+
     const texto = "Teste de áudio do Obsidian Voice";
     new Notice(t("notices.generating_audio"));
     const cacheDir = path.join(os.tmpdir(), "ObsidianVoiceCache");
     if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
     const testFile = path.join(cacheDir, "teste.wav");
-    this.runPiper(texto, testFile, 1.0, {
-      onSuccess: () => {
-        new Notice(t("notices.audio_generated"));
-        try { if (fs.existsSync(testFile)) fs.unlinkSync(testFile); } catch (_) {}
-      },
-      onError: (msg) => new Notice(t("notices.audio_generation_error", { error: msg })),
-    });
+
+    try {
+      await this.ttsPipeline.runTest(texto, testFile, 1.0);
+      new Notice(t("notices.audio_generated"));
+      try { if (fs.existsSync(testFile)) fs.unlinkSync(testFile); } catch (_) {}
+    } catch (error: any) {
+      new Notice(t("notices.audio_generation_error", { error: error?.message || String(error) }));
+    }
   }
 
-  private runPiper(
-    texto: string,
-    outputFile: string,
-    speed: number,
-    callbacks: { onSuccess: () => void; onError: (msg: string) => void }
-  ) {
-    const { piperPath } = this.settings;
-    const resolvedModel = this.resolveModelPath();
-
-    const isPiperCommand = !piperPath.includes("/") && !piperPath.includes("\\");
-    let resolvedPiper = piperPath;
+  private rebuildTTSPipeline() {
     let basePath = "";
-
     if (this.app.vault.adapter instanceof FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
-      if (!isPiperCommand && !path.isAbsolute(piperPath)) {
-        resolvedPiper = path.resolve(basePath, piperPath);
-      }
     }
 
-    // length_scale inversamente proporcional à velocidade: 1x → 1.0, 2x → 0.5
-    const lengthScale = (1 / speed).toFixed(4);
-
-    const comando = `"${resolvedPiper}" --model "${resolvedModel}" --length_scale ${lengthScale} --output_file "${outputFile}"`;
-    const options = basePath ? { cwd: basePath } : {};
-
-    this.logger.logTentativa(texto, comando);
-
-    const child = exec(comando, options, (erro, _stdout, stderr) => {
-      this.piperProcess = null;
-      if (erro) {
-        this.logger.logError(stderr || erro.message);
-        this.logger.logExit(erro.code || 1);
-        callbacks.onError(erro.message);
-        return;
-      }
-      this.logger.logExit(0);
-      callbacks.onSuccess();
+    const engine = new PiperEngine({
+      piperPath: this.settings.piperPath,
+      selectedVoice: this.settings.selectedVoice,
+      basePath,
+      logger: this.logger,
     });
 
-    this.piperProcess = child;
-
-    if (child.stdin) {
-      child.stdin.on("error", (e) => this.logger.logError(`Erro no stdin do Piper: ${e.message}`));
-      child.stdin.write(texto, "utf-8");
-      child.stdin.end();
-    }
+    this.ttsPipeline = new TTSPipelineService(
+      this.app.vault,
+      this.queue,
+      engine,
+      this.logger,
+      () => this.widget.getSpeed()
+    );
   }
 
   private getActiveEditor(): Editor | null {
