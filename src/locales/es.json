@@ -1,0 +1,96 @@
+{
+  "settings": {
+    "language": {
+      "title": "Idioma",
+      "description": "Controla el idioma usado por Obsidian Voice.",
+      "auto": "Automático (Sistema)",
+      "pt": "Português",
+      "en": "English",
+      "es": "Español"
+    },
+    "piper_path": {
+      "title": "Ruta del ejecutable de Piper",
+      "description": "Ruta absoluta al binario de Piper (ejemplo: C:\\piper\\piper.exe). Los modelos .onnx se detectarán automáticamente en la misma carpeta.",
+      "not_file": "La ruta proporcionada no es un archivo.",
+      "missing": "El ejecutable proporcionado no existe en el disco."
+    },
+    "voice_model": {
+      "title": "Voz predeterminada",
+      "loading": "Buscando modelos .onnx...",
+      "found": "Modelos .onnx encontrados en la carpeta del ejecutable de Piper.",
+      "select": "- selecciona un modelo -",
+      "none": "No se encontraron modelos .onnx"
+    },
+    "highlight_color": {
+      "title": "Color de resaltado",
+      "description": "Color del resaltado visual aplicado al párrafo que se está narrando.",
+      "green": "Verde (Predeterminado)",
+      "yellow": "Amarillo clásico",
+      "blue": "Azul enfoque",
+      "purple": "Púrpura zen",
+      "orange": "Ámbar otoñal"
+    },
+    "teleprompter": {
+      "title": "Desplazamiento automático (Teleprompter)",
+      "description": "Cuando está activado, el editor se desplaza automáticamente para seguir el párrafo que se está narrando. Desactívalo para navegar manualmente sin interferencia del reproductor."
+    },
+    "errors": {
+      "prefix": "Error: {{error}}",
+      "unknown_directory": "Error desconocido al leer el directorio."
+    }
+  },
+  "widget": {
+    "aria": {
+      "expand_player": "Expandir reproductor",
+      "minimize_player": "Minimizar reproductor",
+      "play_pause": "Reproducir / Pausar",
+      "stop_narration": "Detener narración",
+      "chapters": "Capítulos",
+      "tools": "Herramientas"
+    },
+    "status": {
+      "waiting": "Esperando narración...",
+      "playing": "Narrando nota...",
+      "paused": "Pausado"
+    },
+    "tools": {
+      "summary_mode": "Modo resumen",
+      "summary_mode_tooltip": "Modo resumen: Cuando está activado, el reproductor leerá solo los resaltados (==texto==) de esta nota.",
+      "teleprompter_mode": "Modo Teleprompter",
+      "teleprompter_mode_tooltip": "Modo Teleprompter: Cuando está activado, el editor se desplaza automáticamente con el párrafo narrado.",
+      "settings": "Configuración..."
+    }
+  },
+  "commands": {
+    "test_piper": "Probar motor TTS (Piper)",
+    "narrate_current_note": "Narrar nota actual (Obsidian Voice)",
+    "toggle_play_pause": "Alternar Reproducir/Pausar (Obsidian Voice)",
+    "stop_narration": "Detener narración (Obsidian Voice)",
+    "toggle_highlights_only": "Obsidian Voice: Alternar lectura de resaltados (Resumen de audio)",
+    "play_from_selection": "Reproducir/Narrar texto de la selección actual",
+    "ribbon_narrate": "Narrar nota (Obsidian Voice)"
+  },
+  "notices": {
+    "summary_mode": "Modo resumen de audio: {{state}}",
+    "teleprompter_mode": "Modo Teleprompter: {{state}}",
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+    "narration_stopped": "Narración detenida.",
+    "no_active_note": "No se encontró ninguna nota activa.",
+    "empty_note": "La nota no tiene contenido para narrar.",
+    "restarting": "Reiniciando...",
+    "starting_narration": "Iniciando narración de la nota...",
+    "missing_configuration": "Obsidian Voice: Configura la ruta de Piper y la voz en la configuración del plugin.",
+    "piper_or_model_missing": "Obsidian Voice: Ejecutable de Piper o modelo ONNX no encontrado en la ruta especificada.",
+    "narration_finished": "Narración completada.",
+    "narration_error": "Error en la narración: {{error}}",
+    "generating_audio": "Generando audio...",
+    "audio_generated": "Audio generado correctamente.",
+    "audio_generation_error": "Error al generar audio: {{error}}",
+    "model_scan_error": "Obsidian Voice: {{error}}"
+  },
+  "errors": {
+    "missing_translation": "Traducción faltante: {{key}} ({{language}})"
+  },
+  "logs": {}
+}

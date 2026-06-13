@@ -1,0 +1,55 @@
+/* 
+ * Responsabilidades do Script
+ *
+ * 1. Definir os estilos visuais de destaque de texto do plugin Obsidian Voice no editor.
+ * 2. Consumir a variável CSS dinâmica de cor de destaque injetada pelo orquestrador principal.
+ * 3. Garantir resiliência visual (fallback) e compatibilidade com quebra de linha (word-wrap).
+ */
+
+/* 
+ * Aumentamos a especificidade do seletor para evitar o abuso de !important,
+ * garantindo que o estilo vença temas de terceiros de forma elegante.
+ */
+.workspace-leaf-content .cm-content .obsidian-voice-highlight {
+  /* 
+   * CORREÇÃO 1 & 4: Fallback robusto. 
+   * Usa a variável injetada pelo JS. Se falhar, usa verde pastel com 40% de opacidade,
+   * garantindo contraste e estética em temas claros e escuros (conforme Roadmap).
+   */
+  background-color: var(--ov-highlight-color, rgba(226, 240, 217, 0.4)) !important;
+  
+  /* 
+   * CORREÇÃO 3: Removido !important desnecessário. 
+   * A especificidade do seletor já é suficiente.
+   */
+  border-radius: 2px;
+  color: inherit;
+  
+  /* 
+   * CORREÇÃO 2: box-decoration-break.
+   * Garante que, se o texto destacado quebrar para a próxima linha no editor,
+   * o border-radius e o background sejam aplicados suavemente em cada fragmento,
+   * evitando o efeito visual "quebrado" ou em degrau.
+   */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  
+  /* 
+   * Mantido inline para não quebrar o fluxo de texto do CodeMirror, 
+   * mas com transição suave para evitar flickering visual.
+   */
+  display: inline;
+  transition: background-color 0.2s ease-out;
+}
+
+/* 
+ * Fallback de segurança para o modo de leitura (Reading View) do Obsidian, 
+ * caso o plugin também seja usado fora do modo de edição (Live Preview).
+ */
+.markdown-reading-view .obsidian-voice-highlight {
+  background-color: var(--ov-highlight-color, rgba(226, 240, 217, 0.4)) !important;
+  border-radius: 2px;
+  display: inline;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

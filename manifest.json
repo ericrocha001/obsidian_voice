@@ -1,0 +1,9 @@
+{
+  "id": "obsidian-voice",
+  "name": "Obsidian Voice",
+  "version": "0.0.1",
+  "minAppVersion": "1.0.0",
+  "description": "Transforme suas notas em áudio local com TTS",
+  "author": "Developer",
+  "isDesktopOnly": true
+}

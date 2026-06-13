@@ -1,0 +1,16 @@
+{
+  "name": "obsidian-voice",
+  "version": "0.0.1",
+  "description": "Transforme suas notas em áudio local com TTS",
+  "main": "main.js",
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "obsidian": "latest",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "settings": {
+    "language": {
+      "title": "Idioma",
+      "description": "Controla o idioma usado pelo Obsidian Voice.",
+      "auto": "Automático (Sistema)",
+      "pt": "Português",
+      "en": "English",
+      "es": "Español"
+    },
+    "piper_path": {
+      "title": "Caminho do executável do Piper",
+      "description": "Caminho absoluto para o binário do Piper (ex: C:\\piper\\piper.exe). Os modelos .onnx serão detectados automaticamente no mesmo diretório.",
+      "not_file": "O caminho fornecido não é um arquivo.",
+      "missing": "O executável fornecido não existe no disco."
+    },
+    "voice_model": {
+      "title": "Voz padrão",
+      "loading": "Buscando modelos .onnx...",
+      "found": "Modelos .onnx encontrados no diretório do executável do Piper.",
+      "select": "- selecione um modelo -",
+      "none": "Nenhum .onnx encontrado"
+    },
+    "highlight_color": {
+      "title": "Cor de destaque",
+      "description": "Cor do realce visual aplicado ao parágrafo sendo narrado.",
+      "green": "Verde (Padrão)",
+      "yellow": "Amarelo Classic",
+      "blue": "Azul Foco",
+      "purple": "Púrpura Zen",
+      "orange": "Âmbar Outono"
+    },
+    "teleprompter": {
+      "title": "Scroll automático (Teleprompter)",
+      "description": "Quando ativado, o editor rola automaticamente para acompanhar o parágrafo sendo narrado. Desative para navegar manualmente sem interferência do player."
+    },
+    "errors": {
+      "prefix": "Erro: {{error}}",
+      "unknown_directory": "Erro desconhecido ao ler o diretório."
+    }
+  },
+  "widget": {
+    "aria": {
+      "expand_player": "Expandir player",
+      "minimize_player": "Minimizar player",
+      "play_pause": "Play / Pausar",
+      "stop_narration": "Parar narração",
+      "chapters": "Capítulos",
+      "tools": "Ferramentas"
+    },
+    "status": {
+      "waiting": "Aguardando narração...",
+      "playing": "Narrando nota...",
+      "paused": "Pausado"
+    },
+    "tools": {
+      "summary_mode": "Modo Resumo",
+      "summary_mode_tooltip": "Modo Resumo: Quando ativado, o player lerá apenas os destaques (==texto==) desta nota.",
+      "teleprompter_mode": "Modo Teleprompter",
+      "teleprompter_mode_tooltip": "Modo Teleprompter: Quando ativado, o editor rola automaticamente acompanhando o parágrafo narrado.",
+      "settings": "Configurações..."
+    }
+  },
+  "commands": {
+    "test_piper": "Testar Motor TTS (Piper)",
+    "narrate_current_note": "Narrar Nota Atual (Obsidian Voice)",
+    "toggle_play_pause": "Alternar Play/Pause (Obsidian Voice)",
+    "stop_narration": "Parar Narração (Obsidian Voice)",
+    "toggle_highlights_only": "Obsidian Voice: Alternar leitura de destaques (Audio-Resumo)",
+    "play_from_selection": "Play/Narrate text from current selection",
+    "ribbon_narrate": "Narrar nota (Obsidian Voice)"
+  },
+  "notices": {
+    "summary_mode": "Modo Audio-Resumo: {{state}}",
+    "teleprompter_mode": "Modo Teleprompter: {{state}}",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "narration_stopped": "Narração interrompida.",
+    "no_active_note": "Nenhuma nota ativa encontrada.",
+    "empty_note": "A nota não possui conteúdo para narrar.",
+    "restarting": "Recomeçando...",
+    "starting_narration": "Iniciando narração da nota...",
+    "missing_configuration": "Obsidian Voice: Configure o caminho do Piper e a voz nas configurações do plugin.",
+    "piper_or_model_missing": "Obsidian Voice: Executável do Piper ou Modelo ONNX não encontrado no caminho especificado.",
+    "narration_finished": "Narração concluída!",
+    "narration_error": "Erro na narração: {{error}}",
+    "generating_audio": "Gerando áudio...",
+    "audio_generated": "Áudio gerado com sucesso!",
+    "audio_generation_error": "Erro ao gerar áudio: {{error}}",
+    "model_scan_error": "Obsidian Voice: {{error}}"
+  },
+  "errors": {
+    "missing_translation": "Tradução ausente: {{key}} ({{language}})"
+  },
+  "logs": {}
+}

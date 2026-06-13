@@ -1,0 +1,96 @@
+{
+  "settings": {
+    "language": {
+      "title": "Language",
+      "description": "Controls the language used by Obsidian Voice.",
+      "auto": "Auto (System)",
+      "pt": "Português",
+      "en": "English",
+      "es": "Español"
+    },
+    "piper_path": {
+      "title": "Piper executable path",
+      "description": "Absolute path to the Piper binary (example: C:\\piper\\piper.exe). ONNX models will be detected automatically in the same folder.",
+      "not_file": "The provided path is not a file.",
+      "missing": "The provided executable does not exist on disk."
+    },
+    "voice_model": {
+      "title": "Default voice",
+      "loading": "Searching for .onnx models...",
+      "found": ".onnx models found in the Piper executable folder.",
+      "select": "- select a model -",
+      "none": "No .onnx models found"
+    },
+    "highlight_color": {
+      "title": "Highlight color",
+      "description": "Color of the visual highlight applied to the paragraph being narrated.",
+      "green": "Green (Default)",
+      "yellow": "Classic Yellow",
+      "blue": "Focus Blue",
+      "purple": "Zen Purple",
+      "orange": "Autumn Amber"
+    },
+    "teleprompter": {
+      "title": "Automatic scroll (Teleprompter)",
+      "description": "When enabled, the editor scrolls automatically to follow the paragraph being narrated. Disable it to navigate manually without player interference."
+    },
+    "errors": {
+      "prefix": "Error: {{error}}",
+      "unknown_directory": "Unknown error while reading the directory."
+    }
+  },
+  "widget": {
+    "aria": {
+      "expand_player": "Expand player",
+      "minimize_player": "Minimize player",
+      "play_pause": "Play / Pause",
+      "stop_narration": "Stop narration",
+      "chapters": "Chapters",
+      "tools": "Tools"
+    },
+    "status": {
+      "waiting": "Waiting for narration...",
+      "playing": "Narrating note...",
+      "paused": "Paused"
+    },
+    "tools": {
+      "summary_mode": "Summary Mode",
+      "summary_mode_tooltip": "Summary Mode: When enabled, the player will read only highlights (==text==) from this note.",
+      "teleprompter_mode": "Teleprompter Mode",
+      "teleprompter_mode_tooltip": "Teleprompter Mode: When enabled, the editor scrolls automatically with the narrated paragraph.",
+      "settings": "Settings..."
+    }
+  },
+  "commands": {
+    "test_piper": "Test TTS Engine (Piper)",
+    "narrate_current_note": "Narrate Current Note (Obsidian Voice)",
+    "toggle_play_pause": "Toggle Play/Pause (Obsidian Voice)",
+    "stop_narration": "Stop Narration (Obsidian Voice)",
+    "toggle_highlights_only": "Obsidian Voice: Toggle highlight reading (Audio Summary)",
+    "play_from_selection": "Play/Narrate text from current selection",
+    "ribbon_narrate": "Narrate note (Obsidian Voice)"
+  },
+  "notices": {
+    "summary_mode": "Audio Summary Mode: {{state}}",
+    "teleprompter_mode": "Teleprompter Mode: {{state}}",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "narration_stopped": "Narration stopped.",
+    "no_active_note": "No active note found.",
+    "empty_note": "This note has no content to narrate.",
+    "restarting": "Restarting...",
+    "starting_narration": "Starting note narration...",
+    "missing_configuration": "Obsidian Voice: Configure the Piper path and voice in the plugin settings.",
+    "piper_or_model_missing": "Obsidian Voice: Piper executable or ONNX model not found at the specified path.",
+    "narration_finished": "Narration complete!",
+    "narration_error": "Narration error: {{error}}",
+    "generating_audio": "Generating audio...",
+    "audio_generated": "Audio generated successfully!",
+    "audio_generation_error": "Error generating audio: {{error}}",
+    "model_scan_error": "Obsidian Voice: {{error}}"
+  },
+  "errors": {
+    "missing_translation": "Missing translation: {{key}} ({{language}})"
+  },
+  "logs": {}
+}

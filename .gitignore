@@ -1,0 +1,6 @@
+node_modules/
+.claude/
+.gemini/
+data.json
+*.map
+.obsidian/
