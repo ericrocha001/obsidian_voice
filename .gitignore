@@ -1,13 +1,26 @@
 ```
-# Dependencies
-node_modules/
-
 # Compiled and build artifacts
-*.map
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+target/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+.julia/
+zig*/
+.deps/
 
 # Logs and temp files
 *.log
 *.tmp
+*.swp
+*.swo
 
 # Environment
 .env
@@ -17,5 +30,20 @@ node_modules/
 # Editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Cache directories
+.mypy_cache/
+.pytest_cache/
+.gradle/
 ```
