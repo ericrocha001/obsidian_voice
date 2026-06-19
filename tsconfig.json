@@ -5,6 +5,7 @@
     "lib": ["ES2018", "DOM"],
     "strict": true,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "rootDir": "src",
     "skipLibCheck": true

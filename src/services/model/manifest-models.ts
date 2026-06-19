@@ -1,0 +1,51 @@
+// Responsabilidades do Script
+//
+// 1. Fornecer o manifesto local de fallback dos modelos TTS para quando o download remoto falhar.
+
+import type { ModelManifest } from './manifest-service';
+
+export const FALLBACK_MANIFEST: ModelManifest = {
+  version: '1.0.0',
+  models: {
+    piper: {
+      platforms: {
+        'windows-x64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip',
+          sha256: 'f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea',
+        },
+        'macos-arm64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_aarch64.tar.gz',
+          sha256: '6b1eb03b3735946cb35216e063e7eebcc33a6bbf5dd96ec0217959bf1cdcb0cc',
+        },
+        'macos-x64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_x64.tar.gz',
+          sha256: 'ced85c0a3df13945b1e623b878a48fdc2854d5c485b4b67f62857cf551deaf8b',
+        },
+        'linux-x64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz',
+          sha256: 'a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992',
+        },
+        'linux-arm64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_aarch64.tar.gz',
+          sha256: 'fea0fd2d87c54dbc7078d0f878289f404bd4d6eea6e7444a77835d1537ab88eb',
+        },
+      },
+    },
+    kokoro: {
+      platforms: {
+        'windows-x64': {
+          url: 'https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-windows-x64.zip',
+          sha256: '0000000000000000000000000000000000000000000000000000000000000000',
+        },
+        'macos-arm64': {
+          url: 'https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-macos-arm64.zip',
+          sha256: '0000000000000000000000000000000000000000000000000000000000000000',
+        },
+        'linux-x64': {
+          url: 'https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-linux-x64.zip',
+          sha256: '0000000000000000000000000000000000000000000000000000000000000000',
+        },
+      },
+    },
+  },
+};

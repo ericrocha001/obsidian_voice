@@ -1,3 +1,138 @@
+<source_code>
+AGENTS.md
+```
+---
+aliases: []
+tags: [IDE/antigravity, IDE/antigravity/rules/rule, programação, software, software/engenharia_de_software, software/engenharia_de_software/arquitetura_de_software, software/mecanismo_software, software/resiliencia_software, software/segurança_software, software/software_agentivo, software/software_erro]
+title: AGENTS
+source:
+  - https://chatgpt.com/g/g-p-6981cf9c38988191932b596154a84f94-google-antigravity/c/69cac95e-f804-8328-995e-f5c0f2ce1526
+author:
+  - Eric Rocha
+project:
+connections:
+date created: 2026-03-30 15:53
+date modified: 2026-06-16 00:22
+---
+
+# AGENTS
+
+## Blindagem Arquitetural
+
+### Responsabilidades Do Script
+
+Todo script criado pelo agente **deve obrigatoriamente iniciar** com uma seção chamada:
+
+```
+Responsabilidades do Script
+```
+
+Essa seção deve aparecer nas primeiras linhas do arquivo.
+
+### Objetivo
+
+Permitir entendimento imediato do propósito do arquivo sem leitura completa do código, reduzindo custo cognitivo humano, consumo de contexto por agentes de IA e complexidade arquitetural do sistema.
+
+### Regras Obrigatórias
+
+1. Escrever sempre em português do Brasil.
+2. Listar apenas responsabilidades reais do arquivo.
+3. Cada responsabilidade deve:
+    - começar com verbo de ação;
+    - descrever claramente o que o script faz;
+    - indicar o domínio ou contexto do sistema quando aplicável;
+    - evitar descrições genéricas.
+4. Responsabilidade significa **um único motivo futuro de modificação do arquivo**.
+5. A lista deve ser escrita em formato numerado.
+6. Não descrever detalhes de implementação interna.
+7. Não repetir nomes de funções (`def`) ou classes.
+
+### Limite Arquitetural De Responsabilidades
+
+O arquivo deve possuir:
+
+- Ideal: **1 a 3 responsabilidades**
+- Limite máximo aceitável: **4 responsabilidades**
+
+Se o número ultrapassar 4, o agente deve:
+
+- sugerir divisão do arquivo;
+- propor novos scripts especializados;
+- separar responsabilidades por domínio.
+
+### Critérios De Divisão Automática
+
+O agente deve sugerir refatoração quando o script:
+
+- executa múltiplos papéis distintos;
+- conversa com mais de um sistema externo;
+- mistura regras de negócio, validação e persistência;
+- possui responsabilidades parcialmente reutilizáveis.
+
+### Estrutura Padrão Obrigatória
+
+Exemplo correto:
+
+```
+Responsabilidades do Script
+
+1. Validar dados de entrada do usuário no módulo de autenticação.
+2. Converter respostas da API externa para o modelo interno do sistema.
+3. Persistir logs estruturados no sistema de observabilidade.
+```
+
+### Benefícios Esperados
+
+- Arquivos pequenos e especializados
+- Manutenção simplificada
+- Debugging mais rápido
+- Melhor navegação do código
+- Menor consumo de tokens por agentes de IA
+- Arquitetura naturalmente modular
+
+### Atualização Das Responsabilidades
+
+Sempre que o script for modificado, refatorado ou tiver seu comportamento alterado, o agente deve:
+
+1. revisar a seção "Responsabilidades do Script";
+2. atualizar, adicionar ou remover responsabilidades quando necessário;
+3. garantir que a lista reflita exatamente o estado atual do arquivo.
+  
+A lista de responsabilidades nunca deve ficar desatualizada em relação ao código.
+
+### Princípio Arquitetural Aplicado
+
+Todo arquivo deve representar **uma unidade clara de responsabilidade dentro do sistema**.
+Se o propósito do arquivo não puder ser explicado rapidamente na lista inicial, o design do script deve ser reconsiderado.
+
+-------------------------
+
+## Código Limpo E Enxuto
+
+Todo código criado ou modificado pelo agente deve priorizar simplicidade, legibilidade e baixa complexidade.
+
+## Regras Obrigatórias
+
+1. Preferir sempre a solução mais simples que funcione.
+2. Evitar abstrações, padrões ou otimizações prematuras.
+3. Manter funções pequenas e fáceis de entender.
+4. Utilizar nomes claros e autoexplicativos.
+5. Evitar níveis profundos de indentação.
+6. Remover automaticamente:
+    - código morto;
+    - variáveis não utilizadas;
+    - imports desnecessários;
+    - comentários obsoletos.
+7. Não adicionar lógica, configurações ou estruturas que não sejam necessárias no momento atual.
+8. Sempre que modificar código existente, simplificar o que for possível.
+
+## Regra De Decisão
+
+Se existir dúvida entre uma solução simples e uma solução sofisticada, escolher sempre a mais simples.
+```
+
+main.js
+```
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -6266,598 +6401,542 @@ var ObsidianVoiceWidget = class {
     });
     const widgetRect = this.widgetEl.getBoundingClientRect();
     if (widgetRect.top < 200) {
-      Object.assign(this.chaptersDropEl.style, { bottom: "auto", top: "100%", marginBottom: "0", marginTop: "8px" });
-    } else {
-      Object.assign(this.chaptersDropEl.style, { bottom: "100%", top: "auto", marginTop: "0" });
-    }
-    for (const chapter of chapters) {
-      const itemEl = this.chaptersDropEl.createDiv();
-      itemEl.setText(chapter.title);
-      Object.assign(itemEl.style, {
-        padding: "8px 12px",
-        borderRadius: "4px",
-        cursor: "pointer",
-        fontSize: "var(--font-ui-small)",
-        whiteSpace: "normal",
-        wordBreak: "break-word",
-        lineHeight: "1.4",
-        display: "block",
-        transition: "background-color 0.1s ease"
-      });
-      if (chapter.level === 2) itemEl.style.paddingLeft = "20px";
-      else if (chapter.level === 3) itemEl.style.paddingLeft = "32px";
-      itemEl.addEventListener("mouseenter", () => {
-        itemEl.style.background = "var(--background-modifier-hover)";
-      });
-      itemEl.addEventListener("mouseleave", () => {
-        itemEl.style.background = "transparent";
-      });
-      itemEl.addEventListener("click", (evt) => {
-        evt.stopPropagation();
-        this.onChapterClick(chapter.chunkIndex);
-        this.closeChaptersDropdown();
-      });
-    }
-    document.addEventListener("click", this.closeChaptersOnOutsideClick);
-    document.addEventListener("keydown", this.closeOnEscape);
-  }
-  closeChaptersDropdown() {
-    if (this.chaptersDropEl) {
-      this.chaptersDropEl.remove();
-      this.chaptersDropEl = null;
-    }
-    document.removeEventListener("click", this.closeChaptersOnOutsideClick);
-    document.removeEventListener("keydown", this.closeOnEscape);
-  }
-  toggleToolsMenu() {
-    if (this.toolsDropEl) {
-      this.closeToolsMenu();
-      return;
-    }
-    if (!this.widgetEl) return;
-    this.toolsDropEl = this.widgetEl.createDiv({ attr: { id: "obsidian-voice-tools-menu" } });
-    Object.assign(this.toolsDropEl.style, {
-      position: "absolute",
-      right: "0",
-      marginBottom: "8px",
-      width: "260px",
-      background: "var(--background-secondary-alt)",
-      border: "1px solid var(--background-modifier-border)",
-      borderRadius: "8px",
-      boxShadow: "var(--shadow-l)",
-      padding: "10px 12px",
-      zIndex: "9999",
-      pointerEvents: "auto"
-    });
-    const widgetRect = this.widgetEl.getBoundingClientRect();
-    if (widgetRect.top < 200) {
-      Object.assign(this.toolsDropEl.style, { bottom: "auto", top: "100%", marginBottom: "0", marginTop: "8px" });
-    } else {
-      Object.assign(this.toolsDropEl.style, { bottom: "100%", top: "auto", marginTop: "0" });
-    }
-    const addToggleRow = (labelText, tooltip, inputId, checked, onChange) => {
-      const row = this.toolsDropEl.createDiv();
-      Object.assign(row.style, { display: "flex", alignItems: "center", gap: "8px" });
-      const labelWrapper = row.createDiv();
-      Object.assign(labelWrapper.style, { display: "flex", alignItems: "center", gap: "4px", flex: "1", minWidth: "0" });
-      const label = labelWrapper.createSpan();
-      label.textContent = labelText;
-      label.style.fontWeight = "500";
-      const infoIcon = labelWrapper.createDiv({ cls: "clickable-icon" });
-      infoIcon.style.opacity = "0.6";
-      infoIcon.style.flexShrink = "0";
-      (0, import_obsidian.setIcon)(infoIcon, "info");
-      infoIcon.setAttribute("aria-label", tooltip);
-      infoIcon.setAttribute("data-tooltip-position", "top");
-      const toggleEl = row.createEl("input");
-      toggleEl.type = "checkbox";
-      toggleEl.id = inputId;
-      toggleEl.checked = checked;
-      Object.assign(toggleEl.style, {
-        width: "36px",
-        height: "20px",
-        cursor: "pointer",
-        flexShrink: "0",
-        accentColor: "var(--interactive-accent)"
-      });
-      toggleEl.addEventListener("change", () => onChange(toggleEl.checked));
-      return toggleEl;
-    };
-    this.resumoToggleEl = addToggleRow(
-      t("widget.tools.summary_mode"),
-      t("widget.tools.summary_mode_tooltip"),
-      "obsidian-voice-resumo-toggle",
-      this.resumoAtivo,
-      (v) => {
-        this.resumoAtivo = v;
-        this.onResumoToggle(v);
-      }
-    );
-    const sep1 = this.toolsDropEl.createDiv();
-    sep1.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
-    this.teleprompterToggleEl = addToggleRow(
-      t("widget.tools.teleprompter_mode"),
-      t("widget.tools.teleprompter_mode_tooltip"),
-      "obsidian-voice-teleprompter-toggle",
-      this.teleprompterAtivo,
-      (v) => {
-        this.teleprompterAtivo = v;
-        this.onTeleprompterToggle(v);
-      }
-    );
-    const sep2 = this.toolsDropEl.createDiv();
-    sep2.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
-    const engineRow = this.toolsDropEl.createDiv();
-    Object.assign(engineRow.style, { display: "flex", alignItems: "center", gap: "8px" });
-    const engineLabel = engineRow.createSpan();
-    engineLabel.textContent = t("widget.tools.voice_engine");
-    engineLabel.style.fontWeight = "500";
-    engineLabel.style.flex = "1";
-    const engineSelect = engineRow.createEl("select");
-    Object.assign(engineSelect.style, {
-      width: "120px",
-      fontSize: "var(--font-ui-small)",
-      padding: "2px 4px",
-      background: "var(--background-primary)",
-      border: "1px solid var(--background-modifier-border)",
-      borderRadius: "4px",
-      color: "var(--text-normal)",
-      cursor: "pointer",
-      flexShrink: "0"
-    });
-    const engines = this.getInstalledEngines();
-    for (const engine of engines) {
-      const option = engineSelect.createEl("option");
-      option.value = engine.id;
-      option.textContent = engine.name;
-      if (!engine.installed) {
-        option.disabled = true;
-        option.textContent += " (n\xE3o instalado)";
-      }
-    }
-    engineSelect.value = this.getActiveEngineId();
-    engineSelect.addEventListener("change", () => {
-      const value = engineSelect.value;
-      this.onEngineChange(value);
-    });
-    const sep3 = this.toolsDropEl.createDiv();
-    sep3.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
-    const settingsItem = this.toolsDropEl.createDiv();
-    settingsItem.setText(t("widget.tools.settings"));
-    Object.assign(settingsItem.style, {
-      padding: "6px 4px",
-      borderRadius: "4px",
-      cursor: "pointer",
-      fontSize: "var(--font-ui-small)",
-      fontWeight: "500"
-    });
-    settingsItem.addEventListener("mouseenter", () => {
-      settingsItem.style.background = "var(--background-modifier-hover)";
-    });
-    settingsItem.addEventListener("mouseleave", () => {
-      settingsItem.style.background = "transparent";
-    });
-    settingsItem.addEventListener("click", (evt) => {
-      evt.stopPropagation();
-      this.closeToolsMenu();
-      this.openSettings();
-    });
-    document.addEventListener("click", this.closeToolsOnOutsideClick);
-    document.addEventListener("keydown", this.closeOnEscape);
-  }
-  closeToolsMenu() {
-    if (this.toolsDropEl) {
-      this.toolsDropEl.remove();
-      this.toolsDropEl = null;
-      this.resumoToggleEl = null;
-      this.teleprompterToggleEl = null;
-    }
-    document.removeEventListener("click", this.closeToolsOnOutsideClick);
-    document.removeEventListener("keydown", this.closeOnEscape);
-  }
-  // ── Atualização de Estado ────────────────────────────────
-  applyState(state) {
-    this.lastState = state;
-    const isTocando = state === "tocando";
-    const isActive = state !== "aguardando";
-    if (this.ring1El && this.ring2El) {
-      this.ring1El.classList.toggle("is-playing", isTocando);
-      this.ring2El.classList.toggle("is-playing", isTocando);
-    }
-    if (this.miniIconEl) {
-      this.miniIconEl.classList.toggle("is-playing", isTocando);
-    }
-    if (!this.statusTextEl || !this.toggleBtn || !this.indicatorEl) return;
-    if (!isActive) {
-      this.statusTextEl.textContent = t("widget.status.waiting");
-      (0, import_obsidian.setIcon)(this.toggleBtn, "play");
-      Object.assign(this.indicatorEl.style, {
-        background: "var(--text-faint)",
-        boxShadow: "none"
-      });
-      return;
-    }
-    this.statusTextEl.textContent = isTocando ? t("widget.status.playing") : t("widget.status.paused");
-    (0, import_obsidian.setIcon)(this.toggleBtn, isTocando ? "pause" : "play");
-    Object.assign(this.indicatorEl.style, {
-      background: isTocando ? "var(--text-success)" : "var(--text-warning)",
-      boxShadow: isTocando ? "0 0 6px var(--text-success)" : "none"
-    });
-  }
-  // ── Utilitários ──────────────────────────────────────────
-  addSep(container) {
-    const sep2 = container.createSpan();
-    sep2.style.cssText = "width:1px; height:16px; background:var(--background-modifier-border); flex-shrink:0;";
-  }
-  refreshTexts() {
-    if (!this.widgetEl) return;
-    if (this.collapseBtn) this.collapseBtn.setAttribute("aria-label", t("widget.aria.minimize_player"));
-    if (this.toggleBtn) this.toggleBtn.setAttribute("aria-label", t("widget.aria.play_pause"));
-    if (this.stopBtn) this.stopBtn.setAttribute("aria-label", t("widget.aria.stop_narration"));
-    if (this.chaptersBtn) this.chaptersBtn.setAttribute("aria-label", t("widget.aria.chapters"));
-    if (this.toolsBtn) this.toolsBtn.setAttribute("aria-label", t("widget.aria.tools"));
-    this.applyLayoutMode();
-    this.applyState(this.lastState);
-    if (this.toolsDropEl) {
-      this.closeToolsMenu();
-      this.toggleToolsMenu();
-    }
-  }
-};
+[TRUNCATED]
+```
 
-// src/settings.ts
-var import_obsidian2 = require("obsidian");
+manifest-models.json
+```
+{
+  "version": "1.0.0",
+  "models": {
+    "piper": {
+      "platforms": {
+        "windows-x64": {
+          "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip",
+          "sha256": "f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea"
+        },
+        "macos-arm64": {
+          "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_aarch64.tar.gz",
+          "sha256": "6b1eb03b3735946cb35216e063e7eebcc33a6bbf5dd96ec0217959bf1cdcb0cc"
+        },
+        "macos-x64": {
+          "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_x64.tar.gz",
+          "sha256": "ced85c0a3df13945b1e623b878a48fdc2854d5c485b4b67f62857cf551deaf8b"
+        },
+        "linux-x64": {
+          "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz",
+          "sha256": "a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992"
+        },
+        "linux-arm64": {
+          "url": "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_aarch64.tar.gz",
+          "sha256": "fea0fd2d87c54dbc7078d0f878289f404bd4d6eea6e7444a77835d1537ab88eb"
+        }
+      }
+    },
+    "kokoro": {
+      "platforms": {
+        "windows-x64": {
+          "url": "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-windows-x64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "macos-arm64": {
+          "url": "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-macos-arm64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "macos-x64": {
+          "url": "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-macos-x64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "linux-x64": {
+          "url": "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-linux-x64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "linux-arm64": {
+          "url": "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-linux-arm64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    }
+  }
+}
+```
 
-// src/services/model/model-catalog.ts
-var MODEL_CATALOG = {
-  piper: {
-    id: "piper",
-    displayName: "Piper",
-    description: "Motor TTS local r\xE1pido e leve. Ideal para narra\xE7\xE3o di\xE1ria com baixo consumo de recursos.",
-    estimatedRamMB: 256,
-    estimatedDiskMB: 200,
-    tags: ["r\xE1pido", "leve", "local"]
+manifest.json
+```
+{
+  "id": "obsidian-voice",
+  "name": "Obsidian Voice",
+  "version": "0.0.1",
+  "minAppVersion": "1.0.0",
+  "description": "Transforme suas notas em áudio local com TTS",
+  "author": "Developer",
+  "isDesktopOnly": true
+}
+```
+
+package.json
+```
+{
+  "name": "obsidian-voice",
+  "version": "0.0.1",
+  "description": "Transforme suas notas em áudio local com TTS",
+  "main": "main.js",
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup"
   },
-  kokoro: {
-    id: "kokoro",
-    displayName: "Kokoro",
-    description: "Motor TTS com vozes naturais e qualidade premium. Consume mais recursos, mas entrega \xE1udio mais realista.",
-    estimatedRamMB: 1024,
-    estimatedDiskMB: 2e3,
-    tags: ["qualidade", "premium", "vozes naturais"]
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
+    "@types/node": "^22.0.0",
+    "@types/tar-stream": "^3.1.4",
+    "adm-zip": "^0.5.17",
+    "tar-stream": "^3.2.0",
+    "obsidian": "latest",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
   }
-};
-function getModelCatalog() {
-  return MODEL_CATALOG;
 }
-function getModelEntry(id) {
-  return MODEL_CATALOG[id];
+```
+
+styles.css
+```
+/* 
+ * Responsabilidades do Script
+ *
+ * 1. Definir os estilos visuais de destaque de texto do plugin Obsidian Voice no editor.
+ * 2. Consumir a variável CSS dinâmica de cor de destaque injetada pelo orquestrador principal.
+ * 3. Estilizar os cards do marketplace de modelos na aba de configurações.
+ * 4. Garantir resiliência visual (fallback) e compatibilidade com quebra de linha (word-wrap).
+ */
+
+/* 
+ * Aumentamos a especificidade do seletor para evitar o abuso de !important,
+ * garantindo que o estilo vença temas de terceiros de forma elegante.
+ */
+.workspace-leaf-content .cm-content .obsidian-voice-highlight {
+  /* 
+   * CORREÇÃO 1 & 4: Fallback robusto. 
+   * Usa a variável injetada pelo JS. Se falhar, usa verde pastel com 40% de opacidade,
+   * garantindo contraste e estética em temas claros e escuros (conforme Roadmap).
+   */
+  background-color: var(--ov-highlight-color, rgba(226, 240, 217, 0.4)) !important;
+  
+  /* 
+   * CORREÇÃO 3: Removido !important desnecessário. 
+   * A especificidade do seletor já é suficiente.
+   */
+  border-radius: 2px;
+  color: inherit;
+  
+  /* 
+   * CORREÇÃO 2: box-decoration-break.
+   * Garante que, se o texto destacado quebrar para a próxima linha no editor,
+   * o border-radius e o background sejam aplicados suavemente em cada fragmento,
+   * evitando o efeito visual "quebrado" ou em degrau.
+   */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  
+  /* 
+   * Mantido inline para não quebrar o fluxo de texto do CodeMirror, 
+   * mas com transição suave para evitar flickering visual.
+   */
+  display: inline;
+  transition: background-color 0.2s ease-out;
 }
 
-// src/settings.ts
-var DEFAULT_SETTINGS = {
-  piperPath: "",
-  selectedVoice: "",
-  highlightColor: "green",
-  enableTeleprompterMode: true,
-  language: "auto",
-  models: {},
-  ttsEngine: "piper",
-  selectedKokoroVoice: "af_bella"
-};
-var STATE_LABELS = {
-  ["NOT_INSTALLED" /* NOT_INSTALLED */]: "Aguardando",
-  ["FETCHING_MANIFEST" /* FETCHING_MANIFEST */]: "Obtendo informa\xE7\xF5es do modelo...",
-  ["DOWNLOADING" /* DOWNLOADING */]: "Baixando...",
-  ["VERIFYING" /* VERIFYING */]: "Verificando integridade...",
-  ["EXTRACTING" /* EXTRACTING */]: "Extraindo...",
-  ["VALIDATING_RUNTIME" /* VALIDATING_RUNTIME */]: "Validando motor de s\xEDntese...",
-  ["INSTALLING" /* INSTALLING */]: "Instalando...",
-  ["INSTALLED" /* INSTALLED */]: "Instalado",
-  ["FAILED" /* FAILED */]: "Falha na instala\xE7\xE3o",
-  ["REMOVING" /* REMOVING */]: "Removendo...",
-  ["UPDATING" /* UPDATING */]: "Atualizando...",
-  ["ROLLBACK" /* ROLLBACK */]: "Revertendo..."
-};
-var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.languageChangeHandler = () => this.display();
-    /** Map para armazenar referências DOM dos progress containers por modelId */
-    this.progressRefs = /* @__PURE__ */ new Map();
-    this.plugin = plugin;
-    onLanguageChanged(this.languageChangeHandler);
-    this.plugin.register(() => offLanguageChanged(this.languageChangeHandler));
+/* 
+ * Fallback de segurança para o modo de leitura (Reading View) do Obsidian, 
+ * caso o plugin também seja usado fora do modo de edição (Live Preview).
+ */
+.markdown-reading-view .obsidian-voice-highlight {
+  background-color: var(--ov-highlight-color, rgba(226, 240, 217, 0.4)) !important;
+  border-radius: 2px;
+  display: inline;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* ── Cards do Marketplace ─────────────────────────────────── */
+
+.ov-marketplace-description {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.ov-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ov-card {
+  background: var(--background-primary-alt);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.ov-card:hover {
+  border-color: var(--interactive-accent);
+}
+
+.ov-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ov-card-name {
+  font-size: var(--font-ui-large);
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.ov-card-badge {
+  font-size: var(--font-ui-smaller);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.ov-badge-installed {
+  background: var(--color-green);
+  color: var(--text-on-accent);
+}
+
+.ov-badge-available {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.ov-card-description {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.ov-card-tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.ov-card-tag {
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.ov-card-resources {
+  display: flex;
+  gap: 16px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+  margin-bottom: 12px;
+}
+
+.ov-card-btn {
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.ov-card-btn:hover {
+  opacity: 0.85;
+}
+
+.ov-btn-install {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ov-btn-remove {
+  background: var(--text-error);
+  color: var(--text-on-accent);
+}
+
+/* ── Card Em Breve ────────────────────────────────────────── */
+
+.ov-card-coming-soon {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* ── Progresso ───────────────────────────────────────────── */
+
+.ov-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ov-progress-text {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.ov-progress-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  border: none;
+  background: var(--background-modifier-border);
+  color: var(--interactive-accent);
+}
+
+.ov-progress-bar::-webkit-progress-bar {
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.ov-progress-bar::-webkit-progress-value {
+  background: var(--interactive-accent);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.ov-progress-bar::-moz-progress-bar {
+  background: var(--interactive-accent);
+  border-radius: 4px;
+}
+```
+
+tsconfig.json
+```
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "module": "CommonJS",
+    "lib": ["ES2018", "DOM"],
+    "strict": true,
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "resolveJsonModule": true,
+    "rootDir": "src",
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
+```
+
+tsup.config.ts
+```
+// Responsabilidades do Script
+//
+// 1. Configurar o processo de build do plugin para gerar o bundle compatível com o Obsidian.
+
+import { defineConfig } from "tsup";
+
+export default defineConfig({
+  entry: ["src/main.ts"],
+  outDir: ".",
+  outExtension: () => ({ js: ".js" }),
+  format: "cjs",
+  external: ["obsidian", "@codemirror/state", "@codemirror/view"],
+  sourcemap: true,
+  clean: false,
+});
+```
+
+.kilo/agent-manager.json
+```
+{
+  "worktrees": {},
+  "sessions": {},
+  "tabOrder": {
+    "local": [
+      "pending:1"
+    ]
   }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    this.progressRefs.clear();
-    new import_obsidian2.Setting(containerEl).setName(t("settings.language.title")).setDesc(t("settings.language.description")).addDropdown((drop) => {
-      drop.addOption("auto", t("settings.language.auto"));
-      drop.addOption("pt", t("settings.language.pt"));
-      drop.addOption("en", t("settings.language.en"));
-      drop.addOption("es", t("settings.language.es"));
-      drop.setValue(this.plugin.settings.language || "auto");
-      drop.onChange(async (value) => {
-        this.plugin.settings.language = value;
-        await this.plugin.saveSettings();
-        setLanguage(value);
-      });
-    });
-    containerEl.createEl("h3", { text: "Gerenciador de Modelos de Voz (Local)" });
-    containerEl.createEl("p", {
-      text: "As instala\xE7\xF5es rodam localmente no seu computador, sem envio de dados para a nuvem e sem custo de rede.",
-      cls: "ov-marketplace-description"
-    });
-    const cardsContainer = containerEl.createDiv({ cls: "ov-cards-container" });
-    const catalog = getModelCatalog();
-    for (const [id, entry] of Object.entries(catalog)) {
-      const modelId = id;
-      const installed = this.plugin.modelManager.isInstalled(modelId);
-      const installing = this.plugin.modelManager.isInstalling(modelId);
-      this.renderCard(cardsContainer, modelId, entry, installed, installing);
-    }
-    this.renderVoiceSection(containerEl);
+}
+```
+
+.kilo/package.json
+```
+{
+  "dependencies": {
+    "@kilocode/plugin": "7.3.46"
   }
-  renderCard(container, id, entry, installed, installing) {
-    const isComingSoon = id === "kokoro";
-    const card = container.createDiv({ cls: `ov-card ${isComingSoon ? "ov-card-coming-soon" : ""}` });
-    const header = card.createDiv({ cls: "ov-card-header" });
-    header.createSpan({ cls: "ov-card-name", text: entry.displayName });
-    const badge = header.createSpan({
-      cls: `ov-card-badge ${installed ? "ov-badge-installed" : "ov-badge-available"}`,
-      text: installed ? "Instalado" : "Dispon\xEDvel para Download"
-    });
-    card.createEl("p", { cls: "ov-card-description", text: entry.description });
-    const tagsRow = card.createDiv({ cls: "ov-card-tags" });
-    for (const tag of entry.tags) {
-      tagsRow.createSpan({ cls: "ov-card-tag", text: tag });
-    }
-    const resources = card.createDiv({ cls: "ov-card-resources" });
-    resources.createSpan({ text: `RAM estimada: ${entry.estimatedRamMB} MB` });
-    resources.createSpan({ text: `Disco estimado: ${entry.estimatedDiskMB} MB` });
-    const progressContainer = card.createDiv({ cls: "ov-progress-container" });
-    const progressText = progressContainer.createSpan({ cls: "ov-progress-text" });
-    const progressBar = progressContainer.createEl("progress", {
-      cls: "ov-progress-bar",
-      attr: { max: "100", value: "0" }
-    });
-    progressContainer.style.display = "none";
-    this.progressRefs.set(id, { container: progressContainer, progress: progressBar, text: progressText });
-    if (installing) {
-      progressContainer.style.display = "flex";
-      progressText.textContent = "Instala\xE7\xE3o em andamento...";
-    }
-    const actionBtn = card.createEl("button", {
-      cls: `ov-card-btn ${installed ? "ov-btn-remove" : "ov-btn-install"}`,
-      text: installed ? "Remover" : isComingSoon ? t("settings.marketplace.coming_soon") : "Instalar"
-    });
-    if (isComingSoon || installing) {
-      actionBtn.disabled = true;
-      if (isComingSoon) {
-        actionBtn.textContent = t("settings.marketplace.coming_soon");
-      } else if (installing) {
-        actionBtn.textContent = "Instalando...";
-      }
-    }
-    actionBtn.addEventListener("click", () => {
-      if (installed) {
-        this.handleRemove(id, entry.displayName, actionBtn, progressContainer, progressText);
-      } else {
-        this.handleInstall(id, entry.displayName, actionBtn, progressContainer, progressText, progressBar);
-      }
-    });
+}
+```
+
+src/audio-player.ts
+```
+// Responsabilidades do Script
+//
+// 1. Gerenciar o ciclo de vida de reprodução de um arquivo de áudio (play, pause, retomada e parada).
+// 2. Remover o arquivo temporário de chunk após a reprodução ou interrupção.
+// 3. Aplicar alteração de velocidade de reprodução em tempo real no chunk ativo.
+
+import { Vault } from "obsidian";
+import * as fs from "fs";
+
+export class ObsidianAudioPlayer {
+  private audio: HTMLAudioElement | null = null;
+  private vault: Vault;
+  private currentChunk: string | null = null;
+
+  constructor(vault: Vault) {
+    this.vault = vault;
   }
-  handleInstall(id, displayName, btn, progressContainer, progressText, progressBar) {
-    btn.disabled = true;
-    btn.textContent = "Instalando...";
-    progressContainer.style.display = "flex";
-    progressText.textContent = "Iniciando...";
-    (async () => {
-      try {
-        await this.plugin.modelManager.install(
-          id,
-          (state) => {
-            progressText.textContent = STATE_LABELS[state] || state;
-            if (state === "INSTALLED" /* INSTALLED */) {
-              progressContainer.style.display = "none";
-              this.display();
-            }
-          },
-          (percent) => {
-            progressBar.value = percent;
-          }
-        );
-      } catch (err) {
-        new import_obsidian2.Notice(`Erro na instala\xE7\xE3o: ${(err == null ? void 0 : err.message) || String(err)}`);
-        progressContainer.style.display = "none";
-        btn.disabled = false;
-        btn.textContent = "Instalar";
-        this.display();
+
+  playFile(filePath: string, filename: string, onEnded: () => void) {
+    this.stop();
+
+    this.currentChunk = filename;
+    this.audio = new Audio(filePath);
+
+    this.audio.onended = () => {
+      if (this.currentChunk) {
+        this.cleanupChunk(this.currentChunk);
+        this.currentChunk = null;
       }
-    })();
-  }
-  async renderVoiceSection(containerEl) {
-    if (!this.plugin.modelManager.isInstalled("piper")) return;
-    containerEl.createEl("h3", { text: t("settings.voice_model.title") });
-    containerEl.createEl("p", {
-      text: "Escolha uma voz para o motor Piper. O download \xE9 feito diretamente do cat\xE1logo oficial.",
-      cls: "ov-marketplace-description"
-    });
-    const voicesSection = containerEl.createDiv({ cls: "ov-voices-section" });
-    const langDrop = voicesSection.createEl("select", { cls: "ov-voice-dropdown" });
-    const profileDrop = voicesSection.createEl("select", { cls: "ov-voice-dropdown" });
-    const downloadBtn = voicesSection.createEl("button", { cls: "ov-card-btn ov-btn-install", text: "Baixar Voz Selecionada" });
-    let voices = [];
-    try {
-      await this.plugin.modelManager.fetchPiperVoices();
-      voices = this.plugin.modelManager.voicesCache || [];
-    } catch (e) {
-      new import_obsidian2.Notice("Falha ao carregar cat\xE1logo de vozes.");
-      return;
-    }
-    const langs = Array.from(new Set(voices.map((v) => v.language.code))).sort();
-    langDrop.length = 0;
-    for (const code of langs) {
-      const opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = code;
-      langDrop.add(opt);
-    }
-    const currentLang = this.plugin.settings.selectedVoice ? this.plugin.settings.selectedVoice.split("-")[0] || "" : "";
-    if (currentLang && langs.includes(currentLang)) langDrop.value = currentLang;
-    const refreshProfiles = () => {
-      const lang = langDrop.value;
-      const filtered = voices.filter((v) => v.language.code === lang);
-      profileDrop.length = 0;
-      for (const v of filtered) {
-        const opt = document.createElement("option");
-        opt.value = v.key;
-        opt.textContent = `${v.name} (${v.quality})`;
-        profileDrop.add(opt);
-      }
-      if (filtered.length > 0) profileDrop.selectedIndex = 0;
+      onEnded();
     };
-    langDrop.addEventListener("change", refreshProfiles);
-    refreshProfiles();
-    downloadBtn.addEventListener("click", async () => {
-      const selected = profileDrop.value;
-      const voice = voices.find((v) => v.key === selected);
-      if (!voice) return;
-      downloadBtn.disabled = true;
-      downloadBtn.textContent = "Baixando...";
-      try {
-        await this.plugin.modelManager.installVoice(voice);
-        this.plugin.settings.selectedVoice = voice.key;
-        await this.plugin.saveSettings();
-        new import_obsidian2.Notice(`Voz ${voice.key} instalada.`);
-        this.display();
-      } catch (e) {
-        new import_obsidian2.Notice(`Falha ao baixar voz: ${(e == null ? void 0 : e.message) || String(e)}`);
-        downloadBtn.disabled = false;
-        downloadBtn.textContent = "Baixar Voz Selecionada";
-      }
-    });
-  }
-  handleRemove(id, displayName, btn, progressContainer, progressText) {
-    btn.disabled = true;
-    btn.textContent = "Removendo...";
-    progressContainer.style.display = "flex";
-    progressText.textContent = "Removendo modelo...";
-    this.plugin.modelManager.remove(id).then(() => {
-      new import_obsidian2.Notice(`Modelo ${displayName} removido com sucesso.`);
-      this.display();
-    }).catch((err) => {
-      new import_obsidian2.Notice(`Erro ao remover: ${err.message}`);
-      this.display();
-    });
-  }
-};
 
-// src/logger.ts
-var fs2 = __toESM(require("fs"));
-var path = __toESM(require("path"));
-var VoiceLogger = class {
-  constructor(vaultPath) {
-    this.logPath = path.resolve(vaultPath, "voice_debug.log");
+    this.audio.play();
   }
-  writeLog(level, message) {
-    const timestamp = (/* @__PURE__ */ new Date()).toISOString();
-    const logLine = `[${timestamp}] [${level}] ${message}
-`;
-    try {
-      fs2.appendFileSync(this.logPath, logLine, "utf-8");
-    } catch (e) {
-      console.error("[Obsidian Voice] Falha ao gravar log:", e);
+
+  /** Retorna true se há um chunk de áudio ativo (tocando ou pausado). */
+  isActive(): boolean {
+    return this.audio !== null;
+  }
+
+  toggle() {
+    if (!this.audio) return;
+
+    if (this.audio.paused) {
+      this.audio.play();
+    } else {
+      this.audio.pause();
     }
   }
-  logTentativa(texto, comando) {
-    const trecho = texto.length > 60 ? texto.substring(0, 60) + "..." : texto;
-    this.writeLog("INFO", `Tentativa de execu\xE7\xE3o - Comando: ${comando} | Texto: "${trecho}"`);
-  }
-  logError(message) {
-    this.writeLog("ERROR", `Erro do processo: ${message}`);
-  }
-  logExit(code) {
-    this.writeLog("INFO", `Processo finalizado com c\xF3digo: ${code}`);
-  }
-  logDebug(message) {
-    this.writeLog("DEBUG", message);
-  }
-  logEngineEvent(engineId, phase, message) {
-    this.writeLog("INFO", `Engine=${engineId} | Fase=${phase} | ${message}`);
-  }
-  logGeneration(result) {
-    this.writeLog(
-      "INFO",
-      `Engine=${result.engineId} | gera\xE7\xE3o=${result.generationMs}ms | arquivo=${result.filePath} | cache=${result.cached}`
-    );
-  }
-};
 
-// src/editor-highlighter.ts
-var import_state = require("@codemirror/state");
-var import_view = require("@codemirror/view");
-var moduleLogger = null;
-var highlightDiagnostics = {
+  /** Aplica velocidade de reprodução ao chunk ativo sem interromper o áudio. */
+  setPlaybackRate(rate: number) {
+    if (this.audio) this.audio.playbackRate = rate;
+  }
+
+  stop() {
+    if (!this.audio) return;
+    this.audio.pause();
+    this.audio.src = ""; // Libera o arquivo imediatamente no Windows para evitar EBUSY
+    this.audio = null;
+
+    if (this.currentChunk) {
+      this.cleanupChunk(this.currentChunk);
+      this.currentChunk = null;
+    }
+  }
+
+
+  private async cleanupChunk(filename: string) {
+    try {
+      if (fs.existsSync(filename)) {
+        fs.unlinkSync(filename);
+        console.log("[Obsidian Voice] Arquivo temporário removido:", filename);
+      }
+    } catch (e) {
+      console.warn("[Obsidian Voice] Não foi possível remover o chunk:", filename, e);
+    }
+  }
+}
+```
+
+src/editor-highlighter.ts
+```
+// Responsabilidades do Script
+//
+// 1. Gerenciar as marcações (decorations) de destaque de texto no editor CodeMirror do Obsidian.
+// 2. Localizar a posição exata de um bloco de texto dentro do documento ativo do editor.
+// 3. Expor métodos para destacar e limpar o destaque de parágrafos no editor de forma isolada.
+// 4. Receber flag externa de controle de scroll para coexistir com rolagem manual do usuário.
+
+import { StateEffect, StateField, Extension } from "@codemirror/state";
+import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
+import { Editor } from "obsidian";
+import { VoiceLogger } from "./logger";
+
+let moduleLogger: VoiceLogger | null = null;
+const highlightDiagnostics = {
   createCount: 0,
   updateCount: 0,
-  effectCount: 0
+  effectCount: 0,
 };
-function logHighlightDiagnostic(message, payload) {
+
+function logHighlightDiagnostic(message: string, payload?: unknown): void {
   let serializedPayload = "";
-  if (payload !== void 0) {
+  if (payload !== undefined) {
     try {
       serializedPayload = ` ${JSON.stringify(payload, null, 2)}`;
     } catch (error) {
-      serializedPayload = ` [payload n\xE3o serializ\xE1vel: ${error instanceof Error ? error.message : String(error)}]`;
+      serializedPayload = ` [payload não serializável: ${error instanceof Error ? error.message : String(error)}]`;
     }
   }
-  moduleLogger == null ? void 0 : moduleLogger.logDebug(`[Diagnostico Highlight] ${message}${serializedPayload}`);
-  if (payload === void 0) {
+
+  moduleLogger?.logDebug(`[Diagnostico Highlight] ${message}${serializedPayload}`);
+  if (payload === undefined) {
     console.log(`[Obsidian Voice Highlight Diagnostic] ${message}`);
   } else {
     console.log(`[Obsidian Voice Highlight Diagnostic] ${message}`, payload);
   }
 }
-function describeEditorStateExtensions(state) {
-  var _a;
-  const stateAny = state;
-  const config = stateAny == null ? void 0 : stateAny.config;
+
+function describeEditorStateExtensions(state: unknown): unknown {
+  const stateAny = state as any;
+  const config = stateAny?.config;
+
   if (!config) {
     return {
       available: false,
-      reason: "state.config n\xE3o est\xE1 acess\xEDvel"
+      reason: "state.config não está acessível",
     };
   }
-  const highlightFieldId = highlightField.id;
-  const fieldAddress = highlightFieldId ? (_a = config.address) == null ? void 0 : _a[highlightFieldId] : void 0;
-  const knownFieldIds = config.address ? Object.keys(config.address).filter((key) => config.address[key] != null) : [];
+
+  const highlightFieldId = (highlightField as any).id;
+  const fieldAddress = highlightFieldId ? config.address?.[highlightFieldId] : undefined;
+  const knownFieldIds = config.address
+    ? Object.keys(config.address).filter((key) => config.address[key] != null)
+    : [];
+
   return {
     available: true,
     highlightFieldId,
-    highlightFieldAddress: fieldAddress != null ? fieldAddress : null,
+    highlightFieldAddress: fieldAddress ?? null,
     highlightFieldPresentInConfig: fieldAddress != null,
     knownStateFieldIds: knownFieldIds,
-    facetCount: Array.isArray(config.facets) ? config.facets.length : void 0,
-    staticValuesCount: Array.isArray(config.staticValues) ? config.staticValues.length : void 0,
-    dynamicSlotsCount: Array.isArray(config.dynamicSlots) ? config.dynamicSlots.length : void 0
+    facetCount: Array.isArray(config.facets) ? config.facets.length : undefined,
+    staticValuesCount: Array.isArray(config.staticValues) ? config.staticValues.length : undefined,
+    dynamicSlotsCount: Array.isArray(config.dynamicSlots) ? config.dynamicSlots.length : undefined,
   };
 }
-var setHighlightEffect = import_state.StateEffect.define();
-var highlightField = import_state.StateField.define({
+
+export const setHighlightEffect = StateEffect.define<{ from: number; to: number } | null>();
+
+export const highlightField = StateField.define<DecorationSet>({
   create() {
     highlightDiagnostics.createCount += 1;
     logHighlightDiagnostic("highlightField.create() executado.", {
       createCount: highlightDiagnostics.createCount,
       updateCount: highlightDiagnostics.updateCount,
-      effectCount: highlightDiagnostics.effectCount
+      effectCount: highlightDiagnostics.effectCount,
     });
-    return import_view.Decoration.none;
+    return Decoration.none;
   },
   update(decorations, tr) {
-    var _a, _b;
     highlightDiagnostics.updateCount += 1;
     logHighlightDiagnostic("highlightField.update() executado.", {
       createCount: highlightDiagnostics.createCount,
@@ -6865,13 +6944,16 @@ var highlightField = import_state.StateField.define({
       effectCount: highlightDiagnostics.effectCount,
       effectsInTransaction: tr.effects.length,
       docChanged: tr.docChanged,
-      selection: (_b = (_a = tr.state.selection) == null ? void 0 : _a.toJSON) == null ? void 0 : _b.call(_a)
+      selection: tr.state.selection?.toJSON?.(),
     });
+
     decorations = decorations.map(tr.changes);
+
     if (tr.effects.length > 0) {
-      moduleLogger == null ? void 0 : moduleLogger.logDebug(`[Field] update chamado. tr.effects.length = ${tr.effects.length}`);
+      moduleLogger?.logDebug(`[Field] update chamado. tr.effects.length = ${tr.effects.length}`);
       console.log("[Obsidian Voice Field] update chamado. Efeitos no tr:", tr.effects.length);
     }
+
     for (const effect of tr.effects) {
       if (effect.is(setHighlightEffect)) {
         highlightDiagnostics.effectCount += 1;
@@ -6879,39 +6961,41 @@ var highlightField = import_state.StateField.define({
           effectValue: effect.value,
           createCount: highlightDiagnostics.createCount,
           updateCount: highlightDiagnostics.updateCount,
-          effectCount: highlightDiagnostics.effectCount
+          effectCount: highlightDiagnostics.effectCount,
         });
-        moduleLogger == null ? void 0 : moduleLogger.logDebug(`[Field] setHighlightEffect recebido com valor: ${JSON.stringify(effect.value)}`);
+        moduleLogger?.logDebug(`[Field] setHighlightEffect recebido com valor: ${JSON.stringify(effect.value)}`);
         console.log("[Obsidian Voice Field] setHighlightEffect recebido no update:", effect.value);
         if (effect.value) {
           const { from, to } = effect.value;
-          const deco = import_view.Decoration.mark({
+          const deco = Decoration.mark({
             attributes: { class: "obsidian-voice-highlight" }
           });
-          return import_view.Decoration.set([deco.range(from, to)]);
+          return Decoration.set([deco.range(from, to)]);
         } else {
-          return import_view.Decoration.none;
+          return Decoration.none;
         }
       }
     }
     return decorations;
   },
-  provide: (field) => import_view.EditorView.decorations.from(field)
+  provide: (field) => EditorView.decorations.from(field),
 });
-var EditorHighlighter = class {
-  constructor() {
-    this.lastSourceIndex = 0;
-    this.logger = null;
-  }
-  setLogger(logger) {
+
+export class EditorHighlighter {
+  private lastSourceIndex = 0;
+  private logger: VoiceLogger | null = null;
+
+  setLogger(logger: VoiceLogger): void {
     this.logger = logger;
     moduleLogger = logger;
   }
-  getExtension() {
+
+  getExtension(): Extension {
     return highlightField;
   }
-  clearHighlight(editor) {
-    const view = editor.cm;
+
+  clearHighlight(editor: Editor): void {
+    const view = (editor as any).cm as EditorView | undefined;
     if (view) {
       view.dispatch({
         effects: setHighlightEffect.of(null)
@@ -6919,21 +7003,25 @@ var EditorHighlighter = class {
     }
     this.lastSourceIndex = 0;
   }
-  highlightParagraph(editor, paragraphText, scrollEnabled = true) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m;
+
+  highlightParagraph(editor: Editor, paragraphText: string, scrollEnabled = true): void {
     const briefText = paragraphText.substring(0, 40) + "...";
-    (_a = this.logger) == null ? void 0 : _a.logDebug(`[Highlighter] highlightParagraph chamado para: "${briefText}"`);
+    this.logger?.logDebug(`[Highlighter] highlightParagraph chamado para: "${briefText}"`);
     console.log("[Obsidian Voice Highlighter] highlightParagraph chamado para texto:", briefText);
-    const view = editor.cm;
+    
+    const view = (editor as any).cm as EditorView | undefined;
     if (!view) {
-      (_b = this.logger) == null ? void 0 : _b.logDebug("[Highlighter] EditorView (cm) n\xE3o encontrado no editor.");
-      console.warn("[Obsidian Voice Highlighter] EditorView (cm) n\xE3o encontrado no editor.");
+      this.logger?.logDebug("[Highlighter] EditorView (cm) não encontrado no editor.");
+      console.warn("[Obsidian Voice Highlighter] EditorView (cm) não encontrado no editor.");
       return;
     }
+
     const docText = view.state.doc.toString();
-    (_c = this.logger) == null ? void 0 : _c.logDebug(`[Highlighter] Comprimento do documento: ${docText.length}`);
+    this.logger?.logDebug(`[Highlighter] Comprimento do documento: ${docText.length}`);
     console.log("[Obsidian Voice Highlighter] Comprimento do docText:", docText.length);
-    const originalToAlphanum = [];
+
+    // 1. Mapeia caracteres alfanuméricos mantendo o índice original
+    const originalToAlphanum: { char: string; origIdx: number }[] = [];
     for (let i = 0; i < docText.length; i++) {
       const char = docText[i];
       if (/^\p{L}|\p{N}$/u.test(char)) {
@@ -6941,9 +7029,11 @@ var EditorHighlighter = class {
       }
     }
     const sourceStr = originalToAlphanum.map((x) => x.char).join("");
-    (_d = this.logger) == null ? void 0 : _d.logDebug(`[Highlighter] Comprimento da string normalizada do documento: ${sourceStr.length}`);
+    this.logger?.logDebug(`[Highlighter] Comprimento da string normalizada do documento: ${sourceStr.length}`);
     console.log("[Obsidian Voice Highlighter] Comprimento da sourceStr normalizada:", sourceStr.length);
-    const cleanTarget = [];
+
+    // 2. Normaliza o parágrafo alvo
+    const cleanTarget: string[] = [];
     for (let i = 0; i < paragraphText.length; i++) {
       const char = paragraphText[i];
       if (/^\p{L}|\p{N}$/u.test(char)) {
@@ -6951,1490 +7041,495 @@ var EditorHighlighter = class {
       }
     }
     const targetStr = cleanTarget.join("");
-    (_e = this.logger) == null ? void 0 : _e.logDebug(`[Highlighter] Comprimento da string normalizada do par\xE1grafo: ${targetStr.length}`);
+    this.logger?.logDebug(`[Highlighter] Comprimento da string normalizada do parágrafo: ${targetStr.length}`);
     console.log("[Obsidian Voice Highlighter] Comprimento da targetStr normalizada:", targetStr.length);
+
     if (!targetStr) {
-      (_f = this.logger) == null ? void 0 : _f.logDebug("[Highlighter] targetStr normalizada est\xE1 vazia.");
-      console.warn("[Obsidian Voice Highlighter] targetStr normalizada est\xE1 vazia.");
+      this.logger?.logDebug("[Highlighter] targetStr normalizada está vazia.");
+      console.warn("[Obsidian Voice Highlighter] targetStr normalizada está vazia.");
       return;
     }
-    (_g = this.logger) == null ? void 0 : _g.logDebug(`[Highlighter] Procurando a partir de lastSourceIndex: ${this.lastSourceIndex}`);
-    console.log("[Obsidian Voice Highlighter] Buscando a partir do \xEDndice:", this.lastSourceIndex);
+
+    // 3. Procura o parágrafo na string normalizada
+    this.logger?.logDebug(`[Highlighter] Procurando a partir de lastSourceIndex: ${this.lastSourceIndex}`);
+    console.log("[Obsidian Voice Highlighter] Buscando a partir do índice:", this.lastSourceIndex);
+    
     let matchIndex = sourceStr.indexOf(targetStr, this.lastSourceIndex);
     if (matchIndex === -1) {
-      (_h = this.logger) == null ? void 0 : _h.logDebug("[Highlighter] Par\xE1grafo n\xE3o encontrado ap\xF3s lastSourceIndex. Buscando do in\xEDcio...");
-      console.log("[Obsidian Voice Highlighter] Par\xE1grafo n\xE3o encontrado a partir do lastSourceIndex. Tentando do in\xEDcio...");
+      this.logger?.logDebug("[Highlighter] Parágrafo não encontrado após lastSourceIndex. Buscando do início...");
+      console.log("[Obsidian Voice Highlighter] Parágrafo não encontrado a partir do lastSourceIndex. Tentando do início...");
       matchIndex = sourceStr.indexOf(targetStr, 0);
     }
+
     if (matchIndex !== -1) {
       this.lastSourceIndex = matchIndex + targetStr.length;
+
       const from = originalToAlphanum[matchIndex].origIdx;
       const to = originalToAlphanum[matchIndex + targetStr.length - 1].origIdx + 1;
+      
       const foundTextSample = docText.substring(from, to).substring(0, 40) + "...";
-      (_i = this.logger) == null ? void 0 : _i.logDebug(`[Highlighter] Encontrado! Range original: [${from}, ${to}]. Texto correspondente: "${foundTextSample}"`);
-      console.log(`[Obsidian Voice Highlighter] Par\xE1grafo encontrado! Range original: [${from}, ${to}]. Texto correspondente: "${foundTextSample}"`);
-      const dispatchDiagnostics = {
+      this.logger?.logDebug(`[Highlighter] Encontrado! Range original: [${from}, ${to}]. Texto correspondente: "${foundTextSample}"`);
+      console.log(`[Obsidian Voice Highlighter] Parágrafo encontrado! Range original: [${from}, ${to}]. Texto correspondente: "${foundTextSample}"`);
+
+      // Dispara efeito de destaque no CodeMirror
+      const dispatchDiagnostics: Record<string, unknown> = {
         viewExists: !!view,
-        stateExists: !!(view == null ? void 0 : view.state),
+        stateExists: !!view?.state,
         createCount: highlightDiagnostics.createCount,
         updateCount: highlightDiagnostics.updateCount,
-        effectCount: highlightDiagnostics.effectCount
+        effectCount: highlightDiagnostics.effectCount,
       };
+
       try {
-        const currentFieldValue = (_j = view.state) == null ? void 0 : _j.field(highlightField, false);
-        dispatchDiagnostics.highlightFieldPresentInDispatchView = currentFieldValue !== void 0;
-        dispatchDiagnostics.highlightFieldValueSummary = currentFieldValue ? {
-          constructorName: (_k = currentFieldValue.constructor) == null ? void 0 : _k.name,
-          isDecorationNone: currentFieldValue === import_view.Decoration.none
-        } : currentFieldValue;
+        const currentFieldValue = view.state?.field(highlightField, false);
+        dispatchDiagnostics.highlightFieldPresentInDispatchView = currentFieldValue !== undefined;
+        dispatchDiagnostics.highlightFieldValueSummary = currentFieldValue
+          ? {
+              constructorName: currentFieldValue.constructor?.name,
+              isDecorationNone: currentFieldValue === Decoration.none,
+            }
+          : currentFieldValue;
       } catch (error) {
         dispatchDiagnostics.highlightFieldReadError = error instanceof Error ? error.message : String(error);
       }
+
       dispatchDiagnostics.currentEditorStateExtensions = describeEditorStateExtensions(view.state);
+
       logHighlightDiagnostic("Relatorio antes de view.dispatch(setHighlightEffect).", dispatchDiagnostics);
+
       view.dispatch({
         effects: setHighlightEffect.of({ from, to })
       });
-      (_l = this.logger) == null ? void 0 : _l.logDebug("[Highlighter] Efeito setHighlightEffect despachado.");
+      this.logger?.logDebug("[Highlighter] Efeito setHighlightEffect despachado.");
       console.log("[Obsidian Voice Highlighter] Efeito setHighlightEffect despachado.");
+
+      // Rola o editor para exibir o trecho destacado (apenas se o usuário não estiver rolando manualmente)
       if (scrollEnabled) {
         const rect = view.coordsAtPos(from);
         if (rect && view.scrollDOM) {
           const editorRect = view.scrollDOM.getBoundingClientRect();
           const targetTop = rect.top - editorRect.top + view.scrollDOM.scrollTop;
           const height = rect.bottom - rect.top;
-          const finalScrollTop = targetTop - editorRect.height / 2 + height / 2;
+          const finalScrollTop = targetTop - (editorRect.height / 2) + (height / 2);
           view.scrollDOM.scrollTo({
             top: finalScrollTop,
             behavior: "smooth"
           });
         } else {
           view.dispatch({
-            effects: import_view.EditorView.scrollIntoView(from, { y: "center" })
+            effects: EditorView.scrollIntoView(from, { y: "center" })
           });
         }
       }
     } else {
-      (_m = this.logger) == null ? void 0 : _m.logDebug(`[Highlighter] Par\xE1grafo n\xE3o p\xF4de ser localizado no documento. Buscado: "${targetStr.substring(0, 30)}..."`);
-      console.warn("[Obsidian Voice Highlighter] Par\xE1grafo n\xE3o p\xF4de ser localizado no documento.");
+      this.logger?.logDebug(`[Highlighter] Parágrafo não pôde ser localizado no documento. Buscado: "${targetStr.substring(0, 30)}..."`);
+      console.warn("[Obsidian Voice Highlighter] Parágrafo não pôde ser localizado no documento.");
     }
-  }
-};
-
-// src/tts/pipeline-service.ts
-var fs3 = __toESM(require("fs"));
-var os = __toESM(require("os"));
-var path2 = __toESM(require("path"));
-var import_obsidian3 = require("obsidian");
-
-// src/tts/circuit-breaker.ts
-var CircuitBreaker = class {
-  constructor(failureThreshold = 3, cooldownMs = 6e4) {
-    this.failureThreshold = failureThreshold;
-    this.cooldownMs = cooldownMs;
-    this.failures = 0;
-    this.openedAt = 0;
-    this.state = "closed";
-  }
-  getState() {
-    if (this.state === "open" && Date.now() - this.openedAt >= this.cooldownMs) {
-      this.state = "half-open";
-    }
-    return this.state;
-  }
-  canExecute() {
-    return this.getState() !== "open";
-  }
-  recordSuccess() {
-    this.failures = 0;
-    this.state = "closed";
-    this.openedAt = 0;
-  }
-  recordFailure() {
-    this.failures += 1;
-    if (this.failures >= this.failureThreshold) {
-      this.state = "open";
-      this.openedAt = Date.now();
-    }
-  }
-};
-
-// src/tts/pipeline-service.ts
-var TTSPipelineService = class {
-  constructor(vault, queue, engine, logger, getSpeed) {
-    this.vault = vault;
-    this.queue = queue;
-    this.engine = engine;
-    this.logger = logger;
-    this.getSpeed = getSpeed;
-    this.nextChunkPromise = null;
-    this.session = null;
-    this.breaker = new CircuitBreaker();
-  }
-  async validate() {
-    return this.engine.validate();
-  }
-  async start() {
-    await this.stop();
-    this.session = this.engine.createSession();
-    this.logger.logEngineEvent(this.engine.id, "session", "warming");
-    await this.session.warmup();
-    this.logger.logEngineEvent(this.engine.id, "session", "ready");
-    this.nextChunkPromise = this.prefetchNextChunk();
-  }
-  async stop() {
-    if (this.session) {
-      this.session.abort();
-      await this.session.dispose();
-      this.session = null;
-    }
-    await this.cleanupPrefetchedChunk();
-  }
-  async getNextChunk() {
-    if (!this.nextChunkPromise) this.nextChunkPromise = this.prefetchNextChunk();
-    const currentPromise = this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    return currentPromise;
-  }
-  prefetch() {
-    this.nextChunkPromise = this.prefetchNextChunk();
-  }
-  holdChunk(chunk) {
-    this.nextChunkPromise = Promise.resolve(chunk);
-  }
-  async resetPrefetch() {
-    await this.cleanupPrefetchedChunk();
-  }
-  async runTest(text, outputFile, speed) {
-    if (!this.session) this.session = this.engine.createSession();
-    await this.session.warmup();
-    return this.generate(text, outputFile, speed);
-  }
-  async prefetchNextChunk() {
-    const chunk = this.queue.getNextChunk();
-    if (chunk === null) return null;
-    const cacheDir = path2.join(os.tmpdir(), "ObsidianVoiceCache");
-    if (!fs3.existsSync(cacheDir)) fs3.mkdirSync(cacheDir, { recursive: true });
-    const filename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
-    const absolutePath = path2.join(cacheDir, filename);
-    try {
-      const metadata = await this.generate(chunk.text, absolutePath, this.getSpeed());
-      return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
-    } catch (error) {
-      const message = (error == null ? void 0 : error.message) || String(error);
-      this.logger.logEngineEvent(this.engine.id, "generation", message);
-      return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message };
-    }
-  }
-  async generate(text, outputFile, speed) {
-    if (!this.breaker.canExecute()) throw new Error(`TTS engine circuit is ${this.breaker.getState()}. Try again later.`);
-    if (!this.session) this.session = this.engine.createSession();
-    try {
-      const result = await this.session.generate({ text, outputFile, speed });
-      this.breaker.recordSuccess();
-      this.logger.logGeneration(result);
-      return result;
-    } catch (error) {
-      this.breaker.recordFailure();
-      throw error;
-    }
-  }
-  toResourcePath(absolutePath) {
-    if (this.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
-      const basePath = this.vault.adapter.getBasePath();
-      const relativePath = path2.relative(basePath, absolutePath);
-      return this.vault.adapter.getResourcePath(relativePath);
-    }
-    return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
-  }
-  async cleanupPrefetchedChunk() {
-    if (!this.nextChunkPromise) return;
-    const chunk = await this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    if ((chunk == null ? void 0 : chunk.absolutePath) && fs3.existsSync(chunk.absolutePath)) fs3.unlinkSync(chunk.absolutePath);
-  }
-};
-
-// src/tts/engine/piper-engine.ts
-var fs4 = __toESM(require("fs"));
-var path3 = __toESM(require("path"));
-
-// src/tts/runtime/subprocess-runtime.ts
-var import_child_process = require("child_process");
-var SubprocessRuntime = class {
-  constructor(logger) {
-    this.logger = logger;
-    this.child = null;
-  }
-  run(request) {
-    this.logger.logDebug(`[Runtime:subprocess] Executando comando: ${request.command}`);
-    return new Promise((resolve5, reject) => {
-      const child = (0, import_child_process.exec)(request.command, request.cwd ? { cwd: request.cwd } : {}, (error, _stdout, stderr) => {
-        this.child = null;
-        if (error) {
-          this.logger.logError(stderr || error.message);
-          this.logger.logExit(error.code || 1);
-          reject(new Error(error.message));
-          return;
-        }
-        this.logger.logExit(0);
-        resolve5();
-      });
-      this.child = child;
-      if (child.stdin) {
-        child.stdin.on("error", (e) => this.logger.logError(`Erro no stdin do subprocesso TTS: ${e.message}`));
-        child.stdin.write(request.input, "utf-8");
-        child.stdin.end();
-      }
-    });
-  }
-  abort() {
-    if (!this.child) return;
-    this.child.kill();
-    this.child = null;
-  }
-};
-
-// src/tts/engine/piper-engine.ts
-var PiperEngine = class {
-  constructor(options) {
-    this.options = options;
-    this.id = "piper";
-    this.name = "Piper";
-    this.version = "1";
-    this.health = { state: "degraded" };
-  }
-  getCapabilities() {
-    return {
-      outputModes: ["wav-file"],
-      supportsRealtime: false,
-      supportsVoiceSwitch: true,
-      supportsSpeedControl: true
-    };
-  }
-  getHealth() {
-    return { ...this.health };
-  }
-  async validate() {
-    const { piperPath } = this.options;
-    const resolvedModel = this.resolveModelPath();
-    const isPiperCommand = this.isCommand(piperPath);
-    const piperExists = !!piperPath && (isPiperCommand || fs4.existsSync(this.resolvePiperPath()));
-    const modelExists = !!resolvedModel && fs4.existsSync(resolvedModel);
-    if (!piperExists || !modelExists) {
-      const error = "Piper executable or voice model is missing.";
-      this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
-      return { ok: false, error };
-    }
-    this.health = { state: "healthy", lastValidation: Date.now() };
-    return { ok: true };
-  }
-  createSession() {
-    return new PiperEngineSession(this, new SubprocessRuntime(this.options.logger));
-  }
-  buildCommand(outputFile, speed) {
-    const resolvedPiper = this.resolvePiperPath();
-    const resolvedModel = this.resolveModelPath();
-    const lengthScale = (1 / speed).toFixed(4);
-    return {
-      command: `"${resolvedPiper}" --model "${resolvedModel}" --length_scale ${lengthScale} --output_file "${outputFile}"`,
-      cwd: this.options.basePath
-    };
-  }
-  resolvePiperPath() {
-    const { piperPath, basePath } = this.options;
-    if (this.isCommand(piperPath) || path3.isAbsolute(piperPath) || !basePath) return piperPath;
-    return path3.resolve(basePath, piperPath);
-  }
-  resolveModelPath() {
-    const { piperPath, selectedVoice, basePath } = this.options;
-    if (!selectedVoice || !piperPath) return "";
-    const isPiperCommand = this.isCommand(piperPath);
-    let modelDir = isPiperCommand ? "" : path3.dirname(this.resolvePiperPath());
-    if (modelDir && !path3.isAbsolute(modelDir) && basePath) modelDir = path3.resolve(basePath, modelDir);
-    const voiceFile = selectedVoice.endsWith(".onnx") ? selectedVoice : `${selectedVoice}.onnx`;
-    if (!modelDir) return voiceFile;
-    const directPath = path3.join(modelDir, voiceFile);
-    if (fs4.existsSync(directPath)) return directPath;
-    let currentDir = modelDir;
-    for (let i = 0; i < 3; i++) {
-      const parentDir = path3.dirname(currentDir);
-      if (parentDir === currentDir) break;
-      const candidatePath = path3.join(parentDir, voiceFile);
-      if (fs4.existsSync(candidatePath)) {
-        return candidatePath;
-      }
-      currentDir = parentDir;
-    }
-    return directPath;
-  }
-  isCommand(piperPath) {
-    return !piperPath.includes("/") && !piperPath.includes("\\");
-  }
-};
-var PiperEngineSession = class {
-  constructor(engine, runtime) {
-    this.engine = engine;
-    this.runtime = runtime;
-  }
-  async warmup() {
-  }
-  async generate(request) {
-    const startedAt = Date.now();
-    const { command, cwd } = this.engine.buildCommand(request.outputFile, request.speed);
-    await this.runtime.run({ command, cwd, input: request.text });
-    return {
-      filePath: request.outputFile,
-      generationMs: Date.now() - startedAt,
-      engineId: this.engine.id,
-      cached: false
-    };
-  }
-  abort() {
-    this.runtime.abort();
-  }
-  dispose() {
-    this.abort();
-  }
-};
-
-// src/tts/engine/kokoro-engine.ts
-var fs5 = __toESM(require("fs"));
-var path4 = __toESM(require("path"));
-var KokoroEngine = class {
-  constructor(options) {
-    this.options = options;
-    this.id = "kokoro";
-    this.name = "Kokoro";
-    this.version = "1";
-    this.health = { state: "degraded" };
-  }
-  getCapabilities() {
-    return {
-      outputModes: ["wav-file"],
-      supportsRealtime: false,
-      supportsVoiceSwitch: true,
-      supportsSpeedControl: true
-    };
-  }
-  getHealth() {
-    return { ...this.health };
-  }
-  async validate() {
-    const { kokoroPath, selectedVoice } = this.options;
-    const kokoroExists = !!kokoroPath && fs5.existsSync(this.resolveKokoroPath());
-    let modelExists = false;
-    if (selectedVoice) {
-      const voicePath = this.resolveVoicePath(selectedVoice);
-      modelExists = fs5.existsSync(voicePath);
-    }
-    if (!kokoroExists || !modelExists) {
-      const error = "Kokoro executable or voice model is missing.";
-      this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
-      return { ok: false, error };
-    }
-    this.health = { state: "healthy", lastValidation: Date.now() };
-    return { ok: true };
-  }
-  createSession() {
-    return new KokoroEngineSession(this, new SubprocessRuntime(this.options.logger));
-  }
-  buildCommand(text, voice, outputFile, speed) {
-    const resolvedKokoro = this.resolveKokoroPath();
-    return {
-      command: `"${resolvedKokoro}" --text "${text}" --voice "${voice}" --speed ${speed} --output "${outputFile}"`,
-      cwd: this.options.basePath
-    };
-  }
-  resolveKokoroPath() {
-    const { kokoroPath, basePath } = this.options;
-    if (path4.isAbsolute(kokoroPath) || !basePath) return kokoroPath;
-    return path4.resolve(basePath, kokoroPath);
-  }
-  resolveVoicePath(voice) {
-    const { kokoroPath, basePath } = this.options;
-    if (!voice || !kokoroPath) return "";
-    const dir = path4.dirname(this.resolveKokoroPath());
-    return path4.join(dir, "voices", voice);
-  }
-  getSelectedVoice() {
-    return this.options.selectedVoice;
-  }
-};
-var KokoroEngineSession = class {
-  constructor(engine, runtime) {
-    this.engine = engine;
-    this.runtime = runtime;
-  }
-  async warmup() {
-  }
-  async generate(request) {
-    const startedAt = Date.now();
-    const { command, cwd } = this.engine.buildCommand(
-      request.text,
-      this.engine.getSelectedVoice(),
-      request.outputFile,
-      request.speed
-    );
-    await this.runtime.run({ command, cwd, input: request.text });
-    return {
-      filePath: request.outputFile,
-      generationMs: Date.now() - startedAt,
-      engineId: this.engine.id,
-      cached: false
-    };
-  }
-  abort() {
-    this.runtime.abort();
-  }
-  dispose() {
-    this.abort();
-  }
-};
-
-// src/tts/engine/engine-factory.ts
-var TTSEngineFactory = class {
-  static create(options) {
-    if (options.ttsEngine === "kokoro") {
-      const kokoroOptions = {
-        kokoroPath: options.piperPath,
-        selectedVoice: options.selectedKokoroVoice,
-        basePath: options.basePath,
-        logger: options.logger
-      };
-      return new KokoroEngine(kokoroOptions);
-    }
-    const piperOptions = {
-      piperPath: options.piperPath,
-      selectedVoice: options.selectedVoice,
-      basePath: options.basePath,
-      logger: options.logger
-    };
-    return new PiperEngine(piperOptions);
-  }
-};
-
-// src/services/model/model-management-service.ts
-var fs10 = __toESM(require("fs/promises"));
-var path8 = __toESM(require("path"));
-var os2 = __toESM(require("os"));
-var import_child_process3 = require("child_process");
-var import_util = require("util");
-var import_obsidian5 = require("obsidian");
-
-// src/services/model/manifest-service.ts
-var import_obsidian4 = require("obsidian");
-var crypto = __toESM(require("crypto"));
-
-// src/services/model/manifest-models.ts
-var FALLBACK_MANIFEST = {
-  version: "1.0.0",
-  models: {
-    piper: {
-      platforms: {
-        "windows-x64": {
-          url: "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip",
-          sha256: "f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea"
-        },
-        "macos-arm64": {
-          url: "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_aarch64.tar.gz",
-          sha256: "6b1eb03b3735946cb35216e063e7eebcc33a6bbf5dd96ec0217959bf1cdcb0cc"
-        },
-        "macos-x64": {
-          url: "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_x64.tar.gz",
-          sha256: "ced85c0a3df13945b1e623b878a48fdc2854d5c485b4b67f62857cf551deaf8b"
-        },
-        "linux-x64": {
-          url: "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz",
-          sha256: "a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992"
-        },
-        "linux-arm64": {
-          url: "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_aarch64.tar.gz",
-          sha256: "fea0fd2d87c54dbc7078d0f878289f404bd4d6eea6e7444a77835d1537ab88eb"
-        }
-      }
-    },
-    kokoro: {
-      platforms: {
-        "windows-x64": {
-          url: "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-windows-x64.zip",
-          sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-        },
-        "macos-arm64": {
-          url: "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-macos-arm64.zip",
-          sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-        },
-        "linux-x64": {
-          url: "https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-linux-x64.zip",
-          sha256: "0000000000000000000000000000000000000000000000000000000000000000"
-        }
-      }
-    }
-  }
-};
-
-// src/services/model/manifest-service.ts
-var TEST_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Z3VS5JJcds3xHn/ygWep4
-PAtEsHnXMSBMzMfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
-FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
-FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
-FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
-FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
-FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
-FBBGQQIDAQAB
------END PUBLIC KEY-----`;
-var SUPPORTED_PLATFORMS = [
-  "windows-x64",
-  "macos-arm64",
-  "macos-x64",
-  "linux-x64",
-  "linux-arm64"
-];
-function isPlatformEntry(value) {
-  if (typeof value !== "object" || value === null) return false;
-  const obj = value;
-  return typeof obj.url === "string" && typeof obj.sha256 === "string";
-}
-function isModelManifestEntry(value) {
-  if (typeof value !== "object" || value === null) return false;
-  const obj = value;
-  if (typeof obj.platforms !== "object" || obj.platforms === null) return true;
-  const platforms = obj.platforms;
-  return SUPPORTED_PLATFORMS.every((p) => !(p in platforms) || isPlatformEntry(platforms[p]));
-}
-function isModelManifest(value) {
-  if (typeof value !== "object" || value === null) return false;
-  const obj = value;
-  if (typeof obj.version !== "string") return false;
-  if (typeof obj.models !== "object" || obj.models === null) return false;
-  const models = obj.models;
-  return Object.values(models).every((m) => isModelManifestEntry(m));
-}
-function verifySignature(content, signatureBase64) {
-  try {
-    const signature = Buffer.from(signatureBase64.trim(), "base64");
-    return crypto.verify(
-      "RSA-SHA256",
-      Buffer.from(content, "utf-8"),
-      TEST_PUBLIC_KEY,
-      signature
-    );
-  } catch (err) {
-    console.error("[ManifestService] Erro ao executar verifica\xE7\xE3o criptogr\xE1fica:", err);
-    return false;
   }
 }
-var ManifestService = class {
-  constructor(manifestUrl) {
-    this.manifestUrl = manifestUrl;
-  }
-  async fetchManifest() {
-    try {
-      const sigUrl = this.manifestUrl.replace(/\.json$/, ".sig");
-      const [manifestResponse, sigResponse] = await Promise.all([
-        (0, import_obsidian4.requestUrl)({ url: this.manifestUrl, method: "GET", contentType: "application/json" }),
-        (0, import_obsidian4.requestUrl)({ url: sigUrl, method: "GET" })
-      ]);
-      const rawText = manifestResponse.text;
-      const signatureBase64 = sigResponse.text;
-      if (!verifySignature(rawText, signatureBase64)) {
-        console.error("[ManifestService] SEGURAN\xC7A: Assinatura do manifesto remoto inv\xE1lida. Abortando uso remoto. Usando fallback local.");
-        return FALLBACK_MANIFEST;
-      }
-      const parsed = JSON.parse(rawText);
-      if (!isModelManifest(parsed)) {
-        console.warn("[ManifestService] Manifesto remoto com estrutura inv\xE1lida. Usando fallback local.");
-        return FALLBACK_MANIFEST;
-      }
-      console.log("[ManifestService] Manifesto remoto verificado e obtido com sucesso.");
-      return parsed;
-    } catch (err) {
-      console.warn("[ManifestService] Falha ao baixar manifesto remoto. Usando fallback local.", err);
-      return FALLBACK_MANIFEST;
-    }
-  }
+```
+
+src/i18n.ts
+```
+import { App } from "obsidian";
+import en = require("./locales/en.json");
+import es = require("./locales/es.json");
+import pt = require("./locales/pt.json");
+
+export type LanguageSetting = "auto" | "pt" | "en" | "es";
+export type SupportedLanguage = Exclude<LanguageSetting, "auto">;
+export type TranslationVars = Record<string, string | number | boolean | null | undefined>;
+
+type TranslationLeaf = string | TranslationTree;
+type TranslationTree = { [key: string]: TranslationLeaf };
+type LanguageChangedCallback = (language: SupportedLanguage, setting: LanguageSetting) => void;
+
+const fallbackLanguage: SupportedLanguage = "en";
+const supportedLanguages: SupportedLanguage[] = ["pt", "en", "es"];
+
+const dictionaries: Record<SupportedLanguage, TranslationTree> = {
+  en: en as TranslationTree,
+  pt: pt as TranslationTree,
+  es: es as TranslationTree,
 };
 
-// src/services/model/resource-guard.ts
-var import_child_process2 = require("child_process");
-var fs6 = __toESM(require("fs"));
-var TIMEOUT_MS = 3e3;
-function execWithTimeout(command, cwd) {
-  return new Promise((resolve5, reject) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => {
-      controller.abort();
-      reject(new Error(`Comando excedeu o timeout de ${TIMEOUT_MS}ms: ${command}`));
-    }, TIMEOUT_MS);
-    (0, import_child_process2.exec)(command, { cwd, signal: controller.signal }, (error, stdout) => {
-      clearTimeout(timer);
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve5(stdout.trim());
-    });
+let appRef: App | null = null;
+let configuredLanguage: LanguageSetting = "auto";
+let activeLanguage: SupportedLanguage = fallbackLanguage;
+const listeners = new Set<LanguageChangedCallback>();
+const cache = new Map<string, string>();
+const warnedMissingKeys = new Set<string>();
+
+export function initializeI18n(app: App, language: LanguageSetting) {
+  appRef = app;
+  configuredLanguage = normalizeLanguageSetting(language);
+  activeLanguage = resolveActiveLanguage(configuredLanguage);
+  cache.clear();
+}
+
+export function t(key: string, vars?: TranslationVars): string {
+  const cacheKey = `${activeLanguage}:${key}`;
+  let template = cache.get(cacheKey);
+
+  if (!template) {
+    template = resolveTranslation(key);
+    if (typeof template !== "string") return key;
+    cache.set(cacheKey, template);
+  }
+
+  return interpolate(template, vars);
+}
+
+export function setLanguage(language: LanguageSetting) {
+  const nextConfiguredLanguage = normalizeLanguageSetting(language);
+  const nextActiveLanguage = resolveActiveLanguage(nextConfiguredLanguage);
+  const changed =
+    nextConfiguredLanguage !== configuredLanguage ||
+    nextActiveLanguage !== activeLanguage;
+
+  configuredLanguage = nextConfiguredLanguage;
+  activeLanguage = nextActiveLanguage;
+
+  if (!changed) return;
+
+  cache.clear();
+  warnedMissingKeys.clear();
+  for (const listener of listeners) {
+    listener(activeLanguage, configuredLanguage);
+  }
+}
+
+export function getLanguage(): SupportedLanguage {
+  return activeLanguage;
+}
+
+export function getLanguageSetting(): LanguageSetting {
+  return configuredLanguage;
+}
+
+export function onLanguageChanged(callback: LanguageChangedCallback): () => void {
+  listeners.add(callback);
+  return () => offLanguageChanged(callback);
+}
+
+export function offLanguageChanged(callback: LanguageChangedCallback) {
+  listeners.delete(callback);
+}
+
+function normalizeLanguageSetting(language: unknown): LanguageSetting {
+  return language === "pt" || language === "en" || language === "es" ? language : "auto";
+}
+
+function resolveActiveLanguage(language: LanguageSetting): SupportedLanguage {
+  if (language !== "auto") return language;
+
+  const locale = getObsidianLocale().toLowerCase();
+  const [baseLanguage] = locale.split("-");
+  return isSupportedLanguage(baseLanguage) ? baseLanguage : fallbackLanguage;
+}
+
+function getObsidianLocale(): string {
+  const appWithLocale = appRef as (App & { getLocale?: () => string }) | null;
+  const appLocale = appWithLocale?.getLocale?.();
+  if (appLocale) return appLocale;
+
+  const navigatorLocale = globalThis.navigator?.language;
+  return navigatorLocale || fallbackLanguage;
+}
+
+function isSupportedLanguage(language: string): language is SupportedLanguage {
+  return supportedLanguages.includes(language as SupportedLanguage);
+}
+
+function resolveTranslation(key: string): string {
+  const translated = lookup(dictionaries[activeLanguage], key);
+  if (typeof translated === "string") return translated;
+
+  const fallback = lookup(dictionaries[fallbackLanguage], key);
+  if (typeof fallback === "string") {
+    warnMissingTranslation(key);
+    return fallback;
+  }
+
+  warnMissingTranslation(key);
+  return key;
+}
+
+function lookup(dictionary: TranslationTree, key: string): TranslationLeaf | undefined {
+  return key.split(".").reduce<TranslationLeaf | undefined>((current, part) => {
+    if (!current || typeof current === "string") return undefined;
+    return current[part];
+  }, dictionary);
+}
+
+function interpolate(template: unknown, vars?: TranslationVars): string {
+  if (typeof template !== "string") return "";
+  if (!vars) return template;
+  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_match, name: string) => {
+    const value = vars[name];
+    return value === null || value === undefined ? "" : String(value);
   });
 }
-async function getDiskFreeBytes(vaultPath) {
-  const safeCwd = await fs6.promises.access(vaultPath).then(() => vaultPath).catch(() => process.cwd()) || process.cwd();
-  if (process.platform === "win32") {
-    const output2 = await execWithTimeout(
-      'powershell -Command "(Get-Item -Path .).PSDrive.Free"',
-      safeCwd
+
+function warnMissingTranslation(key: string) {
+  const warningKey = `${activeLanguage}:${key}`;
+  if (warnedMissingKeys.has(warningKey)) return;
+
+  warnedMissingKeys.add(warningKey);
+  const missingTranslationTemplate =
+    lookup(dictionaries[fallbackLanguage], "errors.missing_translation") as string | undefined;
+  console.warn(
+    interpolate(missingTranslationTemplate || "Missing translation: {{key}} ({{language}})", {
+      key,
+      language: activeLanguage,
+    })
+  );
+}
+```
+
+src/logger.ts
+```
+// Responsabilidades do Script
+//
+// 1. Criar e gerenciar a escrita de registros de depuração no arquivo voice_debug.log.
+// 2. Formatar e gravar tentativas de execução do motor Piper.
+// 3. Registrar erros e códigos de encerramento do processo do motor Piper.
+
+import * as fs from "fs";
+import * as path from "path";
+import { GenerationResult } from "./tts/types";
+
+export class VoiceLogger {
+  private logPath: string;
+
+  constructor(vaultPath: string) {
+    this.logPath = path.resolve(vaultPath, "voice_debug.log");
+  }
+
+  private writeLog(level: string, message: string) {
+    const timestamp = new Date().toISOString();
+    const logLine = `[${timestamp}] [${level}] ${message}\n`;
+    try {
+      fs.appendFileSync(this.logPath, logLine, "utf-8");
+    } catch (e) {
+      console.error("[Obsidian Voice] Falha ao gravar log:", e);
+    }
+  }
+
+  logTentativa(texto: string, comando: string) {
+    const trecho = texto.length > 60 ? texto.substring(0, 60) + "..." : texto;
+    this.writeLog("INFO", `Tentativa de execução - Comando: ${comando} | Texto: "${trecho}"`);
+  }
+
+  logError(message: string) {
+    this.writeLog("ERROR", `Erro do processo: ${message}`);
+  }
+
+  logExit(code: number | string) {
+    this.writeLog("INFO", `Processo finalizado com código: ${code}`);
+  }
+
+  logDebug(message: string) {
+    this.writeLog("DEBUG", message);
+  }
+
+  logEngineEvent(engineId: string, phase: string, message: string) {
+    this.writeLog("INFO", `Engine=${engineId} | Fase=${phase} | ${message}`);
+  }
+
+  logGeneration(result: GenerationResult) {
+    this.writeLog(
+      "INFO",
+      `Engine=${result.engineId} | geração=${result.generationMs}ms | arquivo=${result.filePath} | cache=${result.cached}`
     );
-    const bytes = parseInt(output2, 10);
-    if (isNaN(bytes)) throw new Error(`Sa\xEDda inesperada do PowerShell: "${output2}"`);
-    return bytes;
   }
-  const output = await execWithTimeout("df -k .", safeCwd);
-  const lines = output.split("\n");
-  const dataLine = lines[1];
-  if (!dataLine) throw new Error(`Sa\xEDda inesperada do df: "${output}"`);
-  const parts = dataLine.trim().split(/\s+/);
-  const availableKb = parseInt(parts[3], 10);
-  if (isNaN(availableKb)) throw new Error(`N\xE3o foi poss\xEDvel parsear espa\xE7o dispon\xEDvel: "${dataLine}"`);
-  return availableKb * 1024;
 }
-var ResourceGuard = class {
-  constructor(vaultPath) {
-    this.vaultPath = vaultPath;
-  }
-  async checkDiskSpace(requiredBytes) {
-    const freeBytes = await getDiskFreeBytes(this.vaultPath);
-    console.log(`[ResourceGuard] Espa\xE7o livre: ${freeBytes} bytes | Necess\xE1rio: ${requiredBytes} bytes`);
-    return freeBytes >= requiredBytes;
-  }
-  checkPlatformAndArch(supportedOS, supportedArch) {
-    const osOk = supportedOS.includes(process.platform);
-    const archOk = supportedArch.includes(process.arch);
-    console.log(`[ResourceGuard] Plataforma: ${process.platform} (ok=${osOk}) | Arch: ${process.arch} (ok=${archOk})`);
-    return osOk && archOk;
-  }
-  async validateEnvironment(modelId, requiredBytes) {
-    const platformOk = this.checkPlatformAndArch(
-      ["win32", "darwin", "linux"],
-      ["x64", "arm64"]
-    );
-    if (!platformOk) {
-      const msg = `Modelo "${modelId}": plataforma (${process.platform}/${process.arch}) n\xE3o suportada.`;
-      console.error(`[ResourceGuard] ${msg}`);
-      return { success: false, error: msg };
-    }
-    try {
-      const diskOk = await this.checkDiskSpace(requiredBytes);
-      if (!diskOk) {
-        const msg = `Modelo "${modelId}": espa\xE7o em disco insuficiente. Necess\xE1rio: ${requiredBytes} bytes.`;
-        console.error(`[ResourceGuard] ${msg}`);
-        return { success: false, error: msg };
-      }
-    } catch (err) {
-      const msg = `Modelo "${modelId}": falha na verifica\xE7\xE3o de disco \u2014 ${err instanceof Error ? err.message : String(err)}`;
-      console.error(`[ResourceGuard] ${msg}`);
-      return { success: false, error: msg };
-    }
-    console.log(`[ResourceGuard] Ambiente validado com sucesso para o modelo "${modelId}".`);
-    return { success: true };
-  }
-};
+```
 
-// src/services/model/download-manager.ts
-var https = __toESM(require("https"));
-var http = __toESM(require("http"));
-var fs7 = __toESM(require("fs"));
-var crypto2 = __toESM(require("crypto"));
-var path5 = __toESM(require("path"));
-var import_events = require("events");
-var MAX_REDIRECTS = 5;
-var MAX_RETRIES = 3;
-var BASE_RETRY_DELAY_MS = 1e3;
-function sleep(ms) {
-  return new Promise((resolve5) => setTimeout(resolve5, ms));
-}
-function getFileSize(filePath) {
-  try {
-    return fs7.statSync(filePath).size;
-  } catch (e) {
-    return 0;
-  }
-}
-function isAbortError(err) {
-  return err instanceof Error && err.name === "AbortError";
-}
-function resolveResponse(url, rangeStart, signal, redirectsLeft) {
-  return new Promise((resolve5, reject) => {
-    let settled = false;
-    const parsed = new URL(url);
-    const lib = parsed.protocol === "https:" ? https : http;
-    const headers = {};
-    if (rangeStart > 0) {
-      headers["Range"] = `bytes=${rangeStart}-`;
-    }
-    const req = lib.get(
-      {
-        hostname: parsed.hostname,
-        port: parsed.port || void 0,
-        path: parsed.pathname + parsed.search,
-        headers
-      },
-      (res) => {
-        const { statusCode, headers: resHeaders } = res;
-        const isRedirect = [301, 302, 307, 308].includes(statusCode);
-        if (isRedirect && resHeaders.location) {
-          res.resume();
-          if (redirectsLeft <= 0) {
-            reject(new Error("Limite m\xE1ximo de redirecionamentos HTTP atingido."));
-            return;
-          }
-          const redirectUrl = new URL(resHeaders.location, url).href;
-          resolveResponse(redirectUrl, rangeStart, signal, redirectsLeft - 1).then(resolve5).catch(reject);
-          return;
-        }
-        resolve5(res);
-      }
-    );
-    req.on("error", (err) => {
-      if (!settled) reject(err);
-    });
-    if (signal) {
-      const onAbort = () => {
-        settled = true;
-        req.destroy();
-        const err = new Error("Download cancelado");
-        err.name = "AbortError";
-        reject(err);
-      };
-      signal.addEventListener("abort", onAbort, { once: true });
-    }
-  });
-}
-async function attemptDownload(url, partPath, signal, onProgress) {
-  var _a;
-  await fs7.promises.mkdir(path5.dirname(partPath), { recursive: true });
-  const existingBytes = getFileSize(partPath);
-  const response = await resolveResponse(url, existingBytes, signal, MAX_REDIRECTS);
-  const { statusCode, headers } = response;
-  const isResume = statusCode === 206 && existingBytes > 0;
-  if (!isResume && existingBytes > 0) {
-    await fs7.promises.unlink(partPath).catch(() => {
-    });
-  }
-  const writeStream = fs7.createWriteStream(partPath, { flags: isResume ? "a" : "w" });
-  const contentLength = parseInt((_a = headers["content-length"]) != null ? _a : "0", 10);
-  const totalBytes = isResume ? existingBytes + contentLength : contentLength;
-  let downloadedBytes = isResume ? existingBytes : 0;
-  await new Promise((resolve5, reject) => {
-    response.on("data", (chunk) => {
-      downloadedBytes += chunk.length;
-      const percent = totalBytes > 0 ? Math.round(downloadedBytes / totalBytes * 100) : 0;
-      onProgress({ bytesDownloaded: downloadedBytes, bytesTotal: totalBytes, percent });
-    });
-    response.on("error", (err) => {
-      writeStream.destroy();
-      reject(err);
-    });
-    writeStream.on("error", reject);
-    writeStream.on("finish", resolve5);
-    response.pipe(writeStream);
-  });
-}
-function computeSha256(filePath) {
-  return new Promise((resolve5, reject) => {
-    const hash = crypto2.createHash("sha256");
-    const stream = fs7.createReadStream(filePath);
-    stream.on("data", (chunk) => hash.update(Buffer.from(chunk)));
-    stream.on("end", () => resolve5(hash.digest("hex")));
-    stream.on("error", reject);
-  });
-}
-function computeMd5(filePath) {
-  return new Promise((resolve5, reject) => {
-    const hash = crypto2.createHash("md5");
-    const stream = fs7.createReadStream(filePath);
-    stream.on("data", (chunk) => hash.update(Buffer.from(chunk)));
-    stream.on("end", () => resolve5(hash.digest("hex")));
-    stream.on("error", reject);
-  });
-}
-var DownloadManager = class extends import_events.EventEmitter {
-  async download(options) {
-    const { url, destPath, expectedSha256, expectedMd5, signal } = options;
-    const partPath = `${destPath}.part`;
-    const onProgress = (progress) => this.emit("progress", progress);
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      try {
-        if (signal == null ? void 0 : signal.aborted) {
-          const err = new Error("Download cancelado antes de iniciar");
-          err.name = "AbortError";
-          throw err;
-        }
-        await attemptDownload(url, partPath, signal, onProgress);
-        break;
-      } catch (err) {
-        if (isAbortError(err)) throw err;
-        if (attempt >= MAX_RETRIES - 1) throw err;
-        const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
-        console.warn(
-          `[DownloadManager] Tentativa ${attempt + 1}/${MAX_RETRIES} falhou. Retomando em ${delay}ms...`,
-          err
-        );
-        await sleep(delay);
-      }
-    }
-    if (expectedSha256) {
-      console.log("[DownloadManager] Download conclu\xEDdo. Verificando integridade SHA-256...");
-      const actualSha256 = await computeSha256(partPath);
-      if (actualSha256 !== expectedSha256) {
-        await fs7.promises.unlink(partPath).catch(() => {
-        });
-        throw new Error(
-          `[DownloadManager] Falha de integridade SHA-256: esperado ${expectedSha256}, obtido ${actualSha256}. Arquivo corrompido removido.`
-        );
-      }
-    }
-    if (expectedMd5) {
-      console.log("[DownloadManager] Download conclu\xEDdo. Verificando integridade MD5...");
-      const actualMd5 = await computeMd5(partPath);
-      if (actualMd5 !== expectedMd5) {
-        await fs7.promises.unlink(partPath).catch(() => {
-        });
-        throw new Error(
-          `[DownloadManager] Falha de integridade MD5: esperado ${expectedMd5}, obtido ${actualMd5}. Arquivo corrompido removido.`
-        );
-      }
-    }
-    await fs7.promises.rename(partPath, destPath);
-    console.log(`[DownloadManager] Arquivo verificado e salvo em: ${destPath}`);
-  }
-};
+src/main.ts
+```
+// Responsabilidades do Script
+//
+// 1. Registrar o plugin no ciclo de vida do Obsidian e conectar os módulos isolados.
+// 2. Executar o motor Piper TTS via subprocesso e gerenciar o pipeline de áudio com pre-fetching.
+// 3. Orquestrar a narração de notas Markdown limpas controlando o estado global do player.
+// 4. Gerenciar a coexistência entre scroll automático (Teleprompter) e rolagem manual do usuário.
 
-// src/services/model/archive-manager.ts
-var path6 = __toESM(require("path"));
-var fs8 = __toESM(require("fs"));
-var zlib = __toESM(require("zlib"));
-var tar = __toESM(require_tar_stream());
-var AdmZip = require_adm_zip();
-function isPathSafe(destFolder, filePathInArchive) {
-  const resolved = path6.resolve(destFolder, filePathInArchive);
-  const normalizedDest = path6.normalize(destFolder) + path6.sep;
-  const normalizedResolved = path6.normalize(resolved);
-  return normalizedResolved.startsWith(normalizedDest);
-}
-var ArchiveManager = class {
-  async extract(archivePath, destFolder) {
-    const ext = path6.extname(archivePath).toLowerCase();
-    if (ext === ".zip") {
-      await this.extractZip(archivePath, destFolder);
-    } else if (ext === ".gz" || ext === ".tgz") {
-      await this.extractTarGz(archivePath, destFolder);
-    } else {
-      throw new Error(`Formato de archive n\xE3o suportado: ${ext}`);
-    }
-  }
-  async extractZip(archivePath, destFolder) {
-    const zip = new AdmZip(archivePath);
-    const entries = zip.getEntries();
-    for (const entry of entries) {
-      if (entry.isDirectory) continue;
-      if (!isPathSafe(destFolder, entry.entryName)) {
-        throw new Error("Zip Slip detectado: tentativa de escrita fora do diret\xF3rio destino.");
-      }
-      const targetPath = path6.resolve(destFolder, entry.entryName);
-      fs8.mkdirSync(path6.dirname(targetPath), { recursive: true });
-      fs8.writeFileSync(targetPath, entry.getData());
-    }
-  }
-  async extractTarGz(archivePath, destFolder) {
-    return new Promise((resolve5, reject) => {
-      const extract2 = tar.extract();
-      const errors = [];
-      extract2.on("entry", (header, stream, next) => {
-        if (header.type === "directory") {
-          stream.resume();
-          next();
-          return;
-        }
-        const entryName = header.name;
-        if (!isPathSafe(destFolder, entryName)) {
-          stream.resume();
-          errors.push(`Zip Slip detectado: ${entryName}`);
-          next();
-          return;
-        }
-        const targetPath = path6.resolve(destFolder, entryName);
-        fs8.mkdirSync(path6.dirname(targetPath), { recursive: true });
-        const writeStream = fs8.createWriteStream(targetPath);
-        stream.pipe(writeStream);
-        writeStream.on("finish", next);
-        writeStream.on("error", (err) => {
-          errors.push(err.message);
-          next();
-        });
-      });
-      extract2.on("finish", () => {
-        if (errors.length > 0) {
-          reject(new Error(errors.join("; ")));
-        } else {
-          resolve5();
-        }
-      });
-      extract2.on("error", (err) => reject(err));
-      fs8.createReadStream(archivePath).pipe(zlib.createGunzip()).pipe(extract2);
-    });
-  }
-  isPathSafe(destFolder, filePathInArchive) {
-    return isPathSafe(destFolder, filePathInArchive);
-  }
-};
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { Editor, FileSystemAdapter, MarkdownView, Notice, Plugin, setIcon, TFile } from "obsidian";
+import { EditorView } from "@codemirror/view";
+import { ObsidianAudioPlayer } from "./audio-player";
+import { ObsidianVoiceQueue } from "./queue";
+import { ObsidianVoiceWidget } from "./player-widget";
+import { ObsidianVoiceSettingTab, ObsidianVoiceSettings, DEFAULT_SETTINGS } from "./settings";
+import { VoiceLogger } from "./logger";
+import { EditorHighlighter, highlightField } from "./editor-highlighter";
+import { initializeI18n, t } from "./i18n";
+import { TTSPipelineService, ChunkResult } from "./tts/pipeline-service";
+import { TTSEngineFactory } from "./tts/engine/engine-factory";
+import { ModelManagementService } from "./services/model/model-management-service";
 
-// src/services/model/staging-manager.ts
-var path7 = __toESM(require("path"));
-var fs9 = __toESM(require("fs/promises"));
-var StagingManager = class {
-  constructor(stagingRoot) {
-    this.stagingRoot = stagingRoot;
-  }
-  async prepareStaging(modelId) {
-    const stagingDir = path7.join(this.stagingRoot, ".staging", `${modelId}-temp`);
-    await fs9.mkdir(stagingDir, { recursive: true });
-    const entries = await fs9.readdir(stagingDir);
-    await Promise.all(
-      entries.map(
-        (entry) => fs9.rm(path7.join(stagingDir, entry), { recursive: true, force: true })
-      )
-    );
-    return stagingDir;
-  }
-  async promoteStaging(stagingDir, destDir) {
-    await fs9.rm(destDir, { recursive: true, force: true });
-    await fs9.rename(stagingDir, destDir);
-  }
-  async cleanupStaging(stagingDir) {
-    await fs9.rm(stagingDir, { recursive: true, force: true });
-  }
-};
+export type PlayerState = "aguardando" | "tocando" | "pausado";
 
-// src/services/model/install-state-machine.ts
-var VALID_TRANSITIONS = {
-  ["NOT_INSTALLED" /* NOT_INSTALLED */]: [
-    "FETCHING_MANIFEST" /* FETCHING_MANIFEST */
-  ],
-  ["FETCHING_MANIFEST" /* FETCHING_MANIFEST */]: [
-    "DOWNLOADING" /* DOWNLOADING */,
-    "FAILED" /* FAILED */
-  ],
-  ["DOWNLOADING" /* DOWNLOADING */]: [
-    "VERIFYING" /* VERIFYING */,
-    "FAILED" /* FAILED */
-  ],
-  ["VERIFYING" /* VERIFYING */]: [
-    "EXTRACTING" /* EXTRACTING */,
-    "FAILED" /* FAILED */
-  ],
-  ["EXTRACTING" /* EXTRACTING */]: [
-    "VALIDATING_RUNTIME" /* VALIDATING_RUNTIME */,
-    "FAILED" /* FAILED */
-  ],
-  ["VALIDATING_RUNTIME" /* VALIDATING_RUNTIME */]: [
-    "INSTALLING" /* INSTALLING */,
-    "FAILED" /* FAILED */
-  ],
-  ["INSTALLING" /* INSTALLING */]: [
-    "INSTALLED" /* INSTALLED */,
-    "FAILED" /* FAILED */
-  ],
-  ["INSTALLED" /* INSTALLED */]: [
-    "UPDATING" /* UPDATING */,
-    "REMOVING" /* REMOVING */
-  ],
-  ["FAILED" /* FAILED */]: [
-    "FETCHING_MANIFEST" /* FETCHING_MANIFEST */,
-    "REMOVING" /* REMOVING */
-  ],
-  ["REMOVING" /* REMOVING */]: [
-    "NOT_INSTALLED" /* NOT_INSTALLED */,
-    "FAILED" /* FAILED */
-  ],
-  ["UPDATING" /* UPDATING */]: [
-    "DOWNLOADING" /* DOWNLOADING */,
-    "FAILED" /* FAILED */
-  ],
-  ["ROLLBACK" /* ROLLBACK */]: [
-    "INSTALLED" /* INSTALLED */,
-    "FAILED" /* FAILED */
-  ]
-};
-var InstallStateMachine = class {
-  constructor(initialState = "NOT_INSTALLED" /* NOT_INSTALLED */) {
-    this.currentState = initialState;
-  }
-  get state() {
-    return this.currentState;
-  }
-  setOnStateChange(callback) {
-    this.onStateChange = callback;
-  }
-  transitionTo(nextState) {
-    var _a;
-    const allowed = VALID_TRANSITIONS[this.currentState];
-    if (!allowed || !allowed.includes(nextState)) {
-      throw new Error(
-        `Transi\xE7\xE3o inv\xE1lida: ${this.currentState} \u2192 ${nextState}`
-      );
-    }
-    this.currentState = nextState;
-    (_a = this.onStateChange) == null ? void 0 : _a.call(this, nextState);
-  }
-  isInstalling() {
-    return this.currentState !== "NOT_INSTALLED" /* NOT_INSTALLED */ && this.currentState !== "INSTALLED" /* INSTALLED */ && this.currentState !== "FAILED" /* FAILED */;
-  }
-};
+export default class ObsidianVoicePlugin extends Plugin {
+  settings!: ObsidianVoiceSettings;
+  modelManager!: ModelManagementService;
 
-// src/services/model/model-installer.ts
-var ModelInstaller = class {
-  constructor(stagingRoot, callbacks = {}) {
-    this.machines = /* @__PURE__ */ new Map();
-    this.archiveManager = new ArchiveManager();
-    this.stagingManager = new StagingManager(stagingRoot);
-    this.callbacks = callbacks;
-  }
-  getMachine(modelId) {
-    let machine = this.machines.get(modelId);
-    if (!machine) {
-      machine = new InstallStateMachine();
-      machine.setOnStateChange((state) => {
-        var _a, _b;
-        return (_b = (_a = this.callbacks).onStateChange) == null ? void 0 : _b.call(_a, modelId, state);
-      });
-      this.machines.set(modelId, machine);
-    }
-    return machine;
-  }
-  async install(modelId, archivePath, destDir, version) {
-    var _a, _b;
-    const machine = this.getMachine(modelId);
-    try {
-      machine.transitionTo("VERIFYING" /* VERIFYING */);
-      machine.transitionTo("EXTRACTING" /* EXTRACTING */);
-      const stagingDir = await this.stagingManager.prepareStaging(modelId);
-      machine.transitionTo("VALIDATING_RUNTIME" /* VALIDATING_RUNTIME */);
-      machine.transitionTo("INSTALLING" /* INSTALLING */);
-      await this.archiveManager.extract(archivePath, stagingDir);
-      await this.stagingManager.promoteStaging(stagingDir, destDir);
-      machine.transitionTo("INSTALLED" /* INSTALLED */);
-      const metadata = {
-        id: modelId,
-        activeVersion: version,
-        absolutePath: destDir,
-        installedAt: Date.now()
-      };
-      (_b = (_a = this.callbacks).onInstalled) == null ? void 0 : _b.call(_a, modelId, metadata);
-    } catch (err) {
-      machine.transitionTo("FAILED" /* FAILED */);
-      throw err;
-    }
-  }
-  async remove(modelId, destDir) {
-    var _a, _b;
-    const machine = this.getMachine(modelId);
-    if (machine.isInstalling()) {
-      throw new Error(`Remo\xE7\xE3o bloqueada: instala\xE7\xE3o em andamento para o modelo: ${modelId}`);
-    }
-    machine.transitionTo("REMOVING" /* REMOVING */);
-    try {
-      const { rm: rm2 } = await import("fs/promises");
-      await rm2(destDir, { recursive: true, force: true });
-      machine.transitionTo("NOT_INSTALLED" /* NOT_INSTALLED */);
-      (_b = (_a = this.callbacks).onRemoved) == null ? void 0 : _b.call(_a, modelId);
-    } catch (err) {
-      machine.transitionTo("FAILED" /* FAILED */);
-      throw err;
-    }
-  }
-};
+  private audioPlayer!: ObsidianAudioPlayer;
+  private queue = new ObsidianVoiceQueue();
+  private widget!: ObsidianVoiceWidget;
+  private logger!: VoiceLogger;
+  private highlighter!: EditorHighlighter;
+  private playerState: PlayerState = "aguardando";
+  private ttsPipeline!: TTSPipelineService;
+  private currentParagraphText = "";
+  private activeEditor: import("obsidian").Editor | null = null;
+  private lastNarratedPath: string | null = null;   // Rastreia a nota narrada por último
 
-// src/services/model/model-management-service.ts
-var MANIFEST_URL = "https://raw.githubusercontent.com/ericrocha001/obsidian_voice/main/manifest-models.json";
-var execAsync = (0, import_util.promisify)(import_child_process3.exec);
-var ModelManagementService = class {
-  constructor(basePath, settingsRef, logger) {
-    this.cachedManifest = null;
-    this.voicesCache = null;
-    this.basePath = basePath;
-    this.settingsRef = settingsRef;
-    this.logger = logger;
-    const binDir = path8.join(basePath, ".obsidian", "plugins", "obsidian-voice", "bin");
-    this.manifestService = new ManifestService(MANIFEST_URL);
-    this.resourceGuard = new ResourceGuard(basePath);
-    this.downloadManager = new DownloadManager();
-    const callbacks = {
-      onInstalled: (modelId, metadata) => {
-        this.settingsRef.models[modelId] = metadata;
-        this.settingsRef.saveSettings().catch(
-          (err) => console.error("[ModelManagementService] Erro ao salvar metadados:", err)
-        );
-      },
-      onRemoved: (modelId) => {
-        delete this.settingsRef.models[modelId];
-        this.settingsRef.saveSettings().catch(
-          (err) => console.error("[ModelManagementService] Erro ao salvar remo\xE7\xE3o:", err)
-        );
-      }
-    };
-    this.installer = new ModelInstaller(binDir, callbacks);
-  }
-  isInstalled(modelId) {
-    return !!this.settingsRef.models[modelId];
-  }
-  /**
-   * Resolve o caminho absoluto do executável do modelo.
-   * Prioriza o caminho salvo nos metadados de instalação gerenciada.
-   * Fallback para settings.piperPath (instalação manual legada).
-   */
-  resolveBinaryPath(modelId) {
-    var _a;
-    const metadata = this.settingsRef.models[modelId];
-    if (metadata == null ? void 0 : metadata.absolutePath) return metadata.absolutePath;
-    if (modelId === "piper") return (_a = this.settingsRef.getPiperPath()) != null ? _a : "";
-    return "";
-  }
-  isInstalling(modelId) {
-    return this.installer.getMachine(modelId).isInstalling();
-  }
-  async ensureManifest() {
-    if (!this.cachedManifest) {
-      this.cachedManifest = await this.manifestService.fetchManifest();
-    }
-    return this.cachedManifest;
-  }
-  async fetchPiperVoices() {
-    if (this.voicesCache) return;
-    const url = "https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json";
-    const res = await (0, import_obsidian5.requestUrl)({ url, method: "GET", contentType: "application/json" });
-    const parsed = JSON.parse(res.text);
-    this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
-  }
-  async install(modelId, onStateChange, onProgress) {
-    if (this.isInstalled(modelId) && !this.isInstalling(modelId)) {
-      throw new Error(`Modelo "${modelId}" j\xE1 est\xE1 instalado.`);
-    }
-    const catalogEntry = getModelEntry(modelId);
-    if (!catalogEntry) {
-      throw new Error(`Modelo "${modelId}" n\xE3o encontrado no cat\xE1logo.`);
-    }
-    const machine = this.installer.getMachine(modelId);
-    machine.setOnStateChange((state) => {
-      this.installer.getMachine(modelId).setOnStateChange(() => {
-      });
-      onStateChange(state);
-    });
-    machine.transitionTo("FETCHING_MANIFEST" /* FETCHING_MANIFEST */);
-    onStateChange("FETCHING_MANIFEST" /* FETCHING_MANIFEST */);
-    machine.setOnStateChange(onStateChange);
-    const manifest = await this.ensureManifest();
-    const modelEntry = manifest.models[modelId];
-    if (!modelEntry) {
-      machine.transitionTo("FAILED" /* FAILED */);
-      throw new Error(`Modelo "${modelId}" n\xE3o encontrado no manifesto.`);
-    }
-    const platformKey = this.resolvePlatformKey();
-    const platforms = modelEntry.platforms || {};
-    const platformEntry = platforms[platformKey];
-    if (!platformEntry) {
-      machine.transitionTo("FAILED" /* FAILED */);
-      throw new Error(`Plataforma "${platformKey}" n\xE3o suportada para o modelo "${modelId}".`);
-    }
-    const envCheck = await this.resourceGuard.validateEnvironment(
-      modelId,
-      catalogEntry.estimatedDiskMB * 1024 * 1024
-    );
-    if (!envCheck.success) {
-      machine.transitionTo("FAILED" /* FAILED */);
-      throw new Error(envCheck.error);
-    }
-    machine.transitionTo("DOWNLOADING" /* DOWNLOADING */);
-    onStateChange("DOWNLOADING" /* DOWNLOADING */);
-    const tmpDir = path8.join(os2.tmpdir(), "obsidian-voice-downloads");
-    const archiveName = `${modelId}-${platformKey}.zip`;
-    const archivePath = path8.join(tmpDir, archiveName);
-    if (onProgress) {
-      const onDownloadProgress = (progress) => onProgress(progress.percent);
-      this.downloadManager.on("progress", onDownloadProgress);
-    }
-    try {
-      await this.downloadManager.download({
-        url: platformEntry.url,
-        destPath: archivePath,
-        expectedSha256: platformEntry.sha256
-      });
-    } finally {
-      this.downloadManager.removeAllListeners("progress");
-    }
-    const destDir = path8.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", modelId);
-    await this.installer.install(modelId, archivePath, destDir, manifest.version);
-    await this.registerRuntime(modelId);
-  }
-  async installVoice(voice, onProgress) {
-    var _a;
-    const piperPathSetting = (_a = this.settingsRef.models.piper) == null ? void 0 : _a.absolutePath;
-    if (!piperPathSetting) {
-      throw new Error("Piper n\xE3o est\xE1 instalado.");
-    }
-    const destDir = path8.dirname(piperPathSetting);
-    const base = "https://huggingface.co/rhasspy/piper-voices/resolve/main/";
-    const tasks = [];
-    for (const [rel, meta] of Object.entries(voice.files)) {
-      const fileName = path8.basename(rel);
-      const dest = path8.join(destDir, fileName);
-      tasks.push({ url: base + rel, dest, md5: meta.md5_digest });
-    }
-    for (const task of tasks) {
-      await this.downloadManager.download({
-        url: task.url,
-        destPath: task.dest,
-        expectedMd5: task.md5
-      });
-      if (onProgress) onProgress(100);
-    }
-  }
-  async remove(modelId) {
-    if (!this.isInstalled(modelId)) {
-      throw new Error(`Modelo "${modelId}" n\xE3o est\xE1 instalado.`);
-    }
-    const destDir = path8.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", modelId);
-    await this.installer.remove(modelId, destDir);
-  }
-  resolvePlatformKey() {
-    const arch = process.arch === "arm64" ? "arm64" : "x64";
-    if (process.platform === "win32") return `windows-${arch}`;
-    if (process.platform === "darwin") return `macos-${arch}`;
-    return `linux-${arch}`;
-  }
-  async findPiperBinary(binDir) {
-    const candidates = process.platform === "win32" ? ["piper.exe"] : ["piper"];
-    async function walk(dir) {
-      let entries = [];
-      try {
-        entries = await fs10.readdir(dir, { withFileTypes: true });
-      } catch (e) {
-        return null;
-      }
-      for (const entry of entries) {
-        const full = path8.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          const found2 = await walk(full);
-          if (found2) return found2;
-        } else if (candidates.includes(entry.name)) {
-          return full;
-        }
-      }
-      return null;
-    }
-    const found = await walk(binDir);
-    if (!found) throw new Error("Bin\xE1rio do Piper n\xE3o encontrado ap\xF3s instala\xE7\xE3o.");
-    return found;
-  }
-  async healthcheckPiper(piperPath) {
-    var _a;
-    const run = async () => {
-      await execAsync(`"${piperPath}" --help`, { timeout: 12e4 });
-    };
-    try {
-      await run();
-    } catch (err) {
-      const code = (_a = err == null ? void 0 : err.code) != null ? _a : -1;
-      if (process.platform !== "win32" && code === "EACCES") {
-        await fs10.chmod(piperPath, 493);
-        await run();
-        return;
-      }
-      throw new Error(`Healthcheck do Piper falhou: ${(err == null ? void 0 : err.message) || String(err)}`);
-    }
-  }
-  async registerRuntime(modelId) {
-    if (modelId !== "piper") return;
-    const binDir = path8.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", "piper");
-    const piperPath = await this.findPiperBinary(binDir);
-    this.settingsRef.models.piper = {
-      id: "piper",
-      activeVersion: "official-2023.11.14-2",
-      absolutePath: piperPath,
-      installedAt: Date.now()
-    };
-    await this.settingsRef.saveSettings();
-    try {
-      await this.healthcheckPiper(piperPath);
-    } catch (err) {
-      this.logger.logError(`Healthcheck do Piper falhou (n\xE3o-fatal): ${(err == null ? void 0 : err.message) || String(err)}`);
-      console.warn("[ModelManagementService] Healthcheck do Piper falhou (n\xE3o-fatal):", err);
-    }
-  }
-};
+  // ── Controle de Scroll Manual ─────────────────────────────
+  private isUserScrolling = false;
+  private userScrollTimeout: ReturnType<typeof setTimeout> | null = null;
+  private scrollListenerEl: HTMLElement | null = null;
 
-// src/main.ts
-var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
-  constructor() {
-    super(...arguments);
-    this.queue = new ObsidianVoiceQueue();
-    this.playerState = "aguardando";
-    this.currentParagraphText = "";
-    this.activeEditor = null;
-    this.lastNarratedPath = null;
-    // Rastreia a nota narrada por último
-    // ── Controle de Scroll Manual ─────────────────────────────
-    this.isUserScrolling = false;
-    this.userScrollTimeout = null;
-    this.scrollListenerEl = null;
-    // ── Controle de Scroll Manual ────────────────────────────
-    this.onUserScrollActivity = () => {
-      this.isUserScrolling = true;
-      if (this.userScrollTimeout) clearTimeout(this.userScrollTimeout);
-      this.userScrollTimeout = setTimeout(() => {
-        this.isUserScrolling = false;
-        this.userScrollTimeout = null;
-      }, 1500);
-    };
-  }
   async onload() {
     console.log("[Obsidian Voice] Plugin carregado.");
+
     await this.loadSettings();
     initializeI18n(this.app, this.settings.language);
     this.updateHighlightVariables();
+
     this.highlighter = new EditorHighlighter();
     this.registerEditorExtension([highlightField]);
+
     this.audioPlayer = new ObsidianAudioPlayer(this.app.vault);
+
     let basePath = "";
-    if (this.app.vault.adapter instanceof import_obsidian6.FileSystemAdapter) {
+    if (this.app.vault.adapter instanceof FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
     }
     this.logger = new VoiceLogger(basePath || process.cwd());
     this.highlighter.setLogger(this.logger);
+    this.rebuildTTSPipeline();
+
+    // ── Model Management Service ─────────────────────────
     this.modelManager = new ModelManagementService(
       basePath || process.cwd(),
       {
         models: this.settings.models,
-        getPiperPath: () => this.settings.piperPath,
-        saveSettings: () => this.saveSettings()
+        saveSettings: () => this.saveSettings(),
       },
-      this.logger
     );
-    this.rebuildTTSPipeline();
-    const selfHealPiper = async () => {
-      let changed = false;
-      const piperModel = this.settings.models.piper;
-      if (piperModel && piperModel.absolutePath) {
-        try {
-          const stats = await fs11.promises.stat(piperModel.absolutePath);
-          if (stats.isDirectory()) {
-            const found = await this.modelManager.findPiperBinary(piperModel.absolutePath);
-            if (found) {
-              piperModel.absolutePath = found;
-              changed = true;
-            }
-          }
-        } catch (_) {
-        }
-      }
-      if (this.settings.piperPath) {
-        try {
-          const stats = await fs11.promises.stat(this.settings.piperPath);
-          if (stats.isDirectory()) {
-            const found = await this.modelManager.findPiperBinary(this.settings.piperPath);
-            if (found) {
-              this.settings.piperPath = found;
-              changed = true;
-            }
-          }
-        } catch (_) {
-        }
-      }
-      if (piperModel && piperModel.absolutePath && !this.settings.piperPath) {
-        try {
-          await fs11.promises.access(piperModel.absolutePath);
-          this.settings.piperPath = piperModel.absolutePath;
-          changed = true;
-        } catch (_) {
-        }
-      }
-      if (changed) {
-        await this.saveSettings();
-        this.rebuildTTSPipeline();
-        console.log("[Obsidian Voice] Self-Healing: Caminhos do Piper sincronizados com sucesso.");
-      }
-    };
-    selfHealPiper();
+
+    // ── Auto-Detecção de Piper pré-existente ─────────────────
+    const piperPath = this.settings.piperPath;
+    const piperAlreadyInstalled = this.modelManager.isInstalled('piper');
+    if (piperPath && !piperAlreadyInstalled && fs.existsSync(piperPath)) {
+      this.settings.models.piper = {
+        id: 'piper',
+        activeVersion: 'manual',
+        absolutePath: piperPath,
+        installedAt: Date.now(),
+      };
+      await this.saveSettings();
+      console.log('[Obsidian Voice] Motor Piper pré-existente detectado e registrado.');
+    }
+
+    // ── Ribbon ──────────────────────────────────────────────
     this.addRibbonIcon("headphones", t("commands.ribbon_narrate"), () => this.narrarNotaAtual());
+
+
+
+    // ── Widget Flutuante (sempre visível, inicia minimizado) ──────────
     this.widget = new ObsidianVoiceWidget(
       () => this.togglePlayPause(),
       async () => this.pararNarracao(),
       () => this.queue.getChapters(),
-      (chunkIndex) => this.jumpToChapter(chunkIndex),
-      (active) => this.onResumoToggle(active),
+      (chunkIndex: number) => this.jumpToChapter(chunkIndex),
+      (active: boolean) => this.onResumoToggle(active),
       () => this.openSettingsTab(),
-      (active) => this.onTeleprompterToggle(active),
-      (speed) => this.onSpeedChange(speed),
+      (active: boolean) => this.onTeleprompterToggle(active),
+      (speed: number) => this.onSpeedChange(speed),
       () => {
-        const engines = [];
-        const piperInstalled = this.modelManager.isInstalled("piper");
-        const kokoroInstalled = this.modelManager.isInstalled("kokoro");
-        engines.push({ id: "piper", name: "Piper", installed: piperInstalled });
-        engines.push({ id: "kokoro", name: "Kokoro", installed: kokoroInstalled });
+        const engines: { id: string; name: string; installed: boolean }[] = [];
+        const piperInstalled = this.modelManager.isInstalled('piper');
+        const kokoroInstalled = this.modelManager.isInstalled('kokoro');
+        engines.push({ id: 'piper', name: 'Piper', installed: piperInstalled });
+        engines.push({ id: 'kokoro', name: 'Kokoro', installed: kokoroInstalled });
         return engines;
       },
-      (engineId) => this.onEngineChange(engineId),
-      () => this.settings.ttsEngine
+      (engineId: 'piper' | 'kokoro') => this.onEngineChange(engineId),
+      () => this.settings.ttsEngine,
     );
+    // Sincroniza o estado inicial do toggle com as settings persistidas
     this.widget.setTeleprompterAtivo(this.settings.enableTeleprompterMode);
     this.widget.show("aguardando", activeDocument.body);
+
+    // Escuta mudanças de nota ativa para interromper a narração anterior silenciosamente
     this.registerEvent(
       this.app.workspace.on("file-open", async (file) => {
-        if (!file || this.lastNarratedPath && this.lastNarratedPath !== file.path) {
+        if (!file || (this.lastNarratedPath && this.lastNarratedPath !== file.path)) {
           await this.pararNarracaoSilenciosamente();
         }
       })
     );
+
+    // ── Aba de Configurações ─────────────────────────────────
     this.addSettingTab(new ObsidianVoiceSettingTab(this.app, this));
+
+    // ── Comandos ─────────────────────────────────────────────
     this.addCommand({
       id: "testar-motor-tts-piper",
       name: t("commands.test_piper"),
-      callback: () => this.runPiperTest()
+      callback: () => this.runPiperTest(),
     });
+
     this.addCommand({
       id: "narrar-nota-atual",
       name: t("commands.narrate_current_note"),
-      callback: () => this.narrarNotaAtual()
+      callback: () => this.narrarNotaAtual(),
     });
+
     this.addCommand({
       id: "alternar-play-pause",
       name: t("commands.toggle_play_pause"),
-      callback: () => this.togglePlayPause()
+      callback: () => this.togglePlayPause(),
     });
+
     this.addCommand({
       id: "parar-narracao",
       name: t("commands.stop_narration"),
-      callback: async () => this.pararNarracao()
+      callback: async () => this.pararNarracao(),
     });
+
     this.addCommand({
       id: "toggle-highlights-only",
       name: t("commands.toggle_highlights_only"),
       callback: () => {
         this.queue.readOnlyHighlights = !this.queue.readOnlyHighlights;
         const estado = this.queue.readOnlyHighlights ? t("notices.enabled") : t("notices.disabled");
-        new import_obsidian6.Notice(t("notices.summary_mode", { state: estado }));
+        new Notice(t("notices.summary_mode", { state: estado }));
+
+        // Sincroniza visualmente o toggle do menu de ferramentas (se aberto)
         this.widget.setResumoAtivo(this.queue.readOnlyHighlights);
+
+        // Se a narração estiver ativa, reinicia com o novo filtro
         if (this.playerState === "tocando" || this.playerState === "pausado") {
           this.pararNarracao().then(() => this.narrarNotaAtual());
         }
-      }
+      },
     });
+
     this.addCommand({
       id: "play-from-selection",
       name: t("commands.play_from_selection"),
       hotkeys: [],
-      editorCallback: async (editor) => {
+      editorCallback: async (editor: Editor) => {
         const cursor = editor.getCursor();
         const currentLineText = editor.getLine(cursor.line);
+
+        // Se o player já estiver ativo (tocando/pausado), a fila já está populada
         if (this.playerState === "tocando" || this.playerState === "pausado") {
           let targetIndex = this.queue.getChunkIndexByLine(cursor.line);
           if (targetIndex === 0 && cursor.line !== 0) {
@@ -8442,46 +7537,64 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
           }
           await this.jumpToChapter(targetIndex);
         } else {
+          // Inicialização Fria (Plugin não estava rodando)
           const valido = await this.validarConfiguracoes();
           if (!valido) return;
+
           const fullText = editor.getValue();
           this.activeEditor = editor;
+
+          // Popula a fila com o texto completo para preservar os line numbers
           this.queue.startQueue(fullText);
+
+          // Localiza o índice correspondente
           let targetIndex = this.queue.getChunkIndexByLine(cursor.line);
           if (targetIndex === 0 && cursor.line !== 0) {
             targetIndex = this.queue.findChunkIndexByLineText(currentLineText);
           }
+
+          // Inicia a reprodução
           await this.jumpToChapter(targetIndex);
         }
       }
     });
-    this.registerDomEvent(document, "click", (evt) => {
+
+    // ── Navegação Universal por Clique ────────────────────────
+    this.registerDomEvent(document, "click", (evt: MouseEvent) => {
       if (!this.settings.enableTeleprompterMode) return;
       if (this.playerState !== "tocando") {
         return;
       }
-      const target = evt.target;
+
+      // Evita conflito: ignora cliques que ocorram no widget ou fora do editor
+      const target = evt.target as HTMLElement | null;
       if (target && target.closest("#obsidian-voice-widget")) {
         return;
       }
-      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
+
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!activeView) return;
+
       const editor = activeView.editor;
-      const view = editor.cm;
+      const view = (editor as any).cm as EditorView | undefined;
       if (!view) return;
+
       const pos = view.posAtCoords({ x: evt.clientX, y: evt.clientY });
       if (pos === null) return;
+
       try {
         const lineObj = view.state.doc.lineAt(pos);
         const lineNumber = lineObj.number - 1;
         this.jumpToLine(lineNumber);
       } catch (e) {
+        // Ignora erros de mapeamento de clique
       }
     });
   }
+
   async loadSettings() {
     const data = await this.loadData();
-    if (data && "enableChapterNavigation" in data) {
+    if (data && 'enableChapterNavigation' in data) {
       data.enableTeleprompterMode = data.enableChapterNavigation;
       delete data.enableChapterNavigation;
       this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
@@ -8492,26 +7605,29 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       if (!this.settings.language) this.settings.language = "auto";
     }
   }
+
   async saveSettings() {
     await this.saveData(this.settings);
   }
-  updateHighlightVariables() {
-    var _a;
+
+  updateHighlightVariables(): void {
     const isDark = document.body.classList.contains("theme-dark");
-    const colorMap = {
-      green: isDark ? "rgba(40, 160, 70, 0.4)" : "#cbeec9",
+    const colorMap: Record<string, string> = {
+      green:  isDark ? "rgba(40, 160, 70, 0.4)"   : "#cbeec9",
       yellow: isDark ? "rgba(215, 165, 40, 0.35)" : "#fff2cc",
-      blue: isDark ? "rgba(45, 115, 210, 0.4)" : "#d0e1fd",
-      purple: isDark ? "rgba(145, 70, 190, 0.4)" : "#ebd6fa",
-      orange: isDark ? "rgba(210, 105, 30, 0.35)" : "#ffe0b2"
+      blue:   isDark ? "rgba(45, 115, 210, 0.4)"  : "#d0e1fd",
+      purple: isDark ? "rgba(145, 70, 190, 0.4)"  : "#ebd6fa",
+      orange: isDark ? "rgba(210, 105, 30, 0.35)" : "#ffe0b2",
     };
-    const selectedColor = (_a = colorMap[this.settings.highlightColor]) != null ? _a : colorMap.green;
+    const selectedColor = colorMap[this.settings.highlightColor] ?? colorMap.green;
     document.documentElement.style.setProperty("--ov-highlight-color", selectedColor);
   }
-  openSettingsTab() {
-    this.app.setting.open();
-    this.app.setting.openTabById(this.manifest.id);
+
+  openSettingsTab(): void {
+    (this.app as any).setting.open();
+    (this.app as any).setting.openTabById(this.manifest.id);
   }
+
   async onunload() {
     this.audioPlayer.stop();
     this.queue.reset();
@@ -8522,46 +7638,60 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     }
     this.unregisterScrollListeners();
     this.widget.hide();
+
     this.activeEditor = this.getActiveEditor();
     if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
     this.activeEditor = null;
+
     console.log("[Obsidian Voice] Plugin descarregado.");
   }
+
   // ── Estado do Player ─────────────────────────────────────
-  getPlayerState() {
+
+  private getPlayerState(): PlayerState {
     return this.playerState;
   }
-  updatePlayerState(state) {
+
+  private updatePlayerState(state: PlayerState) {
     this.playerState = state;
+    // O widget é permanente: nunca escondemos, apenas atualizamos o estado visual
     this.widget.show(state, activeDocument.body);
   }
-  async pararNarracao() {
+
+  private async pararNarracao() {
     await this.pararNarracaoSilenciosamente();
-    new import_obsidian6.Notice(t("notices.narration_stopped"));
-    console.log("[Obsidian Voice] Narra\xE7\xE3o interrompida pelo usu\xE1rio.");
+    new Notice(t("notices.narration_stopped"));
+    console.log("[Obsidian Voice] Narração interrompida pelo usuário.");
   }
-  async pararNarracaoSilenciosamente() {
+
+  private async pararNarracaoSilenciosamente() {
     this.queue.reset();
     this.audioPlayer.stop();
     await this.ttsPipeline.stop();
     this.unregisterScrollListeners();
     this.updatePlayerState("aguardando");
+
     this.activeEditor = this.getActiveEditor();
     if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
     this.activeEditor = null;
   }
+
   /** Callback do toggle de Modo Resumo no menu de ferramentas do widget. */
-  onResumoToggle(active) {
+  private onResumoToggle(active: boolean) {
     this.queue.readOnlyHighlights = active;
     const estado = active ? t("notices.enabled") : t("notices.disabled");
-    new import_obsidian6.Notice(t("notices.summary_mode", { state: estado }));
+    new Notice(t("notices.summary_mode", { state: estado }));
+
     if (this.playerState === "tocando") {
+      // Interrompe imediatamente e reinicia com o novo filtro
       this.pararNarracao().then(() => this.narrarNotaAtual());
     } else if (this.playerState === "pausado") {
+      // Regenera a fila silenciosamente para o próximo play
       const activeFile = this.app.workspace.getActiveFile();
       if (activeFile) {
         const editor = this.getActiveEditor();
         const line = editor ? editor.getCursor().line : 0;
+
         this.app.vault.cachedRead(activeFile).then((text) => {
           this.queue.startQueue(text);
           const targetIndex = this.queue.getChunkIndexByLine(line);
@@ -8570,43 +7700,53 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       }
     }
   }
+
   /** Callback do toggle do Modo Teleprompter no menu de ferramentas do widget. */
-  async onTeleprompterToggle(active) {
+  private async onTeleprompterToggle(active: boolean) {
     this.settings.enableTeleprompterMode = active;
     await this.saveSettings();
     const estado = active ? t("notices.enabled") : t("notices.disabled");
-    new import_obsidian6.Notice(t("notices.teleprompter_mode", { state: estado }));
+    new Notice(t("notices.teleprompter_mode", { state: estado }));
   }
+
   /** Callback do slider de velocidade: aplica imediatamente no chunk em reprodução. */
-  onSpeedChange(speed) {
+  private onSpeedChange(speed: number) {
     this.audioPlayer.setPlaybackRate(speed);
   }
-  async onEngineChange(engineId) {
-    if (this.playerState === "tocando") {
+
+  private async onEngineChange(engineId: 'piper' | 'kokoro') {
+    if (this.playerState === 'tocando') {
       this.settings.ttsEngine = engineId;
       await this.saveSettings();
-      new import_obsidian6.Notice(t("notices.engine_change_delayed"));
+      new Notice(t("notices.engine_change_delayed"));
       this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget (adiado)");
       return;
     }
+
     this.settings.ttsEngine = engineId;
     await this.saveSettings();
     this.rebuildTTSPipeline();
-    new import_obsidian6.Notice(t("notices.engine_changed", { engine: engineId }));
+    new Notice(t("notices.engine_changed", { engine: engineId }));
     this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget");
   }
-  togglePlayPause() {
+
+  private togglePlayPause() {
+    // Estado ocioso: recomeça a narração do início
     if (this.playerState === "aguardando") {
       this.narrarNotaAtual();
       return;
     }
-    const next = this.playerState === "tocando" ? "pausado" : "tocando";
+
+    const next: PlayerState = this.playerState === "tocando" ? "pausado" : "tocando";
+
     if (next === "pausado") {
+      // Pausar: suspende o áudio e limpa o highlight
       this.audioPlayer.toggle();
       this.updatePlayerState("pausado");
       this.activeEditor = this.getActiveEditor();
       if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
     } else {
+      // Retomar: se o áudio ainda está pausado no player, simplesmente resume
       if (this.audioPlayer.isActive()) {
         this.audioPlayer.toggle();
         this.updatePlayerState("tocando");
@@ -8619,155 +7759,195 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
           );
         }
       } else {
+        // O chunk foi descartado (ex: após um pulo): reinicia a partir do índice atual da fila
         this.updatePlayerState("tocando");
         this.playNextParagraph();
       }
     }
   }
+
   // ── Narração Principal ───────────────────────────────────
-  async narrarNotaAtual() {
+
+  private async narrarNotaAtual() {
     const activeFile = this.app.workspace.getActiveFile();
-    if (!(activeFile instanceof import_obsidian6.TFile)) {
-      new import_obsidian6.Notice(t("notices.no_active_note"));
+    if (!(activeFile instanceof TFile)) {
+      new Notice(t("notices.no_active_note"));
       return;
     }
+
+    // Busca o editor que está exibindo o arquivo ativo, independente do foco atual.
+    // getActiveViewOfType() falha quando a ribbon/comando rouba o foco da janela.
     this.activeEditor = this.getActiveEditor();
     if (!this.activeEditor) {
       this.logger.logDebug("[Main] narrarNotaAtual: nenhuma leaf com o arquivo ativo encontrada.");
-      console.warn("[Obsidian Voice] Nenhuma leaf com o arquivo ativo encontrada \u2014 highlight desativado.");
+      console.warn("[Obsidian Voice] Nenhuma leaf com o arquivo ativo encontrada — highlight desativado.");
     }
+
     const conteudo = await this.app.vault.read(activeFile);
     const textoLimpo = this.cleanMarkdown(conteudo);
+
     if (!textoLimpo) {
-      new import_obsidian6.Notice(t("notices.empty_note"));
+      new Notice(t("notices.empty_note"));
       return;
     }
+
     const valido = await this.validarConfiguracoes();
     if (!valido) return;
+
     this.queue.startQueue(conteudo);
     this.updatePlayerState("tocando");
     this.registerScrollListeners();
+
     const mesmaNote = this.lastNarratedPath === activeFile.path;
-    new import_obsidian6.Notice(mesmaNote ? t("notices.restarting") : t("notices.starting_narration"));
+    new Notice(mesmaNote ? t("notices.restarting") : t("notices.starting_narration"));
     this.lastNarratedPath = activeFile.path;
     console.log(`[Obsidian Voice] Narrando: ${activeFile.name}`);
+
     await this.ttsPipeline.start();
     this.playNextParagraph();
   }
-  cleanMarkdown(text) {
-    return text.replace(/^---[\s\S]*?---\n?/m, "").replace(/```[\s\S]*?```/g, "").replace(/(?<![#\S])#[^\s#][^\s]*/g, "").replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, "$2").replace(/\[\[([^\]]+)\]\]/g, "$1").trim();
+
+  private cleanMarkdown(text: string): string {
+    return text
+      .replace(/^---[\s\S]*?---\n?/m, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/(?<![#\S])#[^\s#][^\s]*/g, "")
+      .replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, "$2")
+      .replace(/\[\[([^\]]+)\]\]/g, "$1")
+      .trim();
   }
+
   // ── Validação ────────────────────────────────────────────
-  async validarConfiguracoes() {
+
+  private async validarConfiguracoes(): Promise<boolean> {
     this.rebuildTTSPipeline();
     const result = await this.ttsPipeline.validate();
     if (!result.ok) {
-      new import_obsidian6.Notice(t("notices.piper_or_model_missing"));
+      new Notice(t("notices.piper_or_model_missing"));
       if (result.error) this.logger.logError(result.error);
       return false;
     }
     return true;
   }
+
   // ── Pipeline de Áudio com Pre-fetching ───────────────────
-  async playNextParagraph() {
+
+  private async playNextParagraph() {
     if (this.playerState === "pausado") return;
+
     const chunk = await this.ttsPipeline.getNextChunk();
+
     if (chunk === null) {
       this.queue.reset();
       this.updatePlayerState("aguardando");
       this.activeEditor = this.getActiveEditor();
       if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
       this.activeEditor = null;
-      new import_obsidian6.Notice(t("notices.narration_finished"));
+      new Notice(t("notices.narration_finished"));
       console.log("[Obsidian Voice] Fila encerrada.");
       return;
     }
+
     if (chunk.error) {
       this.queue.reset();
       this.updatePlayerState("aguardando");
       this.activeEditor = this.getActiveEditor();
       if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
       this.activeEditor = null;
-      new import_obsidian6.Notice(t("notices.narration_error", { error: chunk.error }));
+      new Notice(t("notices.narration_error", { error: chunk.error }));
       console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
-      try {
-        if (fs11.existsSync(chunk.absolutePath)) fs11.unlinkSync(chunk.absolutePath);
-      } catch (_) {
-      }
+      try { if (fs.existsSync(chunk.absolutePath)) fs.unlinkSync(chunk.absolutePath); } catch (_) {}
       return;
     }
+
+    // Se o usuário pausou enquanto o áudio estava sendo gerado, interrompe a reprodução e guarda o chunk
     if (this.getPlayerState() === "pausado") {
       this.ttsPipeline.holdChunk(chunk);
       return;
     }
+
+    // Inicia a geração do próximo chunk em segundo plano enquanto toca o atual
     this.ttsPipeline.prefetch();
+
+    // Destaca o parágrafo atual usando o editor capturado no início da narração
     this.currentParagraphText = chunk.text;
     this.activeEditor = this.getActiveEditor();
     if (this.activeEditor) {
       const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
       this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
     } else {
-      this.logger.logDebug(`[Main] playNextParagraph: activeEditor \xE9 null, highlight ignorado para: "${chunk.text.substring(0, 40)}"`);
-      console.warn("[Obsidian Voice] activeEditor \xE9 null \u2014 highlight ignorado.");
+      this.logger.logDebug(`[Main] playNextParagraph: activeEditor é null, highlight ignorado para: "${chunk.text.substring(0, 40)}"`);
+      console.warn("[Obsidian Voice] activeEditor é null — highlight ignorado.");
     }
+
     console.log(`[Obsidian Voice] Reproduzindo chunk: ${chunk.resourcePath}`);
     this.audioPlayer.playFile(chunk.resourcePath, chunk.absolutePath, () => {
       this.playNextParagraph();
     });
   }
-  async jumpToLine(lineNumber) {
+
+  private async jumpToLine(lineNumber: number) {
     console.log(`[Obsidian Voice] Pulando para a linha: ${lineNumber}`);
     this.audioPlayer.stop();
     await this.ttsPipeline.resetPrefetch();
+
     const targetIndex = this.queue.getChunkIndexByLine(lineNumber);
     this.queue.setCurrentIndex(targetIndex);
+
     this.updatePlayerState("tocando");
     this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
-  async jumpToChapter(chunkIndex) {
-    console.log(`[Obsidian Voice] Pulando para o cap\xEDtulo no chunk index: ${chunkIndex}`);
+
+  private async jumpToChapter(chunkIndex: number) {
+    console.log(`[Obsidian Voice] Pulando para o capítulo no chunk index: ${chunkIndex}`);
     this.audioPlayer.stop();
     await this.ttsPipeline.resetPrefetch();
+
     this.queue.setCurrentIndex(chunkIndex);
+
     this.updatePlayerState("tocando");
     this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
+
+
   // ── Motor Piper ──────────────────────────────────────────
-  async runPiperTest() {
+
+  private async runPiperTest() {
     const valido = await this.validarConfiguracoes();
     if (!valido) return;
-    const texto = "Teste de \xE1udio do Obsidian Voice";
-    new import_obsidian6.Notice(t("notices.generating_audio"));
-    const cacheDir = path9.join(os3.tmpdir(), "ObsidianVoiceCache");
-    if (!fs11.existsSync(cacheDir)) fs11.mkdirSync(cacheDir, { recursive: true });
-    const testFile = path9.join(cacheDir, "teste.wav");
+
+    const texto = "Teste de áudio do Obsidian Voice";
+    new Notice(t("notices.generating_audio"));
+    const cacheDir = path.join(os.tmpdir(), "ObsidianVoiceCache");
+    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+    const testFile = path.join(cacheDir, "teste.wav");
+
     try {
-      await this.ttsPipeline.runTest(texto, testFile, 1);
-      new import_obsidian6.Notice(t("notices.audio_generated"));
-      try {
-        if (fs11.existsSync(testFile)) fs11.unlinkSync(testFile);
-      } catch (_) {
-      }
-    } catch (error) {
-      new import_obsidian6.Notice(t("notices.audio_generation_error", { error: (error == null ? void 0 : error.message) || String(error) }));
+      await this.ttsPipeline.runTest(texto, testFile, 1.0);
+      new Notice(t("notices.audio_generated"));
+      try { if (fs.existsSync(testFile)) fs.unlinkSync(testFile); } catch (_) {}
+    } catch (error: any) {
+      new Notice(t("notices.audio_generation_error", { error: error?.message || String(error) }));
     }
   }
-  rebuildTTSPipeline() {
+
+  private rebuildTTSPipeline() {
     let basePath = "";
-    if (this.app.vault.adapter instanceof import_obsidian6.FileSystemAdapter) {
+    if (this.app.vault.adapter instanceof FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
     }
-    const resolvedPath = this.modelManager ? this.modelManager.resolveBinaryPath(this.settings.ttsEngine) : "";
+
     const engine = TTSEngineFactory.create({
       ttsEngine: this.settings.ttsEngine,
-      piperPath: resolvedPath,
+      piperPath: this.settings.piperPath,
       selectedVoice: this.settings.selectedVoice,
       selectedKokoroVoice: this.settings.selectedKokoroVoice,
       basePath,
-      logger: this.logger
+      logger: this.logger,
     });
+
     this.ttsPipeline = new TTSPipelineService(
       this.app.vault,
       this.queue,
@@ -8776,38 +7956,3623 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       () => this.widget.getSpeed()
     );
   }
-  getActiveEditor() {
+
+  private getActiveEditor(): Editor | null {
     const activeFile = this.app.workspace.getActiveFile();
     if (!activeFile) return null;
-    let editor = null;
+    let editor: Editor | null = null;
     this.app.workspace.iterateAllLeaves((leaf) => {
-      var _a;
-      if (leaf.view instanceof import_obsidian6.MarkdownView && ((_a = leaf.view.file) == null ? void 0 : _a.path) === activeFile.path) {
-        editor = leaf.view.editor;
+      if (leaf.view instanceof MarkdownView && leaf.view.file?.path === activeFile.path) {
+        editor = (leaf.view as MarkdownView).editor;
       }
     });
     return editor;
   }
+
+  // ── Controle de Scroll Manual ────────────────────────────
+
+  private onUserScrollActivity = () => {
+    this.isUserScrolling = true;
+    if (this.userScrollTimeout) clearTimeout(this.userScrollTimeout);
+    this.userScrollTimeout = setTimeout(() => {
+      this.isUserScrolling = false;
+      this.userScrollTimeout = null;
+    }, 1500);
+  };
+
   registerScrollListeners() {
-    var _a;
     this.unregisterScrollListeners();
-    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
-    const containerEl = (_a = activeView == null ? void 0 : activeView.containerEl) != null ? _a : null;
+
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const containerEl = activeView?.containerEl ?? null;
     if (!containerEl) return;
+
     this.scrollListenerEl = containerEl;
-    const KEYS = /* @__PURE__ */ new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown"]);
-    containerEl.addEventListener("wheel", this.onUserScrollActivity, { passive: true });
+    const KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown"]);
+
+    containerEl.addEventListener("wheel",     this.onUserScrollActivity, { passive: true });
     containerEl.addEventListener("touchmove", this.onUserScrollActivity, { passive: true });
-    containerEl.addEventListener("keydown", (evt) => {
+    containerEl.addEventListener("keydown", (evt: KeyboardEvent) => {
       if (KEYS.has(evt.key)) this.onUserScrollActivity();
     });
   }
-  unregisterScrollListeners() {
+
+  private unregisterScrollListeners() {
     if (!this.scrollListenerEl) return;
-    this.scrollListenerEl.removeEventListener("wheel", this.onUserScrollActivity);
+    this.scrollListenerEl.removeEventListener("wheel",     this.onUserScrollActivity);
     this.scrollListenerEl.removeEventListener("touchmove", this.onUserScrollActivity);
+    // keydown anônimo: o próprio GC limpa quando o elemento é removido do DOM
     this.scrollListenerEl = null;
-    this.isUserScrolling = false;
+    this.isUserScrolling  = false;
   }
+}
+```
+
+src/player-widget.ts
+```
+// Responsabilidades do Script
+//
+// 1. Criar e gerenciar o elemento DOM do widget flutuante de controle de áudio.
+// 2. Gerenciar os estados visuais: ocioso, tocando, pausado, minimizado e expandido.
+// 3. Exibir animação de onda sonora no miniplayer quando o áudio estiver tocando.
+// 4. Expor o valor atual de velocidade do slider e os estados dos Modos Resumo e Teleprompter ao orquestrador.
+
+import { setIcon } from "obsidian";
+import { PlayerState } from "./main";
+import { ChapterInfo } from "./queue";
+import { onLanguageChanged, t } from "./i18n";
+
+const SPEED_MIN     = 1.0;
+const SPEED_MAX     = 2.0;
+const SPEED_STEP    = 0.1;
+const SPEED_DEFAULT = 1.0;
+
+const STYLE_ID = "obsidian-voice-styles";
+
+/** Injeta as keyframes de animação uma única vez no document head. */
+function injectStyles() {
+  if (document.getElementById(STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = `
+    @keyframes ov-wave-1 {
+      0%   { transform: scale(1);    opacity: 0.7; }
+      100% { transform: scale(1.9);  opacity: 0; }
+    }
+    @keyframes ov-wave-2 {
+      0%   { transform: scale(1);    opacity: 0.5; }
+      100% { transform: scale(2.5);  opacity: 0; }
+    }
+    @keyframes ov-icon-breathe {
+      0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 4px var(--text-success)); }
+      50%       { transform: scale(1.18); filter: drop-shadow(0 0 10px var(--text-success)); }
+    }
+    .ov-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--text-success);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .ov-ring-1.is-playing { animation: ov-wave-1 1.4s ease-out infinite; }
+    .ov-ring-2.is-playing { animation: ov-wave-2 1.4s ease-out 0.4s infinite; }
+    .ov-headphone-icon.is-playing svg {
+      animation: ov-icon-breathe 1.4s ease-in-out infinite;
+    }
+    /* Posicionador fixo no canto inferior direito do widget */
+    #obsidian-voice-widget {
+      position:   fixed;
+      bottom:     50px;
+      right:      20px;
+      z-index:    var(--layer-menu);
+    }
+    /* Container principal do widget */
+    .ov-widget-container {
+      position:   relative;
+      display:    flex;
+      align-items: center;
+      overflow:   visible;
+      box-sizing: border-box;
+      /* Transição apenas sobre border-radius para a animação de forma */
+      transition: border-radius 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    /* Ícone circular (headphone) — sempre compatível com temas claro e escuro */
+    .ov-headphone-icon {
+      position:        relative;
+      z-index:         2;
+      width:           40px;
+      height:          40px;
+      flex-shrink:     0;
+      display:         flex;
+      align-items:     center;
+      justify-content: center;
+      background:      var(--background-secondary-alt);
+      border:          1px solid var(--background-modifier-border);
+      border-radius:   50% !important;
+      box-shadow:      var(--shadow-l);
+      cursor:          pointer;
+      transition:      border-radius 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                       border-right-color 0.1s ease,
+                       cursor 0.1s ease;
+    }
+    /* Painel de controles: usa max-width + opacity para não quebrar overflow:visible */
+    .ov-controls-panel {
+      position:    relative;
+      z-index:     1;
+      margin-left: -20px;
+      display:     flex;
+      align-items: center;
+      gap:         6px;
+      font-family: var(--font-interface);
+      font-size:   var(--font-ui-small);
+      padding:     6px 12px 6px 25px;
+      box-sizing:  border-box;
+      /* Anima max-width para expandir/recolher sem afetar o overflow do pai */
+      max-width:   0;
+      opacity:     0;
+      overflow:    hidden;
+      pointer-events: none;
+      background:  var(--background-secondary);
+      border:      1px solid var(--background-modifier-border);
+      border-left: none;
+      border-radius: 0 24px 24px 0;
+      box-shadow:  var(--shadow-l);
+      white-space: nowrap;
+      transition: max-width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity  0.2s ease 0.05s;
+    }
+    /* Estado expandido: painel visível */
+    .ov-widget-container.is-expanded .ov-controls-panel {
+      max-width:      500px;
+      opacity:        1;
+      overflow:       visible;
+      pointer-events: auto;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+export class ObsidianVoiceWidget {
+  private onToggle: () => void;
+  private onStop: () => void;
+  private getChapters: () => ChapterInfo[];
+  private onChapterClick: (chunkIndex: number) => void;
+  private onResumoToggle: (active: boolean) => void;
+  private onTeleprompterToggle: (active: boolean) => void;
+  private openSettings: () => void;
+  private onSpeedChange: (speed: number) => void;
+  private getInstalledEngines: () => { id: string; name: string; installed: boolean }[];
+  private onEngineChange: (engineId: 'piper' | 'kokoro') => void;
+  private getActiveEngineId: () => 'piper' | 'kokoro';
+
+  private widgetEl:            HTMLElement | null = null;
+  private miniIconEl:          HTMLElement | null = null;   // Círculo do miniplayer
+  private ring1El:             HTMLElement | null = null;
+  private ring2El:             HTMLElement | null = null;
+  private controlsEl:          HTMLElement | null = null;   // Área de controles expandida
+  private statusTextEl:        HTMLElement | null = null;
+  private toggleBtn:           HTMLElement | null = null;
+  private collapseBtn:         HTMLElement | null = null;
+  private stopBtn:             HTMLElement | null = null;
+  private chaptersBtn:         HTMLElement | null = null;
+  private toolsBtn:            HTMLElement | null = null;
+  private indicatorEl:         HTMLElement | null = null;
+  private chaptersDropEl:      HTMLElement | null = null;
+  private toolsDropEl:         HTMLElement | null = null;
+  private resumoToggleEl:      HTMLInputElement | null = null;
+  private teleprompterToggleEl: HTMLInputElement | null = null;
+
+  private speedValue        = SPEED_DEFAULT;
+  private isMinimized       = true;   // Começa minimizado
+  private resumoAtivo       = false;
+  private teleprompterAtivo = true;   // Ativado por padrão (espelha settings.enableTeleprompterMode)
+  private lastState: PlayerState = "aguardando";
+  private unsubscribeLanguageChanged: (() => void) | null = null;
+
+  constructor(
+    onToggle: () => void,
+    onStop: () => void,
+    getChapters: () => ChapterInfo[],
+    onChapterClick: (chunkIndex: number) => void,
+    onResumoToggle: (active: boolean) => void,
+    openSettings: () => void,
+    onTeleprompterToggle: (active: boolean) => void,
+    onSpeedChange: (speed: number) => void,
+    getInstalledEngines: () => { id: string; name: string; installed: boolean }[],
+    onEngineChange: (engineId: 'piper' | 'kokoro') => void,
+    getActiveEngineId: () => 'piper' | 'kokoro'
+  ) {
+    this.onToggle             = onToggle;
+    this.onStop               = onStop;
+    this.getChapters          = getChapters;
+    this.onChapterClick       = onChapterClick;
+    this.onResumoToggle       = onResumoToggle;
+    this.openSettings         = openSettings;
+    this.onTeleprompterToggle = onTeleprompterToggle;
+    this.onSpeedChange        = onSpeedChange;
+    this.getInstalledEngines  = getInstalledEngines;
+    this.onEngineChange       = onEngineChange;
+    this.getActiveEngineId    = getActiveEngineId;
+    this.unsubscribeLanguageChanged = onLanguageChanged(() => this.refreshTexts());
+  }
+
+  getSpeed(): number { return this.speedValue; }
+
+  /** Inicializa o widget permanente na tela (sempre minimizado ao criar). */
+  show(state: PlayerState, container: HTMLElement) {
+    if (!this.widgetEl) {
+      this.build(container);
+    }
+    this.applyState(state);
+  }
+
+  /** Remove o widget do DOM (chamado apenas no onunload). */
+  hide() {
+    this.closeChaptersDropdown();
+    this.closeToolsMenu();
+    if (this.widgetEl) {
+      this.widgetEl.remove();
+      this.widgetEl     = null;
+      this.miniIconEl   = null;
+      this.ring1El      = null;
+      this.ring2El      = null;
+      this.controlsEl   = null;
+      this.statusTextEl = null;
+      this.toggleBtn    = null;
+      this.collapseBtn  = null;
+      this.stopBtn      = null;
+      this.chaptersBtn  = null;
+      this.toolsBtn     = null;
+      this.indicatorEl  = null;
+      this.resumoToggleEl = null;
+    }
+    if (this.unsubscribeLanguageChanged) {
+      this.unsubscribeLanguageChanged();
+      this.unsubscribeLanguageChanged = null;
+    }
+    const styleEl = document.getElementById(STYLE_ID);
+    if (styleEl) styleEl.remove();
+  }
+
+  /** Sincroniza o toggle de Modo Resumo quando alterado externamente. */
+  setResumoAtivo(active: boolean) {
+    this.resumoAtivo = active;
+    if (this.resumoToggleEl) this.resumoToggleEl.checked = active;
+  }
+
+  /** Sincroniza o toggle de Modo Teleprompter quando alterado externamente. */
+  setTeleprompterAtivo(active: boolean) {
+    this.teleprompterAtivo = active;
+    if (this.teleprompterToggleEl) this.teleprompterToggleEl.checked = active;
+  }
+
+  // ── Construção do DOM ────────────────────────────────────
+
+  private build(container: HTMLElement) {
+    injectStyles();
+
+    this.widgetEl = container.createDiv({ attr: { id: "obsidian-voice-widget" }, cls: "ov-widget-container" });
+    this.widgetEl.classList.add(this.isMinimized ? "is-minimized" : "is-expanded");
+
+    // ── Círculo do Miniplayer ──────────────────────────────
+    // Wrapper relativo para as rings de animação
+    const miniWrapper = this.widgetEl.createDiv();
+    Object.assign(miniWrapper.style, {
+      position:     "relative",
+      width:        "40px",
+      height:       "40px",
+      flexShrink:   "0",
+    });
+
+    // Anéis de onda sonora (ocultos quando não toca)
+    this.ring1El = miniWrapper.createDiv({ cls: "ov-ring ov-ring-1" });
+    this.ring2El = miniWrapper.createDiv({ cls: "ov-ring ov-ring-2" });
+
+    // Botão circular de headphone
+    this.miniIconEl = miniWrapper.createDiv({ cls: "clickable-icon ov-headphone-icon" });
+    setIcon(this.miniIconEl, "headphones");
+    this.miniIconEl.setAttribute("aria-label", t("widget.aria.expand_player"));
+
+    // Clique no headphone: expande (se minimizado) ou não faz nada
+    this.miniIconEl.addEventListener("click", () => {
+      if (this.isMinimized) this.expand();
+    });
+
+    // ── Área de Controles (visível quando expandido) ───────
+    this.controlsEl = this.widgetEl.createDiv({ cls: "ov-controls-panel" });
+
+    // Botão Colapsar (chevron-right = "encolher para a direita/menor")
+    this.collapseBtn = this.controlsEl.createDiv({ cls: "clickable-icon" });
+    this.collapseBtn.setAttribute("aria-label", t("widget.aria.minimize_player"));
+    setIcon(this.collapseBtn, "chevron-right");
+    this.collapseBtn.addEventListener("click", () => this.minimize());
+
+    // Separador
+    this.addSep(this.controlsEl);
+
+    // Indicador luminoso
+    this.indicatorEl = this.controlsEl.createSpan();
+    Object.assign(this.indicatorEl.style, {
+      width:        "7px",
+      height:       "7px",
+      borderRadius: "50%",
+      display:      "inline-block",
+      flexShrink:   "0",
+      background:   "var(--text-faint)",
+      transition:   "background-color 0.2s ease, box-shadow 0.2s ease",
+    });
+
+    // Rótulo de status
+    this.statusTextEl = this.controlsEl.createSpan();
+    Object.assign(this.statusTextEl.style, {
+      fontWeight: "500",
+      minWidth:   "110px",
+    });
+    this.statusTextEl.textContent = t("widget.status.waiting");
+
+    // Botão Play/Pause
+    this.toggleBtn = this.controlsEl.createDiv({ cls: "clickable-icon" });
+    this.toggleBtn.setAttribute("aria-label", t("widget.aria.play_pause"));
+    setIcon(this.toggleBtn, "play");
+    this.toggleBtn.addEventListener("click", () => this.onToggle());
+
+    // Botão Stop
+    this.stopBtn = this.controlsEl.createDiv({ cls: "clickable-icon" });
+    this.stopBtn.setAttribute("aria-label", t("widget.aria.stop_narration"));
+    setIcon(this.stopBtn, "square");
+    this.stopBtn.addEventListener("click", () => this.onStop());
+
+    // Botão Capítulos
+    this.chaptersBtn = this.controlsEl.createDiv({ cls: "clickable-icon" });
+    this.chaptersBtn.setAttribute("aria-label", t("widget.aria.chapters"));
+    setIcon(this.chaptersBtn, "list");
+    this.chaptersBtn.addEventListener("click", (evt: MouseEvent) => {
+      evt.stopPropagation();
+      this.closeToolsMenu();
+      this.toggleChaptersDropdown();
+    });
+
+    // Separador
+    this.addSep(this.controlsEl);
+
+    // Slider de velocidade
+    const speedWrapper = this.controlsEl.createDiv();
+    Object.assign(speedWrapper.style, { display: "flex", alignItems: "center", gap: "6px" });
+
+    const slider = speedWrapper.createEl("input", { cls: "slider" });
+    slider.type  = "range";
+    slider.min   = String(SPEED_MIN);
+    slider.max   = String(SPEED_MAX);
+    slider.step  = String(SPEED_STEP);
+    slider.value = String(this.speedValue);
+    slider.style.width = "72px";
+
+    const speedLabel = speedWrapper.createSpan();
+    speedLabel.textContent = `${this.speedValue.toFixed(1)}x`;
+    Object.assign(speedLabel.style, { minWidth: "30px", fontWeight: "600", textAlign: "right" });
+
+    slider.addEventListener("input", () => {
+      this.speedValue = parseFloat(slider.value);
+      speedLabel.textContent = `${this.speedValue.toFixed(1)}x`;
+      this.onSpeedChange(this.speedValue);
+    });
+
+    // Separador
+    this.addSep(this.controlsEl);
+
+    // Botão Ferramentas
+    this.toolsBtn = this.controlsEl.createDiv({ cls: "clickable-icon" });
+    this.toolsBtn.setAttribute("aria-label", t("widget.aria.tools"));
+    setIcon(this.toolsBtn, "settings");
+    this.toolsBtn.addEventListener("click", (evt: MouseEvent) => {
+      evt.stopPropagation();
+      this.closeChaptersDropdown();
+      this.toggleToolsMenu();
+    });
+
+    // Ajusta bordas quando minimizado/expandido na primeira montagem
+    this.applyLayoutMode();
+  }
+
+  // ── Minimizar / Expandir ─────────────────────────────────
+
+  private minimize() {
+    if (!this.widgetEl || !this.controlsEl || !this.miniIconEl) return;
+    this.isMinimized = true;
+    this.closeChaptersDropdown();
+    this.closeToolsMenu();
+    this.applyLayoutMode();
+  }
+
+  private expand() {
+    if (!this.widgetEl || !this.controlsEl) return;
+    this.isMinimized = false;
+    this.applyLayoutMode();
+  }
+
+  /** Aplica o layout correto de acordo com isMinimized. */
+  private applyLayoutMode() {
+    if (!this.widgetEl || !this.miniIconEl || !this.controlsEl) return;
+
+    if (this.isMinimized) {
+      this.widgetEl.classList.remove("is-expanded");
+      this.widgetEl.classList.add("is-minimized");
+      this.miniIconEl.setAttribute("aria-label", t("widget.aria.expand_player"));
+    } else {
+      this.widgetEl.classList.remove("is-minimized");
+      this.widgetEl.classList.add("is-expanded");
+      this.miniIconEl.setAttribute("aria-label", "");
+    }
+  }
+
+  // ── Dropdown de Capítulos ────────────────────────────────
+
+  private toggleChaptersDropdown() {
+    if (this.chaptersDropEl) { this.closeChaptersDropdown(); return; }
+    if (!this.widgetEl) return;
+
+    const chapters = this.getChapters();
+    if (chapters.length === 0) return;
+
+    this.chaptersDropEl = this.widgetEl.createDiv({ attr: { id: "obsidian-voice-chapters-dropdown" } });
+    Object.assign(this.chaptersDropEl.style, {
+      position: "absolute", right: "0", marginBottom: "8px",
+      width: "260px", maxHeight: "180px", overflowY: "auto",
+      background: "var(--background-secondary-alt)",
+      border: "1px solid var(--background-modifier-border)",
+      borderRadius: "8px", boxShadow: "var(--shadow-l)",
+      padding: "8px 6px", display: "flex", flexDirection: "column", gap: "6px", zIndex: "9999",
+      pointerEvents: "auto",
+    });
+
+    // Viewport collision detection: abre para cima ou para baixo conforme espaço disponível
+    const widgetRect = this.widgetEl.getBoundingClientRect();
+    if (widgetRect.top < 200) {
+      Object.assign(this.chaptersDropEl.style, { bottom: "auto", top: "100%", marginBottom: "0", marginTop: "8px" });
+    } else {
+      Object.assign(this.chaptersDropEl.style, { bottom: "100%", top: "auto", marginTop: "0" });
+    }
+
+    for (const chapter of chapters) {
+      const itemEl = this.chaptersDropEl.createDiv();
+      itemEl.setText(chapter.title);
+      Object.assign(itemEl.style, {
+        padding: "8px 12px", borderRadius: "4px", cursor: "pointer",
+        fontSize: "var(--font-ui-small)", whiteSpace: "normal",
+        wordBreak: "break-word", lineHeight: "1.4", display: "block",
+        transition: "background-color 0.1s ease",
+      });
+      if (chapter.level === 2) itemEl.style.paddingLeft = "20px";
+      else if (chapter.level === 3) itemEl.style.paddingLeft = "32px";
+
+      itemEl.addEventListener("mouseenter", () => { itemEl.style.background = "var(--background-modifier-hover)"; });
+      itemEl.addEventListener("mouseleave", () => { itemEl.style.background = "transparent"; });
+      itemEl.addEventListener("click", (evt: MouseEvent) => {
+        evt.stopPropagation();
+        this.onChapterClick(chapter.chunkIndex);
+        this.closeChaptersDropdown();
+      });
+    }
+
+    document.addEventListener("click", this.closeChaptersOnOutsideClick);
+    document.addEventListener("keydown", this.closeOnEscape);
+  }
+
+  private closeChaptersDropdown() {
+    if (this.chaptersDropEl) { this.chaptersDropEl.remove(); this.chaptersDropEl = null; }
+    document.removeEventListener("click", this.closeChaptersOnOutsideClick);
+    document.removeEventListener("keydown", this.closeOnEscape);
+  }
+
+  private closeChaptersOnOutsideClick = (evt: MouseEvent) => {
+    if (this.chaptersDropEl && this.widgetEl && !this.widgetEl.contains(evt.target as Node)) {
+      this.closeChaptersDropdown();
+    }
+  };
+
+  // ── Menu de Ferramentas ──────────────────────────────────
+
+  private closeOnEscape = (evt: KeyboardEvent) => {
+    if (evt.key === "Escape") {
+      this.closeChaptersDropdown();
+      this.closeToolsMenu();
+    }
+  };
+
+  private toggleToolsMenu() {
+    if (this.toolsDropEl) { this.closeToolsMenu(); return; }
+    if (!this.widgetEl) return;
+
+    this.toolsDropEl = this.widgetEl.createDiv({ attr: { id: "obsidian-voice-tools-menu" } });
+    Object.assign(this.toolsDropEl.style, {
+      position: "absolute", right: "0", marginBottom: "8px",
+      width: "260px", background: "var(--background-secondary-alt)",
+      border: "1px solid var(--background-modifier-border)",
+      borderRadius: "8px", boxShadow: "var(--shadow-l)", padding: "10px 12px", zIndex: "9999",
+      pointerEvents: "auto",
+    });
+
+    // Viewport collision detection: abre para cima ou para baixo conforme espaço disponível
+    const widgetRect = this.widgetEl.getBoundingClientRect();
+    if (widgetRect.top < 200) {
+      Object.assign(this.toolsDropEl.style, { bottom: "auto", top: "100%", marginBottom: "0", marginTop: "8px" });
+    } else {
+      Object.assign(this.toolsDropEl.style, { bottom: "100%", top: "auto", marginTop: "0" });
+    }
+
+    // ── Helper: cria uma linha de toggle reutilizável ──────────────────
+    const addToggleRow = (
+      labelText: string,
+      tooltip: string,
+      inputId: string,
+      checked: boolean,
+      onChange: (v: boolean) => void
+    ): HTMLInputElement => {
+      const row = this.toolsDropEl!.createDiv();
+      Object.assign(row.style, { display: "flex", alignItems: "center", gap: "8px" });
+
+      const labelWrapper = row.createDiv();
+      Object.assign(labelWrapper.style, { display: "flex", alignItems: "center", gap: "4px", flex: "1", minWidth: "0" });
+
+      const label = labelWrapper.createSpan();
+      label.textContent = labelText;
+      label.style.fontWeight = "500";
+
+      const infoIcon = labelWrapper.createDiv({ cls: "clickable-icon" });
+      infoIcon.style.opacity = "0.6";
+      infoIcon.style.flexShrink = "0";
+      setIcon(infoIcon, "info");
+      infoIcon.setAttribute("aria-label", tooltip);
+      infoIcon.setAttribute("data-tooltip-position", "top");
+
+      const toggleEl = row.createEl("input");
+      toggleEl.type    = "checkbox";
+      toggleEl.id      = inputId;
+      toggleEl.checked = checked;
+      Object.assign(toggleEl.style, {
+        width: "36px", height: "20px", cursor: "pointer", flexShrink: "0",
+        accentColor: "var(--interactive-accent)",
+      });
+      toggleEl.addEventListener("change", () => onChange(toggleEl.checked));
+      return toggleEl;
+    };
+
+    // ── Row: Modo Resumo ──────────────────────────────────
+    this.resumoToggleEl = addToggleRow(
+      t("widget.tools.summary_mode"),
+      t("widget.tools.summary_mode_tooltip"),
+      "obsidian-voice-resumo-toggle",
+      this.resumoAtivo,
+      (v) => { this.resumoAtivo = v; this.onResumoToggle(v); }
+    );
+
+    // Separador
+    const sep1 = this.toolsDropEl.createDiv();
+    sep1.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
+
+    // ── Row: Modo Teleprompter ────────────────────────────
+    this.teleprompterToggleEl = addToggleRow(
+      t("widget.tools.teleprompter_mode"),
+      t("widget.tools.teleprompter_mode_tooltip"),
+      "obsidian-voice-teleprompter-toggle",
+      this.teleprompterAtivo,
+      (v) => { this.teleprompterAtivo = v; this.onTeleprompterToggle(v); }
+    );
+
+    // Separador
+    const sep2 = this.toolsDropEl.createDiv();
+    sep2.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
+
+    // ── Row: Seletor de Motor de Voz ──────────────────────
+    const engineRow = this.toolsDropEl.createDiv();
+    Object.assign(engineRow.style, { display: "flex", alignItems: "center", gap: "8px" });
+
+    const engineLabel = engineRow.createSpan();
+    engineLabel.textContent = t("widget.tools.voice_engine");
+    engineLabel.style.fontWeight = "500";
+    engineLabel.style.flex = "1";
+
+    const engineSelect = engineRow.createEl("select");
+    Object.assign(engineSelect.style, {
+      width: "120px", fontSize: "var(--font-ui-small)", padding: "2px 4px",
+      background: "var(--background-primary)", border: "1px solid var(--background-modifier-border)",
+      borderRadius: "4px", color: "var(--text-normal)", cursor: "pointer", flexShrink: "0",
+    });
+    // Popula opções baseadas nas engines instaladas
+    const engines = this.getInstalledEngines();
+    for (const engine of engines) {
+       const option = engineSelect.createEl("option");
+       option.value = engine.id;
+       option.textContent = engine.name;
+       if (!engine.installed) {
+         option.disabled = true;
+         option.textContent += " (não instalado)";
+       }
+    }
+
+    engineSelect.value = this.getActiveEngineId();
+
+    engineSelect.addEventListener("change", () => {
+      const value = engineSelect.value as 'piper' | 'kokoro';
+      this.onEngineChange(value);
+    });
+
+    // Separador
+    const sep3 = this.toolsDropEl.createDiv();
+    sep3.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
+
+    // ── Item: Configurações... ────────────────────────────
+    const settingsItem = this.toolsDropEl.createDiv();
+    settingsItem.setText(t("widget.tools.settings"));
+    Object.assign(settingsItem.style, {
+      padding: "6px 4px", borderRadius: "4px", cursor: "pointer",
+      fontSize: "var(--font-ui-small)", fontWeight: "500",
+    });
+    settingsItem.addEventListener("mouseenter", () => { settingsItem.style.background = "var(--background-modifier-hover)"; });
+    settingsItem.addEventListener("mouseleave", () => { settingsItem.style.background = "transparent"; });
+    settingsItem.addEventListener("click", (evt: MouseEvent) => {
+      evt.stopPropagation();
+      this.closeToolsMenu();
+      this.openSettings();
+    });
+
+    document.addEventListener("click", this.closeToolsOnOutsideClick);
+    document.addEventListener("keydown", this.closeOnEscape);
+  }
+
+  private closeToolsMenu() {
+    if (this.toolsDropEl) {
+      this.toolsDropEl.remove();
+      this.toolsDropEl          = null;
+      this.resumoToggleEl       = null;
+      this.teleprompterToggleEl = null;
+    }
+    document.removeEventListener("click", this.closeToolsOnOutsideClick);
+    document.removeEventListener("keydown", this.closeOnEscape);
+  }
+
+  private closeToolsOnOutsideClick = (evt: MouseEvent) => {
+    if (this.toolsDropEl && this.widgetEl && !this.widgetEl.contains(evt.target as Node)) {
+      this.closeToolsMenu();
+    }
+  };
+
+  // ── Atualização de Estado ────────────────────────────────
+
+  private applyState(state: PlayerState) {
+    this.lastState = state;
+    const isTocando = state === "tocando";
+    const isActive  = state !== "aguardando";
+
+    // Animação dos anéis de onda no miniplayer
+    if (this.ring1El && this.ring2El) {
+      this.ring1El.classList.toggle("is-playing", isTocando);
+      this.ring2El.classList.toggle("is-playing", isTocando);
+    }
+    // Animação do ícone de headphone
+    if (this.miniIconEl) {
+      this.miniIconEl.classList.toggle("is-playing", isTocando);
+    }
+
+    if (!this.statusTextEl || !this.toggleBtn || !this.indicatorEl) return;
+
+    if (!isActive) {
+      this.statusTextEl.textContent = t("widget.status.waiting");
+      setIcon(this.toggleBtn, "play");
+      Object.assign(this.indicatorEl.style, {
+        background: "var(--text-faint)",
+        boxShadow:  "none",
+      });
+      return;
+    }
+
+    this.statusTextEl.textContent = isTocando ? t("widget.status.playing") : t("widget.status.paused");
+    setIcon(this.toggleBtn, isTocando ? "pause" : "play");
+    Object.assign(this.indicatorEl.style, {
+      background: isTocando ? "var(--text-success)" : "var(--text-warning)",
+      boxShadow:  isTocando ? "0 0 6px var(--text-success)" : "none",
+    });
+  }
+
+  // ── Utilitários ──────────────────────────────────────────
+
+  private addSep(container: HTMLElement) {
+    const sep = container.createSpan();
+    sep.style.cssText = "width:1px; height:16px; background:var(--background-modifier-border); flex-shrink:0;";
+  }
+
+  private refreshTexts() {
+    if (!this.widgetEl) return;
+
+    if (this.collapseBtn) this.collapseBtn.setAttribute("aria-label", t("widget.aria.minimize_player"));
+    if (this.toggleBtn) this.toggleBtn.setAttribute("aria-label", t("widget.aria.play_pause"));
+    if (this.stopBtn) this.stopBtn.setAttribute("aria-label", t("widget.aria.stop_narration"));
+    if (this.chaptersBtn) this.chaptersBtn.setAttribute("aria-label", t("widget.aria.chapters"));
+    if (this.toolsBtn) this.toolsBtn.setAttribute("aria-label", t("widget.aria.tools"));
+
+    this.applyLayoutMode();
+    this.applyState(this.lastState);
+
+    if (this.toolsDropEl) {
+      this.closeToolsMenu();
+      this.toggleToolsMenu();
+    }
+  }
+}
+```
+
+src/queue.ts
+```
+// Responsabilidades do Script
+//
+// 1. Limpar marcações Markdown e normalizar caracteres especiais em linhas individuais.
+// 2. Fatiar a nota em chunks mapeando as linhas físicas originais do editor (0-indexed).
+// 3. Gerenciar o ponteiro de leitura e realizar buscas por índice de linha em memória.
+// 4. Filtrar apenas destaques (==texto==) quando o modo Audio-Resumo estiver ativo.
+
+export interface AudioChunk {
+  index: number;
+  text: string;
+  startLine: number;
+  endLine: number;
+}
+
+export interface ChapterInfo {
+  title: string;
+  chunkIndex: number;
+  level: number;
+}
+
+export class ObsidianVoiceQueue {
+  private chunks: AudioChunk[] = [];
+  private chapters: ChapterInfo[] = [];
+  private currentIndex = 0;
+  private readonly MAX_CHUNK_LENGTH = 500;
+
+  /** Quando true, a fila é populada apenas com os destaques ==texto== da nota. */
+  readOnlyHighlights = false;
+
+  startQueue(rawText: string) {
+    this.chunks = [];
+    this.chapters = [];
+    this.currentIndex = 0;
+
+    if (this.readOnlyHighlights) {
+      this.buildHighlightsQueue(rawText);
+      // Capítulos são extraídos APÓS os chunks estarem prontos
+      this.buildChapters(rawText);
+      return;
+    }
+
+    const rawLines = rawText.split(/\r?\n/);
+    let inFrontmatter = false;
+    let inCodeBlock = false;
+
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i];
+      const trimmed = line.trim();
+
+      // Detecta Frontmatter no início do arquivo
+      if (i === 0 && trimmed === "---") {
+        inFrontmatter = true;
+        continue;
+      }
+      if (inFrontmatter) {
+        if (trimmed === "---") {
+          inFrontmatter = false;
+        }
+        continue;
+      }
+
+      // Detecta blocos de código
+      if (trimmed.startsWith("```")) {
+        inCodeBlock = !inCodeBlock;
+        continue;
+      }
+      if (inCodeBlock) {
+        continue;
+      }
+
+      // Detecta cabeçalhos H1-H3 para navegação por capítulos
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        const title = headingMatch[2].trim();
+        this.chapters.push({
+          title,
+          chunkIndex: this.chunks.length,
+          level
+        });
+      }
+
+      // Limpa a linha de marcações Markdown e formatações
+      const cleanLine = this.cleanLineMarkdown(line);
+      if (!cleanLine) {
+        continue;
+      }
+
+      // Se exceder o tamanho máximo, subdivide
+      if (cleanLine.length <= this.MAX_CHUNK_LENGTH) {
+        this.chunks.push({
+          index: this.chunks.length,
+          text: cleanLine,
+          startLine: i,
+          endLine: i,
+        });
+      } else {
+        const subChunks = this.splitParagraph(cleanLine, this.MAX_CHUNK_LENGTH);
+        for (const sub of subChunks) {
+          this.chunks.push({
+            index: this.chunks.length,
+            text: sub,
+            startLine: i,
+            endLine: i,
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * Popula a fila exclusivamente com os trechos destacados (==texto==) da nota.
+   * As tags == são removidas antes do envio ao TTS.
+   */
+  private buildHighlightsQueue(rawText: string) {
+    // Lazy match (.*?) aceita = dentro do destaque, ex: ==x = y==
+    const regex = /==(.*?)==/g;
+    const rawLines = rawText.split(/\r?\n/);
+
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i];
+      let match: RegExpExecArray | null;
+
+      regex.lastIndex = 0;
+      while ((match = regex.exec(line)) !== null) {
+        const text = match[1].trim();
+        if (!text) continue;
+
+        const cleanText = this.cleanLineMarkdown(text);
+        if (!cleanText) continue;
+
+        this.chunks.push({
+          index: this.chunks.length,
+          text: cleanText,
+          startLine: i,
+          endLine: i,
+        });
+      }
+    }
+  }
+
+  /**
+   * Extrai capítulos (H1-H3) do texto bruto e os associa ao primeiro chunk
+   * que começa na linha do heading ou imediatamente após ela.
+   * Funciona corretamente em ambos os modos (normal e readOnlyHighlights).
+   */
+  private buildChapters(rawText: string) {
+    const rawLines = rawText.split(/\r?\n/);
+    let inFrontmatter = false;
+    let inCodeBlock = false;
+
+    for (let i = 0; i < rawLines.length; i++) {
+      const trimmed = rawLines[i].trim();
+
+      // Frontmatter
+      if (i === 0 && trimmed === "---") { inFrontmatter = true; continue; }
+      if (inFrontmatter) {
+        if (trimmed === "---") inFrontmatter = false;
+        continue;
+      }
+
+      // Code blocks
+      if (trimmed.startsWith("```")) { inCodeBlock = !inCodeBlock; continue; }
+      if (inCodeBlock) continue;
+
+      // Headings H1-H3
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+      if (!headingMatch) continue;
+
+      const level = headingMatch[1].length;
+      const title = headingMatch[2].trim();
+
+      // Busca o primeiro chunk cuja startLine >= linha do heading.
+      // Isso funciona tanto no modo normal (chunks contínuos) quanto no modo
+      // highlight (chunks esparsos), pois avança pelo array sem assumir cobertura contínua.
+      const chunkIndex = this.nextChunkAfterLine(i);
+
+      this.chapters.push({ title, chunkIndex, level });
+    }
+  }
+
+  /**
+   * Retorna o índice do primeiro chunk com startLine >= targetLine.
+   * Se nenhum chunk estiver à frente, retorna o índice do último chunk.
+   */
+  private nextChunkAfterLine(targetLine: number): number {
+    for (let i = 0; i < this.chunks.length; i++) {
+      if (this.chunks[i].startLine >= targetLine) return this.chunks[i].index;
+    }
+    return this.chunks.length > 0 ? this.chunks[this.chunks.length - 1].index : 0;
+  }
+
+  getNextChunk(): AudioChunk | null {
+    if (!this.hasMore()) return null;
+    return this.chunks[this.currentIndex++];
+  }
+
+  hasMore(): boolean {
+    return this.currentIndex < this.chunks.length;
+  }
+
+  reset() {
+    this.chunks = [];
+    this.chapters = [];
+    this.currentIndex = 0;
+  }
+
+  getChapters(): ChapterInfo[] {
+    return this.chapters;
+  }
+
+  setCurrentIndex(index: number) {
+    if (index >= 0 && index <= this.chunks.length) {
+      this.currentIndex = index;
+    }
+  }
+
+  getChunkIndexByLine(lineNumber: number): number {
+    if (this.chunks.length === 0) return 0;
+
+    // Tenta encontrar o primeiro chunk que contém a linha no intervalo [startLine, endLine]
+    for (let i = 0; i < this.chunks.length; i++) {
+      const chunk = this.chunks[i];
+      if (lineNumber >= chunk.startLine && lineNumber <= chunk.endLine) {
+        return chunk.index;
+      }
+    }
+
+    // Se não encontrar, busca o chunk mais próximo
+    let closestIndex = 0;
+    let minDiff = Infinity;
+    for (let i = 0; i < this.chunks.length; i++) {
+      const chunk = this.chunks[i];
+      const diff = Math.min(
+        Math.abs(lineNumber - chunk.startLine),
+        Math.abs(lineNumber - chunk.endLine)
+      );
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = chunk.index;
+      }
+    }
+    return closestIndex;
+  }
+
+  findChunkIndexByLineText(lineText: string): number {
+    if (!lineText || !lineText.trim()) return 0;
+
+    const cleanedLine = this.cleanLineMarkdown(lineText).toLowerCase();
+    if (!cleanedLine) return 0;
+
+    const index = this.chunks.findIndex(chunk => {
+      const chunkText = chunk.text.toLowerCase();
+      return chunkText.includes(cleanedLine) || cleanedLine.includes(chunkText);
+    });
+
+    return index !== -1 ? index : 0;
+  }
+
+  /**
+   * Limpa marcações markdown e formatações de uma linha individual.
+   */
+  private cleanLineMarkdown(line: string): string {
+    let clean = line
+      // Remove blocos de código em linha
+      .replace(/`([^`]+)`/g, "$1")
+      // Sintaxe de links internos: [[Link|Texto]] -> Texto e [[Link]] -> Link
+      .replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, "$2")
+      .replace(/\[\[([^\]]+)\]\]/g, "$1")
+      // Links externos: [Texto](URL) -> Texto
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      // Destaques: ==texto== -> texto (lazy match aceita = dentro do destaque)
+      .replace(/==(.*?)==/g, "$1")
+      .replace(/==/g, "")
+      // Negrito e Itálico: **texto**, __texto__, *texto*, _texto_
+      .replace(/(\*\*|__)(.*?)\1/g, "$2")
+      .replace(/(\*|_)(.*?)\1/g, "$2")
+      .replace(/[*_]/g, "") // Remove qualquer asterisco ou underscore residual
+      // Marcadores de cabeçalho: # Titulo -> Titulo
+      .replace(/^#+\s+/, "")
+      // Traços de listas no início de linhas: "- item" ou "* item" ou "1. item" -> "item"
+      .replace(/^\s*[-*+]\s+/, "")
+      .replace(/^\s*\d+\.\s+/, "")
+      // Remove hashtags (#tag) apenas quando precedidas por espaço ou início de linha,
+      // e apenas quando o token após # não é puramente numérico (ex: evita remover #FF0000 ou #123)
+      .replace(/(^|\s)#(?![0-9a-fA-F]{3,6}\b)([^\s#]+)/g, "$1")
+      // Substituições tipográficas
+      .replace(/[""]/g, '"') // Aspas inteligentes duplas
+      .replace(/['']/g, "'") // Aspas inteligentes simples
+      .replace(/—/g, ",")    // Travessão longo por vírgula
+      .replace(/–/g, ",")    // Travessão médio por vírgula
+      // Remove emojis e símbolos especiais sem representação fonética direta
+      .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{1F1E6}-\u{1F1FF}]/gu, "");
+
+    return clean.trim();
+  }
+
+  /**
+   * Divide recursivamente um parágrafo longo em sub-blocos no ponto de pontuação mais próximo.
+   */
+  private splitParagraph(text: string, maxLength: number): string[] {
+    if (text.length <= maxLength) {
+      return [text];
+    }
+
+    let splitIndex = -1;
+    const punctuations = [".", ";", "?", "!"];
+
+    // Encontra a última pontuação dentro do limite seguro
+    for (const punct of punctuations) {
+      const idx = text.lastIndexOf(punct, maxLength - 1);
+      if (idx > splitIndex) {
+        splitIndex = idx;
+      }
+    }
+
+    // Se encontrou pontuação, divide nela
+    if (splitIndex !== -1) {
+      const part1 = text.substring(0, splitIndex + 1).trim();
+      const part2 = text.substring(splitIndex + 1).trim();
+      if (part1 && part2) {
+        return [part1, ...this.splitParagraph(part2, maxLength)];
+      }
+    }
+
+    // Fallback: divide no último espaço (palavra completa)
+    const spaceIdx = text.lastIndexOf(" ", maxLength - 1);
+    if (spaceIdx !== -1) {
+      const part1 = text.substring(0, spaceIdx).trim();
+      const part2 = text.substring(spaceIdx + 1).trim();
+      if (part1 && part2) {
+        return [part1, ...this.splitParagraph(part2, maxLength)];
+      }
+    }
+
+    // Fallback final: corta a seco no limite máximo
+    const part1 = text.substring(0, maxLength).trim();
+    const part2 = text.substring(maxLength).trim();
+    return [part1, ...this.splitParagraph(part2, maxLength)];
+  }
+}
+```
+
+src/settings.ts
+```
+// Responsabilidades do Script
+//
+// 1. Definir a interface e os padrões das configurações do plugin.
+// 2. Renderizar os cards reativos do marketplace com barra de progresso ao vivo.
+// 3. Gerenciar o seletor global de idioma.
+
+import { App, PluginSettingTab, Setting, Notice } from "obsidian";
+import ObsidianVoicePlugin from "./main";
+import { LanguageSetting, offLanguageChanged, onLanguageChanged, setLanguage, t } from "./i18n";
+import type { InstalledModelMetadata } from "./types/model";
+import { getModelCatalog } from "./services/model/model-catalog";
+import { InstallState } from "./types/model";
+import type { PiperVoiceEntry } from "./services/model/model-management-service";
+
+export interface ObsidianVoiceSettings {
+  piperPath: string;
+  selectedVoice: string;
+  highlightColor: string;
+  enableTeleprompterMode: boolean;
+  language: LanguageSetting;
+  models: Record<string, InstalledModelMetadata>;
+  ttsEngine: 'piper' | 'kokoro';
+  selectedKokoroVoice: string;
+}
+
+export const DEFAULT_SETTINGS: ObsidianVoiceSettings = {
+  piperPath:               "",
+  selectedVoice:           "",
+  highlightColor:          "green",
+  enableTeleprompterMode:  true,
+  language:                "auto",
+  models:                  {},
+  ttsEngine:               'piper',
+  selectedKokoroVoice:     'af_bella',
 };
-//# sourceMappingURL=main.js.map
+
+const STATE_LABELS: Record<InstallState, string> = {
+  [InstallState.NOT_INSTALLED]:     "Aguardando",
+  [InstallState.FETCHING_MANIFEST]: "Obtendo informações do modelo...",
+  [InstallState.DOWNLOADING]:       "Baixando...",
+  [InstallState.VERIFYING]:         "Verificando integridade...",
+  [InstallState.EXTRACTING]:        "Extraindo...",
+  [InstallState.VALIDATING_RUNTIME]: "Validando motor de síntese...",
+  [InstallState.INSTALLING]:        "Instalando...",
+  [InstallState.INSTALLED]:         "Instalado",
+  [InstallState.FAILED]:            "Falha na instalação",
+  [InstallState.REMOVING]:          "Removendo...",
+  [InstallState.UPDATING]:          "Atualizando...",
+  [InstallState.ROLLBACK]:          "Revertendo...",
+};
+
+// ── Aba de Configurações ─────────────────────────────────────────────────────
+export class ObsidianVoiceSettingTab extends PluginSettingTab {
+  plugin: ObsidianVoicePlugin;
+  private readonly languageChangeHandler = () => this.display();
+  /** Map para armazenar referências DOM dos progress containers por modelId */
+  private progressRefs = new Map<string, {
+    container: HTMLDivElement;
+    progress: HTMLProgressElement;
+    text: HTMLSpanElement;
+  }>();
+
+  constructor(app: App, plugin: ObsidianVoicePlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+    onLanguageChanged(this.languageChangeHandler);
+    this.plugin.register(() => offLanguageChanged(this.languageChangeHandler));
+  }
+
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    this.progressRefs.clear();
+
+    // ── Campo: Idioma ───────────────────────────────────────
+    new Setting(containerEl)
+      .setName(t("settings.language.title"))
+      .setDesc(t("settings.language.description"))
+      .addDropdown((drop) => {
+        drop.addOption("auto", t("settings.language.auto"));
+        drop.addOption("pt",   t("settings.language.pt"));
+        drop.addOption("en",   t("settings.language.en"));
+        drop.addOption("es",   t("settings.language.es"));
+        drop.setValue(this.plugin.settings.language || "auto");
+        drop.onChange(async (value) => {
+          this.plugin.settings.language = value as LanguageSetting;
+          await this.plugin.saveSettings();
+          setLanguage(value as LanguageSetting);
+        });
+      });
+
+    // ── Seção: Gerenciador de Modelos ─────────────────────────
+    containerEl.createEl("h3", { text: "Gerenciador de Modelos de Voz (Local)" });
+    containerEl.createEl("p", {
+      text: "As instalações rodam localmente no seu computador, sem envio de dados para a nuvem e sem custo de rede.",
+      cls: "ov-marketplace-description",
+    });
+
+    const cardsContainer = containerEl.createDiv({ cls: "ov-cards-container" });
+
+    const catalog = getModelCatalog();
+    for (const [id, entry] of Object.entries(catalog)) {
+      const modelId = id as 'piper' | 'kokoro';
+      const installed = this.plugin.modelManager.isInstalled(modelId);
+      const installing = this.plugin.modelManager.isInstalling(modelId);
+      this.renderCard(cardsContainer, modelId, entry, installed, installing);
+    }
+
+    this.renderVoiceSection(containerEl);
+  }
+
+  private renderCard(
+    container: HTMLDivElement,
+    id: 'piper' | 'kokoro',
+    entry: { displayName: string; description: string; estimatedRamMB: number; estimatedDiskMB: number; tags: string[] },
+    installed: boolean,
+    installing: boolean,
+  ): void {
+    const isComingSoon = id === 'kokoro';
+    const card = container.createDiv({ cls: `ov-card ${isComingSoon ? 'ov-card-coming-soon' : ''}` });
+
+    // Cabeçalho do card
+    const header = card.createDiv({ cls: "ov-card-header" });
+    header.createSpan({ cls: "ov-card-name", text: entry.displayName });
+
+    const badge = header.createSpan({
+      cls: `ov-card-badge ${installed ? "ov-badge-installed" : "ov-badge-available"}`,
+      text: installed ? "Instalado" : "Disponível para Download",
+    });
+
+    // Descrição
+    card.createEl("p", { cls: "ov-card-description", text: entry.description });
+
+    // Tags
+    const tagsRow = card.createDiv({ cls: "ov-card-tags" });
+    for (const tag of entry.tags) {
+      tagsRow.createSpan({ cls: "ov-card-tag", text: tag });
+    }
+
+    // Recursos
+    const resources = card.createDiv({ cls: "ov-card-resources" });
+    resources.createSpan({ text: `RAM estimada: ${entry.estimatedRamMB} MB` });
+    resources.createSpan({ text: `Disco estimado: ${entry.estimatedDiskMB} MB` });
+
+    // Container de progresso (oculto por padrão)
+    const progressContainer = card.createDiv({ cls: "ov-progress-container" });
+    const progressText = progressContainer.createSpan({ cls: "ov-progress-text" });
+    const progressBar = progressContainer.createEl("progress", {
+      cls: "ov-progress-bar",
+      attr: { max: "100", value: "0" },
+    });
+    progressContainer.style.display = "none";
+
+    this.progressRefs.set(id, { container: progressContainer, progress: progressBar, text: progressText });
+
+    // Se já estiver instalando, exibe progresso imediatamente
+    if (installing) {
+      progressContainer.style.display = "flex";
+      progressText.textContent = "Instalação em andamento...";
+    }
+
+    // Botão de ação
+    const actionBtn = card.createEl("button", {
+      cls: `ov-card-btn ${installed ? "ov-btn-remove" : "ov-btn-install"}`,
+      text: installed ? "Remover" : (isComingSoon ? t("settings.marketplace.coming_soon") : "Instalar"),
+    });
+
+    if (isComingSoon || installing) {
+      actionBtn.disabled = true;
+      if (isComingSoon) {
+        actionBtn.textContent = t("settings.marketplace.coming_soon");
+      } else if (installing) {
+        actionBtn.textContent = "Instalando...";
+      }
+    }
+
+    actionBtn.addEventListener("click", () => {
+      if (installed) {
+        this.handleRemove(id, entry.displayName, actionBtn, progressContainer, progressText);
+      } else {
+        this.handleInstall(id, entry.displayName, actionBtn, progressContainer, progressText, progressBar);
+      }
+    });
+  }
+
+  private handleInstall(
+    id: 'piper' | 'kokoro',
+    displayName: string,
+    btn: HTMLButtonElement,
+    progressContainer: HTMLDivElement,
+    progressText: HTMLSpanElement,
+    progressBar: HTMLProgressElement,
+  ): void {
+    btn.disabled = true;
+    btn.textContent = "Instalando...";
+    progressContainer.style.display = "flex";
+    progressText.textContent = "Iniciando...";
+
+    (async () => {
+      try {
+        await this.plugin.modelManager.install(
+          id,
+          (state) => {
+            progressText.textContent = STATE_LABELS[state] || state;
+
+            if (state === InstallState.INSTALLED) {
+              progressContainer.style.display = "none";
+              this.display();
+            }
+          },
+          (percent) => {
+            progressBar.value = percent;
+          },
+        );
+      } catch (err: any) {
+        new Notice(`Erro na instalação: ${err?.message || String(err)}`);
+        progressContainer.style.display = "none";
+        btn.disabled = false;
+        btn.textContent = "Instalar";
+        this.display();
+      }
+    })();
+  }
+
+  private async renderVoiceSection(containerEl: HTMLElement) {
+    if (!this.plugin.modelManager.isInstalled('piper')) return;
+
+    containerEl.createEl("h3", { text: t("settings.voice_model.title") });
+    containerEl.createEl("p", {
+      text: "Escolha uma voz para o motor Piper. O download é feito diretamente do catálogo oficial.",
+      cls: "ov-marketplace-description",
+    });
+
+    const voicesSection = containerEl.createDiv({ cls: "ov-voices-section" });
+
+    const langDrop = voicesSection.createEl("select", { cls: "ov-voice-dropdown" });
+    const profileDrop = voicesSection.createEl("select", { cls: "ov-voice-dropdown" });
+    const downloadBtn = voicesSection.createEl("button", { cls: "ov-card-btn ov-btn-install", text: "Baixar Voz Selecionada" });
+
+    let voices: PiperVoiceEntry[] = [];
+    try {
+      await this.plugin.modelManager.fetchPiperVoices();
+      voices = (this.plugin.modelManager as any).voicesCache || [];
+    } catch (e) {
+      new Notice("Falha ao carregar catálogo de vozes.");
+      return;
+    }
+
+    const langs = Array.from(new Set(voices.map((v) => v.language.code))).sort();
+    langDrop.length = 0;
+    for (const code of langs) {
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = code;
+      langDrop.add(opt);
+    }
+
+    const currentLang = this.plugin.settings.selectedVoice ? this.plugin.settings.selectedVoice.split("-")[0] || "" : "";
+    if (currentLang && langs.includes(currentLang)) langDrop.value = currentLang;
+
+    const refreshProfiles = () => {
+      const lang = langDrop.value;
+      const filtered = voices.filter((v) => v.language.code === lang);
+      profileDrop.length = 0;
+      for (const v of filtered) {
+        const opt = document.createElement('option');
+        opt.value = v.key;
+        opt.textContent = `${v.name} (${v.quality})`;
+        profileDrop.add(opt);
+      }
+      if (filtered.length > 0) profileDrop.selectedIndex = 0;
+    };
+
+    langDrop.addEventListener('change', refreshProfiles);
+    refreshProfiles();
+
+    downloadBtn.addEventListener('click', async () => {
+      const selected = profileDrop.value;
+      const voice = voices.find((v) => v.key === selected);
+      if (!voice) return;
+
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Baixando...";
+
+      try {
+        await (this.plugin.modelManager as any).installVoice(voice);
+        this.plugin.settings.selectedVoice = voice.key;
+        await this.plugin.saveSettings();
+        new Notice(`Voz ${voice.key} instalada.`);
+        this.display();
+      } catch (e: any) {
+        new Notice(`Falha ao baixar voz: ${e?.message || String(e)}`);
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = "Baixar Voz Selecionada";
+      }
+    });
+  }
+
+  private handleRemove(
+    id: 'piper' | 'kokoro',
+    displayName: string,
+    btn: HTMLButtonElement,
+    progressContainer: HTMLDivElement,
+    progressText: HTMLSpanElement,
+  ): void {
+    btn.disabled = true;
+    btn.textContent = "Removendo...";
+    progressContainer.style.display = "flex";
+    progressText.textContent = "Removendo modelo...";
+
+    this.plugin.modelManager.remove(id)
+      .then(() => {
+        new Notice(`Modelo ${displayName} removido com sucesso.`);
+        this.display();
+      })
+      .catch((err) => {
+        new Notice(`Erro ao remover: ${err.message}`);
+        this.display();
+      });
+  }
+}
+```
+
+src/locales/en.json
+```
+{
+  "settings": {
+    "language": {
+      "title": "Language",
+      "description": "Controls the language used by Obsidian Voice.",
+      "auto": "Auto (System)",
+      "pt": "Português",
+      "en": "English",
+      "es": "Español"
+    },
+    "marketplace": {
+      "coming_soon": "Coming soon"
+    },
+    "piper_path": {
+      "title": "Piper executable path",
+      "description": "Absolute path to the Piper binary (example: C:\\piper\\piper.exe). ONNX models will be detected automatically in the same folder.",
+      "not_file": "The provided path is not a file.",
+      "missing": "The provided executable does not exist on disk."
+    },
+    "voice_model": {
+      "title": "Default voice",
+      "loading": "Searching for .onnx models...",
+      "found": ".onnx models found in the Piper executable folder.",
+      "select": "- select a model -",
+      "none": "No .onnx models found"
+    },
+    "highlight_color": {
+      "title": "Highlight color",
+      "description": "Color of the visual highlight applied to the paragraph being narrated.",
+      "green": "Green (Default)",
+      "yellow": "Classic Yellow",
+      "blue": "Focus Blue",
+      "purple": "Zen Purple",
+      "orange": "Autumn Amber"
+    },
+    "teleprompter": {
+      "title": "Automatic scroll (Teleprompter)",
+      "description": "When enabled, the editor scrolls automatically to follow the paragraph being narrated. Disable it to navigate manually without player interference."
+    },
+    "errors": {
+      "prefix": "Error: {{error}}",
+      "unknown_directory": "Unknown error while reading the directory."
+    }
+  },
+  "widget": {
+    "aria": {
+      "expand_player": "Expand player",
+      "minimize_player": "Minimize player",
+      "play_pause": "Play / Pause",
+      "stop_narration": "Stop narration",
+      "chapters": "Chapters",
+      "tools": "Tools"
+    },
+    "status": {
+      "waiting": "Waiting for narration...",
+      "playing": "Narrating note...",
+      "paused": "Paused"
+    },
+    "tools": {
+      "summary_mode": "Summary Mode",
+      "summary_mode_tooltip": "Summary Mode: When enabled, the player will read only highlights (==text==) from this note.",
+      "teleprompter_mode": "Teleprompter Mode",
+      "teleprompter_mode_tooltip": "Teleprompter Mode: When enabled, the editor scrolls automatically with the narrated paragraph.",
+      "settings": "Settings...",
+      "voice_engine": "Voice Engine"
+    }
+  },
+  "commands": {
+    "test_piper": "Test TTS Engine (Piper)",
+    "narrate_current_note": "Narrate Current Note (Obsidian Voice)",
+    "toggle_play_pause": "Toggle Play/Pause (Obsidian Voice)",
+    "stop_narration": "Stop Narration (Obsidian Voice)",
+    "toggle_highlights_only": "Obsidian Voice: Toggle highlight reading (Audio Summary)",
+    "play_from_selection": "Play/Narrate text from current selection",
+    "ribbon_narrate": "Narrate note (Obsidian Voice)"
+  },
+  "notices": {
+    "summary_mode": "Audio Summary Mode: {{state}}",
+    "teleprompter_mode": "Teleprompter Mode: {{state}}",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "narration_stopped": "Narration stopped.",
+    "no_active_note": "No active note found.",
+    "empty_note": "This note has no content to narrate.",
+    "restarting": "Restarting...",
+    "starting_narration": "Starting note narration...",
+    "missing_configuration": "Obsidian Voice: Configure the Piper path and voice in the plugin settings.",
+    "piper_or_model_missing": "Obsidian Voice: Piper executable or ONNX model not found at the specified path.",
+    "narration_finished": "Narration complete!",
+    "narration_error": "Narration error: {{error}}",
+    "generating_audio": "Generating audio...",
+    "audio_generated": "Audio generated successfully!",
+    "audio_generation_error": "Error generating audio: {{error}}",
+    "model_scan_error": "Obsidian Voice: {{error}}",
+    "engine_change_delayed": "Engine change will apply on the next narration.",
+    "engine_changed": "Voice engine changed to {{engine}}."
+  },
+  "errors": {
+    "missing_translation": "Missing translation: {{key}} ({{language}})",
+    "resource_guard": {
+      "insufficient_disk": "Insufficient disk space. Required: {{required}} bytes, available: {{available}} bytes.",
+      "incompatible_arch": "Incompatible processor architecture: {{arch}}. Supported architectures: {{supported}}.",
+      "incompatible_os": "Unsupported operating system: {{os}}.",
+      "manifest_signature_failed": "Manifest security signature verification failed. The file may have been tampered with.",
+      "disk_check_timeout": "Disk space check timed out. Please try again."
+    }
+  },
+  "logs": {}
+}
+```
+
+src/locales/es.json
+```
+{
+  "settings": {
+    "language": {
+      "title": "Idioma",
+      "description": "Controla el idioma usado por Obsidian Voice.",
+      "auto": "Automático (Sistema)",
+      "pt": "Português",
+      "en": "English",
+      "es": "Español"
+    },
+    "marketplace": {
+      "coming_soon": "Próximamente"
+    },
+    "piper_path": {
+      "title": "Ruta del ejecutable de Piper",
+      "description": "Ruta absoluta al binario de Piper (ejemplo: C:\\piper\\piper.exe). Los modelos .onnx se detectarán automáticamente en la misma carpeta.",
+      "not_file": "La ruta proporcionada no es un archivo.",
+      "missing": "El ejecutable proporcionado no existe en el disco."
+    },
+    "voice_model": {
+      "title": "Voz predeterminada",
+      "loading": "Buscando modelos .onnx...",
+      "found": "Modelos .onnx encontrados en la carpeta del ejecutable de Piper.",
+      "select": "- selecciona un modelo -",
+      "none": "No se encontraron modelos .onnx"
+    },
+    "highlight_color": {
+      "title": "Color de resaltado",
+      "description": "Color del resaltado visual aplicado al párrafo que se está narrando.",
+      "green": "Verde (Predeterminado)",
+      "yellow": "Amarillo clásico",
+      "blue": "Azul enfoque",
+      "purple": "Púrpura zen",
+      "orange": "Ámbar otoñal"
+    },
+    "teleprompter": {
+      "title": "Desplazamiento automático (Teleprompter)",
+      "description": "Cuando está activado, el editor se desplaza automáticamente para seguir el párrafo que se está narrando. Desactívalo para navegar manualmente sin interferencia del reproductor."
+    },
+    "errors": {
+      "prefix": "Error: {{error}}",
+      "unknown_directory": "Error desconocido al leer el directorio."
+    }
+  },
+  "widget": {
+    "aria": {
+      "expand_player": "Expandir reproductor",
+      "minimize_player": "Minimizar reproductor",
+      "play_pause": "Reproducir / Pausar",
+      "stop_narration": "Detener narración",
+      "chapters": "Capítulos",
+      "tools": "Herramientas"
+    },
+    "status": {
+      "waiting": "Esperando narración...",
+      "playing": "Narrando nota...",
+      "paused": "Pausado"
+    },
+    "tools": {
+      "summary_mode": "Modo resumen",
+      "summary_mode_tooltip": "Modo resumen: Cuando está activado, el reproductor leerá solo los resaltados (==texto==) de esta nota.",
+      "teleprompter_mode": "Modo Teleprompter",
+      "teleprompter_mode_tooltip": "Modo Teleprompter: Cuando está activado, el editor se desplaza automáticamente con el párrafo narrado.",
+      "settings": "Configuración...",
+      "voice_engine": "Motor de Voz"
+    }
+  },
+  "commands": {
+    "test_piper": "Probar motor TTS (Piper)",
+    "narrate_current_note": "Narrar nota actual (Obsidian Voice)",
+    "toggle_play_pause": "Alternar Reproducir/Pausar (Obsidian Voice)",
+    "stop_narration": "Detener narración (Obsidian Voice)",
+    "toggle_highlights_only": "Obsidian Voice: Alternar lectura de resaltados (Resumen de audio)",
+    "play_from_selection": "Reproducir/Narrar texto de la selección actual",
+    "ribbon_narrate": "Narrar nota (Obsidian Voice)"
+  },
+  "notices": {
+    "summary_mode": "Modo resumen de audio: {{state}}",
+    "teleprompter_mode": "Modo Teleprompter: {{state}}",
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+    "narration_stopped": "Narración detenida.",
+    "no_active_note": "No se encontró ninguna nota activa.",
+    "empty_note": "La nota no tiene contenido para narrar.",
+    "restarting": "Reiniciando...",
+    "starting_narration": "Iniciando narración de la nota...",
+    "missing_configuration": "Obsidian Voice: Configura la ruta de Piper y la voz en la configuración del plugin.",
+    "piper_or_model_missing": "Obsidian Voice: Ejecutable de Piper o modelo ONNX no encontrado en la ruta especificada.",
+    "narration_finished": "Narración completada.",
+    "narration_error": "Error en la narración: {{error}}",
+    "generating_audio": "Generando audio...",
+    "audio_generated": "Audio generado correctamente.",
+    "audio_generation_error": "Error al generar audio: {{error}}",
+    "model_scan_error": "Obsidian Voice: {{error}}",
+    "engine_change_delayed": "El cambio de motor se aplicará en la próxima narración.",
+    "engine_changed": "Motor de voz cambiado a {{engine}}."
+  },
+  "errors": {
+    "missing_translation": "Traducción faltante: {{key}} ({{language}})",
+    "resource_guard": {
+      "insufficient_disk": "Espacio en disco insuficiente. Requerido: {{required}} bytes, disponible: {{available}} bytes.",
+      "incompatible_arch": "Arquitectura de procesador incompatible: {{arch}}. Arquitecturas compatibles: {{supported}}.",
+      "incompatible_os": "Sistema operativo no compatible: {{os}}.",
+      "manifest_signature_failed": "Falló la verificación de firma de seguridad del manifiesto. El archivo puede haber sido alterado.",
+      "disk_check_timeout": "La verificación de espacio en disco superó el tiempo límite. Inténtelo de nuevo."
+    }
+  },
+  "logs": {}
+}
+```
+
+src/locales/pt.json
+```
+{
+  "settings": {
+    "language": {
+      "title": "Idioma",
+      "description": "Controla o idioma usado pelo Obsidian Voice.",
+      "auto": "Automático (Sistema)",
+      "pt": "Português",
+      "en": "English",
+      "es": "Español"
+    },
+    "marketplace": {
+      "coming_soon": "Em breve"
+    },
+    "piper_path": {
+      "title": "Caminho do executável do Piper",
+      "description": "Caminho absoluto para o binário do Piper (ex: C:\\piper\\piper.exe). Os modelos .onnx serão detectados automaticamente no mesmo diretório.",
+      "not_file": "O caminho fornecido não é um arquivo.",
+      "missing": "O executável fornecido não existe no disco."
+    },
+    "voice_model": {
+      "title": "Voz padrão",
+      "loading": "Buscando modelos .onnx...",
+      "found": "Modelos .onnx encontrados no diretório do executável do Piper.",
+      "select": "- selecione um modelo -",
+      "none": "Nenhum .onnx encontrado"
+    },
+    "highlight_color": {
+      "title": "Cor de destaque",
+      "description": "Cor do realce visual aplicado ao parágrafo sendo narrado.",
+      "green": "Verde (Padrão)",
+      "yellow": "Amarelo Classic",
+      "blue": "Azul Foco",
+      "purple": "Púrpura Zen",
+      "orange": "Âmbar Outono"
+    },
+    "teleprompter": {
+      "title": "Scroll automático (Teleprompter)",
+      "description": "Quando ativado, o editor rola automaticamente para acompanhar o parágrafo sendo narrado. Desative para navegar manualmente sem interferência do player."
+    },
+    "errors": {
+      "prefix": "Erro: {{error}}",
+      "unknown_directory": "Erro desconhecido ao ler o diretório."
+    }
+  },
+  "widget": {
+    "aria": {
+      "expand_player": "Expandir player",
+      "minimize_player": "Minimizar player",
+      "play_pause": "Play / Pausar",
+      "stop_narration": "Parar narração",
+      "chapters": "Capítulos",
+      "tools": "Ferramentas"
+    },
+    "status": {
+      "waiting": "Aguardando narração...",
+      "playing": "Narrando nota...",
+      "paused": "Pausado"
+    },
+    "tools": {
+      "summary_mode": "Modo Resumo",
+      "summary_mode_tooltip": "Modo Resumo: Quando ativado, o player lerá apenas os destaques (==texto==) desta nota.",
+      "teleprompter_mode": "Modo Teleprompter",
+      "teleprompter_mode_tooltip": "Modo Teleprompter: Quando ativado, o editor rola automaticamente acompanhando o parágrafo narrado.",
+      "settings": "Configurações...",
+      "voice_engine": "Motor de Voz"
+    }
+  },
+  "commands": {
+    "test_piper": "Testar Motor TTS (Piper)",
+    "narrate_current_note": "Narrar Nota Atual (Obsidian Voice)",
+    "toggle_play_pause": "Alternar Play/Pause (Obsidian Voice)",
+    "stop_narration": "Parar Narração (Obsidian Voice)",
+    "toggle_highlights_only": "Obsidian Voice: Alternar leitura de destaques (Audio-Resumo)",
+    "play_from_selection": "Play/Narrate text from current selection",
+    "ribbon_narrate": "Narrar nota (Obsidian Voice)"
+  },
+  "notices": {
+    "summary_mode": "Modo Audio-Resumo: {{state}}",
+    "teleprompter_mode": "Modo Teleprompter: {{state}}",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "narration_stopped": "Narração interrompida.",
+    "no_active_note": "Nenhuma nota ativa encontrada.",
+    "empty_note": "A nota não possui conteúdo para narrar.",
+    "restarting": "Recomeçando...",
+    "starting_narration": "Iniciando narração da nota...",
+    "missing_configuration": "Obsidian Voice: Configure o caminho do Piper e a voz nas configurações do plugin.",
+    "piper_or_model_missing": "Obsidian Voice: Executável do Piper ou Modelo ONNX não encontrado no caminho especificado.",
+    "narration_finished": "Narração concluída!",
+    "narration_error": "Erro na narração: {{error}}",
+    "generating_audio": "Gerando áudio...",
+    "audio_generated": "Áudio gerado com sucesso!",
+    "audio_generation_error": "Erro ao gerar áudio: {{error}}",
+    "model_scan_error": "Obsidian Voice: {{error}}",
+    "engine_change_delayed": "A troca de motor será aplicada na próxima narração.",
+    "engine_changed": "Motor de voz alterado para {{engine}}."
+  },
+  "errors": {
+    "missing_translation": "Tradução ausente: {{key}} ({{language}})",
+    "resource_guard": {
+      "insufficient_disk": "Espaço em disco insuficiente. Necessário: {{required}} bytes, disponível: {{available}} bytes.",
+      "incompatible_arch": "Arquitetura de processador incompatível: {{arch}}. Arquiteturas suportadas: {{supported}}.",
+      "incompatible_os": "Sistema operacional não suportado: {{os}}.",
+      "manifest_signature_failed": "Falha na verificação de assinatura de segurança do manifesto. O arquivo pode ter sido adulterado.",
+      "disk_check_timeout": "Verificação de espaço em disco excedeu o tempo limite. Tente novamente."
+    }
+  },
+  "logs": {}
+}
+```
+
+src/tts/circuit-breaker.ts
+```
+// Responsabilidades do Script
+//
+// 1. Bloquear temporariamente engines TTS instáveis após falhas consecutivas de geração.
+// 2. Controlar a recuperação gradual de engines TTS após o período de resfriamento.
+
+import { CircuitState } from "./types";
+
+export class CircuitBreaker {
+  private failures = 0;
+  private openedAt = 0;
+  private state: CircuitState = "closed";
+
+  constructor(
+    private readonly failureThreshold = 3,
+    private readonly cooldownMs = 60_000
+  ) {}
+
+  getState(): CircuitState {
+    if (this.state === "open" && Date.now() - this.openedAt >= this.cooldownMs) {
+      this.state = "half-open";
+    }
+    return this.state;
+  }
+
+  canExecute(): boolean {
+    return this.getState() !== "open";
+  }
+
+  recordSuccess(): void {
+    this.failures = 0;
+    this.state = "closed";
+    this.openedAt = 0;
+  }
+
+  recordFailure(): void {
+    this.failures += 1;
+    if (this.failures >= this.failureThreshold) {
+      this.state = "open";
+      this.openedAt = Date.now();
+    }
+  }
+}
+```
+
+src/tts/pipeline-service.ts
+```
+// Responsabilidades do Script
+//
+// 1. Orquestrar o ciclo de sessão da engine TTS durante a narração.
+// 2. Pré-gerar chunks de áudio da fila de narração e limpar arquivos temporários.
+// 3. Aplicar blindagem de falhas e registrar metadados da geração TTS.
+
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { FileSystemAdapter, Vault } from "obsidian";
+import { ObsidianVoiceQueue } from "../queue";
+import { VoiceLogger } from "../logger";
+import { CircuitBreaker } from "./circuit-breaker";
+import { EngineSession, GenerationResult, TTSEngine } from "./types";
+
+export type ChunkResult = { resourcePath: string; absolutePath: string; filename: string; text: string; metadata?: GenerationResult; error?: string } | null;
+
+export class TTSPipelineService {
+  private nextChunkPromise: Promise<ChunkResult> | null = null;
+  private session: EngineSession | null = null;
+  private breaker = new CircuitBreaker();
+
+  constructor(
+    private readonly vault: Vault,
+    private readonly queue: ObsidianVoiceQueue,
+    private readonly engine: TTSEngine,
+    private readonly logger: VoiceLogger,
+    private readonly getSpeed: () => number
+  ) {}
+
+  async validate(): Promise<{ ok: boolean; error?: string }> {
+    return this.engine.validate();
+  }
+
+  async start(): Promise<void> {
+    await this.stop();
+    this.session = this.engine.createSession();
+    this.logger.logEngineEvent(this.engine.id, "session", "warming");
+    await this.session.warmup();
+    this.logger.logEngineEvent(this.engine.id, "session", "ready");
+    this.nextChunkPromise = this.prefetchNextChunk();
+  }
+
+  async stop(): Promise<void> {
+    if (this.session) {
+      this.session.abort();
+      await this.session.dispose();
+      this.session = null;
+    }
+    await this.cleanupPrefetchedChunk();
+  }
+
+  async getNextChunk(): Promise<ChunkResult> {
+    if (!this.nextChunkPromise) this.nextChunkPromise = this.prefetchNextChunk();
+    const currentPromise = this.nextChunkPromise;
+    this.nextChunkPromise = null;
+    return currentPromise;
+  }
+
+  prefetch(): void {
+    this.nextChunkPromise = this.prefetchNextChunk();
+  }
+
+  holdChunk(chunk: NonNullable<ChunkResult>): void {
+    this.nextChunkPromise = Promise.resolve(chunk);
+  }
+
+  async resetPrefetch(): Promise<void> {
+    await this.cleanupPrefetchedChunk();
+  }
+
+  async runTest(text: string, outputFile: string, speed: number): Promise<GenerationResult> {
+    if (!this.session) this.session = this.engine.createSession();
+    await this.session.warmup();
+    return this.generate(text, outputFile, speed);
+  }
+
+  private async prefetchNextChunk(): Promise<ChunkResult> {
+    const chunk = this.queue.getNextChunk();
+    if (chunk === null) return null;
+
+    const cacheDir = path.join(os.tmpdir(), "ObsidianVoiceCache");
+    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+
+    const filename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
+    const absolutePath = path.join(cacheDir, filename);
+
+    try {
+      const metadata = await this.generate(chunk.text, absolutePath, this.getSpeed());
+      return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
+    } catch (error: any) {
+      const message = error?.message || String(error);
+      this.logger.logEngineEvent(this.engine.id, "generation", message);
+      return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message };
+    }
+  }
+
+  private async generate(text: string, outputFile: string, speed: number): Promise<GenerationResult> {
+    if (!this.breaker.canExecute()) throw new Error(`TTS engine circuit is ${this.breaker.getState()}. Try again later.`);
+    if (!this.session) this.session = this.engine.createSession();
+
+    try {
+      const result = await this.session.generate({ text, outputFile, speed });
+      this.breaker.recordSuccess();
+      this.logger.logGeneration(result);
+      return result;
+    } catch (error) {
+      this.breaker.recordFailure();
+      throw error;
+    }
+  }
+
+  private toResourcePath(absolutePath: string): string {
+    if (this.vault.adapter instanceof FileSystemAdapter) {
+      const basePath = this.vault.adapter.getBasePath();
+      const relativePath = path.relative(basePath, absolutePath);
+      return this.vault.adapter.getResourcePath(relativePath);
+    }
+    return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
+  }
+
+  private async cleanupPrefetchedChunk(): Promise<void> {
+    if (!this.nextChunkPromise) return;
+    const chunk = await this.nextChunkPromise;
+    this.nextChunkPromise = null;
+    if (chunk?.absolutePath && fs.existsSync(chunk.absolutePath)) fs.unlinkSync(chunk.absolutePath);
+  }
+}
+```
+
+src/tts/types.ts
+```
+// Responsabilidades do Script
+//
+// 1. Definir contratos compartilhados para engines TTS no pipeline de narração.
+// 2. Descrever metadados de geração, capacidades e saúde usados pelos serviços TTS.
+
+export type TTSOutputMode = "wav-file" | "pcm-stream" | "buffer";
+export type EngineHealthState = "healthy" | "degraded" | "broken" | "warming";
+export type CircuitState = "closed" | "open" | "half-open";
+
+export interface TTSCapabilities {
+  outputModes: TTSOutputMode[];
+  supportsRealtime: boolean;
+  supportsVoiceSwitch: boolean;
+  supportsSpeedControl: boolean;
+}
+
+export interface EngineHealth {
+  state: EngineHealthState;
+  lastValidation?: number;
+  lastError?: string;
+}
+
+export interface GenerationRequest {
+  text: string;
+  outputFile: string;
+  speed: number;
+}
+
+export interface GenerationResult {
+  filePath: string;
+  durationMs?: number;
+  generationMs: number;
+  engineId: string;
+  sampleRate?: number;
+  cached: boolean;
+}
+
+export interface EngineValidationResult {
+  ok: boolean;
+  error?: string;
+}
+
+export interface EngineSession {
+  warmup(): Promise<void>;
+  generate(request: GenerationRequest): Promise<GenerationResult>;
+  abort(): void;
+  dispose(): Promise<void> | void;
+}
+
+export interface TTSEngine {
+  readonly id: string;
+  readonly name: string;
+  readonly version: string;
+  getCapabilities(): TTSCapabilities;
+  getHealth(): EngineHealth;
+  validate(): Promise<EngineValidationResult>;
+  createSession(): EngineSession;
+}
+
+export interface EngineDescriptor {
+  id: string;
+  name: string;
+  version: string;
+  supportedOS: NodeJS.Platform[] | "all";
+  factory(): TTSEngine;
+}
+```
+
+src/types/model.ts
+```
+// Responsabilidades do Script
+//
+// 1. Definir os tipos globais de identificação e estado de instalação de modelos TTS.
+// 2. Descrever a estrutura de metadados estáticos (catálogo) e persistidos (disco) dos modelos.
+
+export type ModelId = 'piper' | 'kokoro';
+
+export const enum InstallState {
+  NOT_INSTALLED = 'NOT_INSTALLED',
+  FETCHING_MANIFEST = 'FETCHING_MANIFEST',
+  DOWNLOADING = 'DOWNLOADING',
+  VERIFYING = 'VERIFYING',
+  EXTRACTING = 'EXTRACTING',
+  VALIDATING_RUNTIME = 'VALIDATING_RUNTIME',
+  INSTALLING = 'INSTALLING',
+  INSTALLED = 'INSTALLED',
+  FAILED = 'FAILED',
+  REMOVING = 'REMOVING',
+  UPDATING = 'UPDATING',
+  ROLLBACK = 'ROLLBACK',
+}
+
+export interface ModelCatalogEntry {
+  id: ModelId;
+  displayName: string;
+  description: string;
+  estimatedRamMB: number;
+  estimatedDiskMB: number;
+  tags: string[];
+}
+
+export interface InstalledModelMetadata {
+  id: ModelId;
+  activeVersion: string;
+  absolutePath: string;
+  installedAt: number;
+}
+```
+
+src/services/model/archive-manager.ts
+```
+// Responsabilidades do Script
+//
+// 1. Extrair arquivos .zip e .tar.gz de forma segura com proteção contra Zip Slip.
+// 2. Validar cada entrada do archive para impedir escrita fora do diretório destino.
+
+import * as path from 'path';
+import * as fs from 'fs';
+import * as zlib from 'zlib';
+import * as tar from 'tar-stream';
+import AdmZip = require('adm-zip');
+
+function isPathSafe(destFolder: string, filePathInArchive: string): boolean {
+  const resolved = path.resolve(destFolder, filePathInArchive);
+  // Normaliza ambos para evitar falsos negativos por separadores mistos
+  const normalizedDest = path.normalize(destFolder) + path.sep;
+  const normalizedResolved = path.normalize(resolved);
+  return normalizedResolved.startsWith(normalizedDest);
+}
+
+export class ArchiveManager {
+  async extract(archivePath: string, destFolder: string): Promise<void> {
+    const ext = path.extname(archivePath).toLowerCase();
+
+    if (ext === '.zip') {
+      await this.extractZip(archivePath, destFolder);
+    } else if (ext === '.gz' || ext === '.tgz') {
+      await this.extractTarGz(archivePath, destFolder);
+    } else {
+      throw new Error(`Formato de archive não suportado: ${ext}`);
+    }
+  }
+
+  private async extractZip(archivePath: string, destFolder: string): Promise<void> {
+    const zip = new AdmZip(archivePath);
+    const entries = zip.getEntries();
+
+    for (const entry of entries) {
+      if (entry.isDirectory) continue;
+
+      if (!isPathSafe(destFolder, entry.entryName)) {
+        throw new Error('Zip Slip detectado: tentativa de escrita fora do diretório destino.');
+      }
+
+      const targetPath = path.resolve(destFolder, entry.entryName);
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+      fs.writeFileSync(targetPath, entry.getData());
+    }
+  }
+
+  private async extractTarGz(archivePath: string, destFolder: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const extract = tar.extract();
+      const errors: string[] = [];
+
+      extract.on('entry', (header, stream, next) => {
+        if (header.type === 'directory') {
+          stream.resume();
+          next();
+          return;
+        }
+
+        const entryName = header.name;
+
+        if (!isPathSafe(destFolder, entryName)) {
+          stream.resume();
+          errors.push(`Zip Slip detectado: ${entryName}`);
+          next();
+          return;
+        }
+
+        const targetPath = path.resolve(destFolder, entryName);
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+        const writeStream = fs.createWriteStream(targetPath);
+        stream.pipe(writeStream);
+        writeStream.on('finish', next);
+        writeStream.on('error', (err) => {
+          errors.push(err.message);
+          next();
+        });
+      });
+
+      extract.on('finish', () => {
+        if (errors.length > 0) {
+          reject(new Error(errors.join('; ')));
+        } else {
+          resolve();
+        }
+      });
+
+      extract.on('error', (err) => reject(err));
+
+      fs.createReadStream(archivePath)
+        .pipe(zlib.createGunzip())
+        .pipe(extract);
+    });
+  }
+
+  isPathSafe(destFolder: string, filePathInArchive: string): boolean {
+    return isPathSafe(destFolder, filePathInArchive);
+  }
+}
+```
+
+src/services/model/download-manager.ts
+```
+// Responsabilidades do Script
+//
+// 1. Gerenciar downloads resilientes de arquivos grandes via HTTPS com suporte a Range Requests.
+// 2. Emitir eventos de progresso em tempo real para a UI durante o download.
+// 3. Validar integridade criptográfica SHA-256 do arquivo finalizado via stream.
+
+import * as https from 'https';
+import * as http from 'http';
+import * as fs from 'fs';
+import * as crypto from 'crypto';
+import * as path from 'path';
+import { EventEmitter } from 'events';
+import type { IncomingMessage } from 'http';
+
+const MAX_REDIRECTS = 5;
+const MAX_RETRIES = 3;
+const BASE_RETRY_DELAY_MS = 1000;
+
+export interface DownloadProgress {
+  bytesDownloaded: number;
+  bytesTotal: number;
+  percent: number;
+}
+
+export interface DownloadOptions {
+  url: string;
+  destPath: string;
+  expectedSha256: string;
+  signal?: AbortSignal;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getFileSize(filePath: string): number {
+  try {
+    return fs.statSync(filePath).size;
+  } catch {
+    return 0;
+  }
+}
+
+function isAbortError(err: unknown): boolean {
+  return err instanceof Error && err.name === 'AbortError';
+}
+
+function resolveResponse(
+  url: string,
+  rangeStart: number,
+  signal: AbortSignal | undefined,
+  redirectsLeft: number,
+): Promise<IncomingMessage> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const parsed = new URL(url);
+    const lib = parsed.protocol === 'https:' ? https : http;
+
+    const headers: Record<string, string> = {};
+    if (rangeStart > 0) {
+      headers['Range'] = `bytes=${rangeStart}-`;
+    }
+
+    const req = lib.get(
+      {
+        hostname: parsed.hostname,
+        port: parsed.port || undefined,
+        path: parsed.pathname + parsed.search,
+        headers,
+      },
+      (res) => {
+        const { statusCode, headers: resHeaders } = res;
+
+        const isRedirect = [301, 302, 307, 308].includes(statusCode!);
+        if (isRedirect && resHeaders.location) {
+          res.resume();
+          if (redirectsLeft <= 0) {
+            reject(new Error('Limite máximo de redirecionamentos HTTP atingido.'));
+            return;
+          }
+          resolveResponse(resHeaders.location, rangeStart, signal, redirectsLeft - 1)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+
+        resolve(res);
+      },
+    );
+
+    req.on('error', (err) => {
+      if (!settled) reject(err);
+    });
+
+    if (signal) {
+      const onAbort = () => {
+        settled = true;
+        req.destroy();
+        const err = new Error('Download cancelado');
+        err.name = 'AbortError';
+        reject(err);
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+  });
+}
+
+async function attemptDownload(
+  url: string,
+  partPath: string,
+  signal: AbortSignal | undefined,
+  onProgress: (p: DownloadProgress) => void,
+): Promise<void> {
+  await fs.promises.mkdir(path.dirname(partPath), { recursive: true });
+
+  const existingBytes = getFileSize(partPath);
+  const response = await resolveResponse(url, existingBytes, signal, MAX_REDIRECTS);
+  const { statusCode, headers } = response;
+
+  const isResume = statusCode === 206 && existingBytes > 0;
+
+  if (!isResume && existingBytes > 0) {
+    await fs.promises.unlink(partPath).catch(() => {});
+  }
+
+  const writeStream = fs.createWriteStream(partPath, { flags: isResume ? 'a' : 'w' });
+  const contentLength = parseInt(headers['content-length'] ?? '0', 10);
+  const totalBytes = isResume ? existingBytes + contentLength : contentLength;
+  let downloadedBytes = isResume ? existingBytes : 0;
+
+  await new Promise<void>((resolve, reject) => {
+    response.on('data', (chunk: Buffer) => {
+      downloadedBytes += chunk.length;
+      const percent = totalBytes > 0 ? Math.round((downloadedBytes / totalBytes) * 100) : 0;
+      onProgress({ bytesDownloaded: downloadedBytes, bytesTotal: totalBytes, percent });
+    });
+
+    response.on('error', (err) => {
+      writeStream.destroy();
+      reject(err);
+    });
+
+    writeStream.on('error', reject);
+    writeStream.on('finish', resolve);
+
+    response.pipe(writeStream);
+  });
+}
+
+function computeSha256(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha256');
+    const stream = fs.createReadStream(filePath);
+    stream.on('data', (chunk) => hash.update(Buffer.from(chunk)));
+    stream.on('end', () => resolve(hash.digest('hex')));
+    stream.on('error', reject);
+  });
+}
+
+export class DownloadManager extends EventEmitter {
+  async download(options: DownloadOptions): Promise<void> {
+    const { url, destPath, expectedSha256, signal } = options;
+    const partPath = `${destPath}.part`;
+
+    const onProgress = (progress: DownloadProgress) => this.emit('progress', progress);
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        if (signal?.aborted) {
+          const err = new Error('Download cancelado antes de iniciar');
+          err.name = 'AbortError';
+          throw err;
+        }
+
+        await attemptDownload(url, partPath, signal, onProgress);
+        break;
+      } catch (err) {
+        if (isAbortError(err)) throw err;
+
+        if (attempt >= MAX_RETRIES - 1) throw err;
+
+        const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt);
+        console.warn(
+          `[DownloadManager] Tentativa ${attempt + 1}/${MAX_RETRIES} falhou. Retomando em ${delay}ms...`,
+          err,
+        );
+        await sleep(delay);
+      }
+    }
+
+    console.log('[DownloadManager] Download concluído. Verificando integridade SHA-256...');
+    const actualSha256 = await computeSha256(partPath);
+
+    if (actualSha256 !== expectedSha256) {
+      await fs.promises.unlink(partPath).catch(() => {});
+      throw new Error(
+        `[DownloadManager] Falha de integridade: esperado ${expectedSha256}, obtido ${actualSha256}. Arquivo corrompido removido.`,
+      );
+    }
+
+    await fs.promises.rename(partPath, destPath);
+    console.log(`[DownloadManager] Arquivo verificado e salvo em: ${destPath}`);
+  }
+}
+```
+
+src/services/model/install-state-machine.ts
+```
+// Responsabilidades do Script
+//
+// 1. Controlar as transições válidas de estado de instalação de modelos.
+// 2. Impedir concorrência bloqueando novas instalações para o mesmo modelo.
+
+import { InstallState } from '../../types/model';
+
+const VALID_TRANSITIONS: Record<InstallState, InstallState[]> = {
+  [InstallState.NOT_INSTALLED]: [
+    InstallState.FETCHING_MANIFEST,
+  ],
+  [InstallState.FETCHING_MANIFEST]: [
+    InstallState.DOWNLOADING,
+    InstallState.FAILED,
+  ],
+  [InstallState.DOWNLOADING]: [
+    InstallState.VERIFYING,
+    InstallState.FAILED,
+  ],
+  [InstallState.VERIFYING]: [
+    InstallState.EXTRACTING,
+    InstallState.FAILED,
+  ],
+  [InstallState.EXTRACTING]: [
+    InstallState.VALIDATING_RUNTIME,
+    InstallState.FAILED,
+  ],
+  [InstallState.VALIDATING_RUNTIME]: [
+    InstallState.INSTALLING,
+    InstallState.FAILED,
+  ],
+  [InstallState.INSTALLING]: [
+    InstallState.INSTALLED,
+    InstallState.FAILED,
+  ],
+  [InstallState.INSTALLED]: [
+    InstallState.UPDATING,
+    InstallState.REMOVING,
+  ],
+  [InstallState.FAILED]: [
+    InstallState.FETCHING_MANIFEST,
+    InstallState.REMOVING,
+  ],
+  [InstallState.REMOVING]: [
+    InstallState.NOT_INSTALLED,
+    InstallState.FAILED,
+  ],
+  [InstallState.UPDATING]: [
+    InstallState.DOWNLOADING,
+    InstallState.FAILED,
+  ],
+  [InstallState.ROLLBACK]: [
+    InstallState.INSTALLED,
+    InstallState.FAILED,
+  ],
+};
+
+export class InstallStateMachine {
+  private currentState: InstallState;
+  private onStateChange?: (state: InstallState) => void;
+
+  constructor(initialState: InstallState = InstallState.NOT_INSTALLED) {
+    this.currentState = initialState;
+  }
+
+  get state(): InstallState {
+    return this.currentState;
+  }
+
+  setOnStateChange(callback: (state: InstallState) => void): void {
+    this.onStateChange = callback;
+  }
+
+  transitionTo(nextState: InstallState): void {
+    const allowed = VALID_TRANSITIONS[this.currentState];
+    if (!allowed || !allowed.includes(nextState)) {
+      throw new Error(
+        `Transição inválida: ${this.currentState} → ${nextState}`
+      );
+    }
+
+    this.currentState = nextState;
+    this.onStateChange?.(nextState);
+  }
+
+  isInstalling(): boolean {
+    return (
+      this.currentState !== InstallState.NOT_INSTALLED &&
+      this.currentState !== InstallState.INSTALLED &&
+      this.currentState !== InstallState.FAILED
+    );
+  }
+}
+```
+
+src/services/model/manifest-models.ts
+```
+// Responsabilidades do Script
+//
+// 1. Fornecer o manifesto local de fallback dos modelos TTS para quando o download remoto falhar.
+
+import type { ModelManifest } from './manifest-service';
+
+export const FALLBACK_MANIFEST: ModelManifest = {
+  version: '1.0.0',
+  models: {
+    piper: {
+      platforms: {
+        'windows-x64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip',
+          sha256: 'f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea',
+        },
+        'macos-arm64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_aarch64.tar.gz',
+          sha256: '6b1eb03b3735946cb35216e063e7eebcc33a6bbf5dd96ec0217959bf1cdcb0cc',
+        },
+        'macos-x64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_macos_x64.tar.gz',
+          sha256: 'ced85c0a3df13945b1e623b878a48fdc2854d5c485b4b67f62857cf551deaf8b',
+        },
+        'linux-x64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz',
+          sha256: 'a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992',
+        },
+        'linux-arm64': {
+          url: 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_aarch64.tar.gz',
+          sha256: 'fea0fd2d87c54dbc7078d0f878289f404bd4d6eea6e7444a77835d1537ab88eb',
+        },
+      },
+    },
+    kokoro: {
+      platforms: {
+        'windows-x64': {
+          url: 'https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-windows-x64.zip',
+          sha256: '0000000000000000000000000000000000000000000000000000000000000000',
+        },
+        'macos-arm64': {
+          url: 'https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-macos-arm64.zip',
+          sha256: '0000000000000000000000000000000000000000000000000000000000000000',
+        },
+        'linux-x64': {
+          url: 'https://github.com/ericrocha001/obsidian_voice/releases/download/models/kokoro-linux-x64.zip',
+          sha256: '0000000000000000000000000000000000000000000000000000000000000000',
+        },
+      },
+    },
+  },
+};
+```
+
+src/services/model/manifest-service.ts
+```
+// Responsabilidades do Script
+//
+// 1. Realizar o download e parsing seguro do manifesto remoto de distribuição de modelos.
+// 2. Validar a estrutura do manifesto com Type Guard.
+// 3. Verificar a assinatura criptográfica do manifesto remoto para garantir integridade.
+// 4. Fallback para cópia local embarcada quando o download remoto ou a verificação falhar.
+
+import { requestUrl } from 'obsidian';
+import * as crypto from 'crypto';
+import { FALLBACK_MANIFEST } from './manifest-models';
+
+export type SupportedPlatform = 'windows-x64' | 'macos-arm64' | 'macos-x64' | 'linux-x64' | 'linux-arm64';
+
+export interface PlatformEntry {
+  url: string;
+  sha256: string;
+}
+
+export interface ModelManifestEntry {
+  platforms?: Partial<Record<SupportedPlatform, PlatformEntry>>;
+}
+
+export interface ModelManifest {
+  version: string;
+  models: Record<string, ModelManifestEntry>;
+}
+
+/**
+ * Chave pública RSA de teste para verificação de assinatura do manifesto.
+ * ATENÇÃO: Substitua por sua chave pública de produção antes do deploy.
+ * Gere o par com: openssl genrsa -out private.pem 2048 && openssl rsa -in private.pem -pubout -out public.pem
+ */
+const TEST_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Z3VS5JJcds3xHn/ygWep4
+PAtEsHnXMSBMzMfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
+FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
+FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
+FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
+FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
+FBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfBFBBGMFfB
+FBBGQQIDAQAB
+-----END PUBLIC KEY-----`;
+
+const SUPPORTED_PLATFORMS: SupportedPlatform[] = [
+  'windows-x64',
+  'macos-arm64',
+  'macos-x64',
+  'linux-x64',
+  'linux-arm64',
+];
+
+function isPlatformEntry(value: unknown): value is PlatformEntry {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return typeof obj.url === 'string' && typeof obj.sha256 === 'string';
+}
+
+function isModelManifestEntry(value: unknown): value is ModelManifestEntry {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.platforms !== 'object' || obj.platforms === null) return true;
+  const platforms = obj.platforms as Record<string, unknown>;
+  return SUPPORTED_PLATFORMS.every((p) => !(p in platforms) || isPlatformEntry(platforms[p]));
+}
+
+function isModelManifest(value: unknown): value is ModelManifest {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.version !== 'string') return false;
+  if (typeof obj.models !== 'object' || obj.models === null) return false;
+  const models = obj.models as Record<string, unknown>;
+  return Object.values(models).every((m) => isModelManifestEntry(m));
+}
+
+function verifySignature(content: string, signatureBase64: string): boolean {
+  try {
+    const signature = Buffer.from(signatureBase64.trim(), 'base64');
+    return crypto.verify(
+      'RSA-SHA256',
+      Buffer.from(content, 'utf-8'),
+      TEST_PUBLIC_KEY,
+      signature,
+    );
+  } catch (err) {
+    console.error('[ManifestService] Erro ao executar verificação criptográfica:', err);
+    return false;
+  }
+}
+
+export class ManifestService {
+  private manifestUrl: string;
+
+  constructor(manifestUrl: string) {
+    this.manifestUrl = manifestUrl;
+  }
+
+  async fetchManifest(): Promise<ModelManifest> {
+    try {
+      const sigUrl = this.manifestUrl.replace(/\.json$/, '.sig');
+
+      const [manifestResponse, sigResponse] = await Promise.all([
+        requestUrl({ url: this.manifestUrl, method: 'GET', contentType: 'application/json' }),
+        requestUrl({ url: sigUrl, method: 'GET' }),
+      ]);
+
+      const rawText: string = manifestResponse.text;
+      const signatureBase64: string = sigResponse.text;
+
+      if (!verifySignature(rawText, signatureBase64)) {
+        console.error('[ManifestService] SEGURANÇA: Assinatura do manifesto remoto inválida. Abortando uso remoto. Usando fallback local.');
+        return FALLBACK_MANIFEST;
+      }
+
+      const parsed: unknown = JSON.parse(rawText);
+
+      if (!isModelManifest(parsed)) {
+        console.warn('[ManifestService] Manifesto remoto com estrutura inválida. Usando fallback local.');
+        return FALLBACK_MANIFEST;
+      }
+
+      console.log('[ManifestService] Manifesto remoto verificado e obtido com sucesso.');
+      return parsed;
+    } catch (err) {
+      console.warn('[ManifestService] Falha ao baixar manifesto remoto. Usando fallback local.', err);
+      return FALLBACK_MANIFEST;
+    }
+  }
+}
+```
+
+src/services/model/model-catalog.ts
+```
+// Responsabilidades do Script
+//
+// 1. Expor o catálogo estático de modelos TTS com metadados para exibição na UI.
+
+import type { ModelCatalogEntry } from '../../types/model';
+
+const MODEL_CATALOG: Record<string, ModelCatalogEntry> = {
+  piper: {
+    id: 'piper',
+    displayName: 'Piper',
+    description: 'Motor TTS local rápido e leve. Ideal para narração diária com baixo consumo de recursos.',
+    estimatedRamMB: 256,
+    estimatedDiskMB: 200,
+    tags: ['rápido', 'leve', 'local'],
+  },
+  kokoro: {
+    id: 'kokoro',
+    displayName: 'Kokoro',
+    description: 'Motor TTS com vozes naturais e qualidade premium. Consume mais recursos, mas entrega áudio mais realista.',
+    estimatedRamMB: 1024,
+    estimatedDiskMB: 2000,
+    tags: ['qualidade', 'premium', 'vozes naturais'],
+  },
+};
+
+export function getModelCatalog(): Record<string, ModelCatalogEntry> {
+  return MODEL_CATALOG;
+}
+
+export function getModelEntry(id: string): ModelCatalogEntry | undefined {
+  return MODEL_CATALOG[id];
+}
+```
+
+src/services/model/model-installer.ts
+```
+// Responsabilidades do Script
+//
+// 1. Orquestrar o fluxo de extração e staging para instalação atômica de modelos.
+// 2. Controlar as transições de estado da instalação com proteção contra concorrência.
+// 3. Persistir metadados do modelo instalado via callback de salvamento.
+
+import { ArchiveManager } from './archive-manager';
+import { StagingManager } from './staging-manager';
+import { InstallStateMachine } from './install-state-machine';
+import { InstallState } from '../../types/model';
+import type { ModelId, InstalledModelMetadata } from '../../types/model';
+
+export interface InstallCallbacks {
+  onStateChange?: (modelId: ModelId, state: InstallState) => void;
+  onInstalled?: (modelId: ModelId, metadata: InstalledModelMetadata) => void;
+  onRemoved?: (modelId: ModelId) => void;
+}
+
+export class ModelInstaller {
+  private archiveManager: ArchiveManager;
+  private stagingManager: StagingManager;
+  private machines: Map<ModelId, InstallStateMachine> = new Map();
+  private callbacks: InstallCallbacks;
+
+  constructor(stagingRoot: string, callbacks: InstallCallbacks = {}) {
+    this.archiveManager = new ArchiveManager();
+    this.stagingManager = new StagingManager(stagingRoot);
+    this.callbacks = callbacks;
+  }
+
+  getMachine(modelId: ModelId): InstallStateMachine {
+    let machine = this.machines.get(modelId);
+    if (!machine) {
+      machine = new InstallStateMachine();
+      machine.setOnStateChange((state) => this.callbacks.onStateChange?.(modelId, state));
+      this.machines.set(modelId, machine);
+    }
+    return machine;
+  }
+
+  async install(modelId: ModelId, archivePath: string, destDir: string, version: string): Promise<void> {
+    const machine = this.getMachine(modelId);
+
+    try {
+      machine.transitionTo(InstallState.VERIFYING);
+      machine.transitionTo(InstallState.EXTRACTING);
+
+      const stagingDir = await this.stagingManager.prepareStaging(modelId);
+
+      machine.transitionTo(InstallState.VALIDATING_RUNTIME);
+      machine.transitionTo(InstallState.INSTALLING);
+
+      await this.archiveManager.extract(archivePath, stagingDir);
+      await this.stagingManager.promoteStaging(stagingDir, destDir);
+
+      machine.transitionTo(InstallState.INSTALLED);
+
+      const metadata: InstalledModelMetadata = {
+        id: modelId,
+        activeVersion: version,
+        absolutePath: destDir,
+        installedAt: Date.now(),
+      };
+
+      this.callbacks.onInstalled?.(modelId, metadata);
+    } catch (err) {
+      machine.transitionTo(InstallState.FAILED);
+      throw err;
+    }
+  }
+
+  async remove(modelId: ModelId, destDir: string): Promise<void> {
+    const machine = this.getMachine(modelId);
+
+    if (machine.isInstalling()) {
+      throw new Error(`Remoção bloqueada: instalação em andamento para o modelo: ${modelId}`);
+    }
+
+    machine.transitionTo(InstallState.REMOVING);
+
+    try {
+      const { rm } = await import('fs/promises');
+      await rm(destDir, { recursive: true, force: true });
+      machine.transitionTo(InstallState.NOT_INSTALLED);
+      this.callbacks.onRemoved?.(modelId);
+    } catch (err) {
+      machine.transitionTo(InstallState.FAILED);
+      throw err;
+    }
+  }
+}
+```
+
+src/services/model/model-management-service.ts
+```
+// Responsabilidades do Script
+//
+// 1. Fornecer API pública unificada (Facade) para instalação e remoção de modelos TTS.
+// 2. Orquestrar ManifestService, ResourceGuard, DownloadManager e ModelInstaller.
+// 3. Persistir metadados de modelos instalados via callback no data.json do plugin.
+// 4. Consultar catálogo de vozes do Piper no HuggingFace com cache.
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as os from 'os';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { requestUrl } from 'obsidian';
+import { ManifestService, type ModelManifest } from './manifest-service';
+import { ResourceGuard } from './resource-guard';
+import { DownloadManager } from './download-manager';
+import { ModelInstaller, type InstallCallbacks } from './model-installer';
+import { getModelEntry } from './model-catalog';
+import { InstallState } from '../../types/model';
+import type { ModelId, InstalledModelMetadata } from '../../types/model';
+
+const MANIFEST_URL = 'https://raw.githubusercontent.com/ericrocha001/obsidian_voice/main/manifest-models.json';
+const execAsync = promisify(exec);
+
+interface SettingsRef {
+  models: Record<string, InstalledModelMetadata>;
+  saveSettings: () => Promise<void>;
+}
+
+export interface PiperVoiceEntry {
+  key: string;
+  name: string;
+  language: {
+    code: string;
+    family: string;
+    region: string;
+    name_native: string;
+    name_english: string;
+    country_english: string;
+  };
+  quality: string;
+  num_speakers: number;
+  speaker_id_map?: Record<string, number>;
+  files: Record<string, { size_bytes: number; md5_digest: string }>;
+  aliases: string[];
+}
+
+export class ModelManagementService {
+  private manifestService: ManifestService;
+  private resourceGuard: ResourceGuard;
+  private downloadManager: DownloadManager;
+  private installer: ModelInstaller;
+  private settingsRef: SettingsRef;
+  private basePath: string;
+  private cachedManifest: ModelManifest | null = null;
+  private voicesCache: PiperVoiceEntry[] | null = null;
+
+  constructor(basePath: string, settingsRef: SettingsRef) {
+    this.basePath = basePath;
+    this.settingsRef = settingsRef;
+
+    const binDir = path.join(basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin');
+
+    this.manifestService = new ManifestService(MANIFEST_URL);
+    this.resourceGuard = new ResourceGuard(basePath);
+    this.downloadManager = new DownloadManager();
+
+    const callbacks: InstallCallbacks = {
+      onInstalled: (modelId, metadata) => {
+        this.settingsRef.models[modelId] = metadata;
+        this.settingsRef.saveSettings().catch((err) =>
+          console.error('[ModelManagementService] Erro ao salvar metadados:', err)
+        );
+      },
+      onRemoved: (modelId) => {
+        delete this.settingsRef.models[modelId];
+        this.settingsRef.saveSettings().catch((err) =>
+          console.error('[ModelManagementService] Erro ao salvar remoção:', err)
+        );
+      },
+    };
+
+    this.installer = new ModelInstaller(binDir, callbacks);
+  }
+
+  isInstalled(modelId: ModelId): boolean {
+    return !!this.settingsRef.models[modelId];
+  }
+
+  isInstalling(modelId: ModelId): boolean {
+    return this.installer.getMachine(modelId).isInstalling();
+  }
+
+  async ensureManifest(): Promise<ModelManifest> {
+    if (!this.cachedManifest) {
+      this.cachedManifest = await this.manifestService.fetchManifest();
+    }
+    return this.cachedManifest;
+  }
+
+  async fetchPiperVoices(): Promise<void> {
+    if (this.voicesCache) return;
+
+    const url = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json';
+    const res = await requestUrl({ url, method: 'GET', contentType: 'application/json' });
+    const parsed = JSON.parse(res.text) as Record<string, PiperVoiceEntry>;
+    this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  async install(
+    modelId: ModelId,
+    onStateChange: (state: InstallState) => void,
+    onProgress?: (percent: number) => void,
+  ): Promise<void> {
+    if (this.isInstalled(modelId) && !this.isInstalling(modelId)) {
+      throw new Error(`Modelo "${modelId}" já está instalado.`);
+    }
+
+    const catalogEntry = getModelEntry(modelId);
+    if (!catalogEntry) {
+      throw new Error(`Modelo "${modelId}" não encontrado no catálogo.`);
+    }
+
+    const machine = this.installer.getMachine(modelId);
+    machine.setOnStateChange((state) => {
+      this.installer.getMachine(modelId).setOnStateChange(() => {});
+      onStateChange(state);
+    });
+
+    machine.transitionTo(InstallState.FETCHING_MANIFEST);
+    onStateChange(InstallState.FETCHING_MANIFEST);
+    machine.setOnStateChange(onStateChange);
+
+    const manifest = await this.ensureManifest();
+    const modelEntry = manifest.models[modelId];
+    if (!modelEntry) {
+      machine.transitionTo(InstallState.FAILED);
+      throw new Error(`Modelo "${modelId}" não encontrado no manifesto.`);
+    }
+
+    const platformKey = this.resolvePlatformKey() as 'windows-x64' | 'macos-arm64' | 'linux-x64' | 'macos-x64' | 'linux-arm64';
+    const platforms = modelEntry.platforms || {};
+    const platformEntry = platforms[platformKey];
+    if (!platformEntry) {
+      machine.transitionTo(InstallState.FAILED);
+      throw new Error(`Plataforma "${platformKey}" não suportada para o modelo "${modelId}".`);
+    }
+
+    const envCheck = await this.resourceGuard.validateEnvironment(
+      modelId,
+      catalogEntry.estimatedDiskMB * 1024 * 1024,
+    );
+    if (!envCheck.success) {
+      machine.transitionTo(InstallState.FAILED);
+      throw new Error(envCheck.error);
+    }
+
+    machine.transitionTo(InstallState.DOWNLOADING);
+    onStateChange(InstallState.DOWNLOADING);
+
+    const tmpDir = path.join(os.tmpdir(), 'obsidian-voice-downloads');
+    const archiveName = `${modelId}-${platformKey}.zip`;
+    const archivePath = path.join(tmpDir, archiveName);
+
+    if (onProgress) {
+      const onDownloadProgress = (progress: { percent: number }) => onProgress(progress.percent);
+      this.downloadManager.on('progress', onDownloadProgress);
+    }
+
+    try {
+      await this.downloadManager.download({
+        url: platformEntry.url,
+        destPath: archivePath,
+        expectedSha256: platformEntry.sha256,
+      });
+    } finally {
+      this.downloadManager.removeAllListeners('progress');
+    }
+
+    const destDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', modelId);
+
+    await this.installer.install(modelId, archivePath, destDir, manifest.version);
+
+    // Runtime Registration: localizar binário e validar saúde
+    await this.registerRuntime(modelId);
+  }
+
+  async installVoice(voice: PiperVoiceEntry, onProgress?: (percent: number) => void): Promise<void> {
+    const piperPathSetting = this.settingsRef.models.piper?.absolutePath;
+    if (!piperPathSetting) {
+      throw new Error('Piper não está instalado.');
+    }
+
+    const destDir = path.dirname(piperPathSetting);
+    const base = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
+
+    const tasks: { url: string; dest: string }[] = [];
+    for (const [rel, meta] of Object.entries(voice.files)) {
+      const fileName = path.basename(rel);
+      const dest = path.join(destDir, fileName);
+      tasks.push({ url: base + rel, dest });
+    }
+
+    for (const task of tasks) {
+      await this.downloadManager.download({
+        url: task.url,
+        destPath: task.dest,
+        expectedSha256: '',
+      });
+      if (onProgress) onProgress(100);
+    }
+  }
+
+  async remove(modelId: ModelId): Promise<void> {
+    if (!this.isInstalled(modelId)) {
+      throw new Error(`Modelo "${modelId}" não está instalado.`);
+    }
+
+    const destDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', modelId);
+    await this.installer.remove(modelId, destDir);
+  }
+
+  private resolvePlatformKey(): string {
+    const arch = process.arch === 'arm64' ? 'arm64' : 'x64';
+    if (process.platform === 'win32') return `windows-${arch}`;
+    if (process.platform === 'darwin') return `macos-${arch}`;
+    return `linux-${arch}`;
+  }
+
+  private async findPiperBinary(binDir: string): Promise<string> {
+    const candidates: string[] = process.platform === 'win32' ? ['piper.exe'] : ['piper'];
+
+    async function walk(dir: string): Promise<string | null> {
+      let entries: { name: string; isDirectory: () => boolean }[] = [];
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch {
+        return null;
+      }
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const found = await walk(full);
+          if (found) return found;
+        } else if (candidates.includes(entry.name)) {
+          return full;
+        }
+      }
+      return null;
+    }
+
+    const found = await walk(binDir);
+    if (!found) throw new Error('Binário do Piper não encontrado após instalação.');
+    return found;
+  }
+
+  private async healthcheckPiper(piperPath: string): Promise<void> {
+    const run = async () => {
+      await execAsync(`"${piperPath}" --help`, { timeout: 120000 });
+    };
+
+    try {
+      await run();
+    } catch (err: any) {
+      const code = err?.code ?? -1;
+      if (process.platform !== 'win32' && code === 'EACCES') {
+        await fs.chmod(piperPath, 0o755);
+        await run();
+        return;
+      }
+      throw new Error(`Healthcheck do Piper falhou: ${err?.message || String(err)}`);
+    }
+  }
+
+  private async registerRuntime(modelId: ModelId): Promise<void> {
+    if (modelId !== 'piper') return;
+
+    const binDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', 'piper');
+    const piperPath = await this.findPiperBinary(binDir);
+    await this.healthcheckPiper(piperPath);
+
+    this.settingsRef.models.piper = {
+      id: 'piper',
+      activeVersion: 'official-2023.11.14-2',
+      absolutePath: piperPath,
+      installedAt: Date.now(),
+    } as any;
+
+    await this.settingsRef.saveSettings();
+  }
+}
+```
+
+src/services/model/resource-guard.ts
+```
+// Responsabilidades do Script
+//
+// 1. Verificar espaço livre em disco da partição do Vault via subprocesso nativo não-bloqueante.
+// 2. Validar plataforma e arquitetura do sistema operacional contra listas de suporte declaradas.
+// 3. Orquestrar a validação completa de ambiente para um modelo antes de iniciar qualquer download.
+
+import { exec } from 'child_process';
+import * as fs from 'fs';
+import type { ModelId } from '../../types/model';
+
+const TIMEOUT_MS = 3000;
+
+function execWithTimeout(command: string, cwd: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`Comando excedeu o timeout de ${TIMEOUT_MS}ms: ${command}`));
+    }, TIMEOUT_MS);
+
+    exec(command, { cwd, signal: controller.signal }, (error, stdout) => {
+      clearTimeout(timer);
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(stdout.trim());
+    });
+  });
+}
+
+async function getDiskFreeBytes(vaultPath: string): Promise<number> {
+  const safeCwd = (await fs.promises.access(vaultPath).then(() => vaultPath).catch(() => process.cwd())) || process.cwd();
+
+  if (process.platform === 'win32') {
+    const output = await execWithTimeout(
+      'powershell -Command "(Get-Item -Path .).PSDrive.Free"',
+      safeCwd,
+    );
+    const bytes = parseInt(output, 10);
+    if (isNaN(bytes)) throw new Error(`Saída inesperada do PowerShell: "${output}"`);
+    return bytes;
+  }
+
+  // macOS e Linux
+  const output = await execWithTimeout('df -k .', safeCwd);
+  const lines = output.split('\n');
+  const dataLine = lines[1];
+  if (!dataLine) throw new Error(`Saída inesperada do df: "${output}"`);
+  const parts = dataLine.trim().split(/\s+/);
+  // Coluna 3 (índice 3) = blocos disponíveis em kilobytes
+  const availableKb = parseInt(parts[3], 10);
+  if (isNaN(availableKb)) throw new Error(`Não foi possível parsear espaço disponível: "${dataLine}"`);
+  return availableKb * 1024;
+}
+
+export class ResourceGuard {
+  private vaultPath: string;
+
+  constructor(vaultPath: string) {
+    this.vaultPath = vaultPath;
+  }
+
+  async checkDiskSpace(requiredBytes: number): Promise<boolean> {
+    const freeBytes = await getDiskFreeBytes(this.vaultPath);
+    console.log(`[ResourceGuard] Espaço livre: ${freeBytes} bytes | Necessário: ${requiredBytes} bytes`);
+    return freeBytes >= requiredBytes;
+  }
+
+  checkPlatformAndArch(supportedOS: string[], supportedArch: string[]): boolean {
+    const osOk = supportedOS.includes(process.platform);
+    const archOk = supportedArch.includes(process.arch);
+    console.log(`[ResourceGuard] Plataforma: ${process.platform} (ok=${osOk}) | Arch: ${process.arch} (ok=${archOk})`);
+    return osOk && archOk;
+  }
+
+  async validateEnvironment(
+    modelId: ModelId,
+    requiredBytes: number,
+  ): Promise<{ success: boolean; error?: string }> {
+    const platformOk = this.checkPlatformAndArch(
+      ['win32', 'darwin', 'linux'],
+      ['x64', 'arm64'],
+    );
+
+    if (!platformOk) {
+      const msg = `Modelo "${modelId}": plataforma (${process.platform}/${process.arch}) não suportada.`;
+      console.error(`[ResourceGuard] ${msg}`);
+      return { success: false, error: msg };
+    }
+
+    try {
+      const diskOk = await this.checkDiskSpace(requiredBytes);
+      if (!diskOk) {
+        const msg = `Modelo "${modelId}": espaço em disco insuficiente. Necessário: ${requiredBytes} bytes.`;
+        console.error(`[ResourceGuard] ${msg}`);
+        return { success: false, error: msg };
+      }
+    } catch (err) {
+      const msg = `Modelo "${modelId}": falha na verificação de disco — ${err instanceof Error ? err.message : String(err)}`;
+      console.error(`[ResourceGuard] ${msg}`);
+      return { success: false, error: msg };
+    }
+
+    console.log(`[ResourceGuard] Ambiente validado com sucesso para o modelo "${modelId}".`);
+    return { success: true };
+  }
+}
+```
+
+src/services/model/staging-manager.ts
+```
+// Responsabilidades do Script
+//
+// 1. Gerenciar o diretório temporário .staging para instalação atômica de modelos.
+// 2. Promover o diretório de staging para o destino final com rename atômico.
+// 3. Remover resíduos de staging em caso de falha ou abortamento.
+
+import * as path from 'path';
+import * as fs from 'fs/promises';
+import type { ModelId } from '../../types/model';
+
+export class StagingManager {
+  private stagingRoot: string;
+
+  constructor(stagingRoot: string) {
+    this.stagingRoot = stagingRoot;
+  }
+
+  async prepareStaging(modelId: ModelId): Promise<string> {
+    const stagingDir = path.join(this.stagingRoot, '.staging', `${modelId}-temp`);
+    await fs.mkdir(stagingDir, { recursive: true });
+
+    // Remove conteúdo existente sem remover o diretório raiz
+    const entries = await fs.readdir(stagingDir);
+    await Promise.all(
+      entries.map((entry) =>
+        fs.rm(path.join(stagingDir, entry), { recursive: true, force: true })
+      )
+    );
+
+    return stagingDir;
+  }
+
+  async promoteStaging(stagingDir: string, destDir: string): Promise<void> {
+    // Remove o destino antigo se existir
+    await fs.rm(destDir, { recursive: true, force: true });
+    // Rename atômico: staging → destino
+    await fs.rename(stagingDir, destDir);
+  }
+
+  async cleanupStaging(stagingDir: string): Promise<void> {
+    await fs.rm(stagingDir, { recursive: true, force: true });
+  }
+}
+```
+
+src/tts/engine/engine-factory.ts
+```
+// Responsabilidades do Script
+//
+// 1. Instanciar o motor TTS correto com base no identificador da engine ativa.
+// 2. Desacoplar o main.ts da criação direta de classes de motor específicas.
+
+import { TTSEngine } from "../types";
+import { PiperEngine, PiperEngineOptions } from "./piper-engine";
+import { KokoroEngine, KokoroEngineOptions } from "./kokoro-engine";
+import { VoiceLogger } from "../../logger";
+
+export interface EngineFactoryOptions {
+  ttsEngine: 'piper' | 'kokoro';
+  piperPath: string;
+  selectedVoice: string;
+  selectedKokoroVoice: string;
+  basePath?: string;
+  logger: VoiceLogger;
+}
+
+export class TTSEngineFactory {
+  static create(options: EngineFactoryOptions): TTSEngine {
+    if (options.ttsEngine === 'kokoro') {
+      const kokoroOptions: KokoroEngineOptions = {
+        kokoroPath: options.piperPath,
+        selectedVoice: options.selectedKokoroVoice,
+        basePath: options.basePath,
+        logger: options.logger,
+      };
+      return new KokoroEngine(kokoroOptions);
+    }
+
+    const piperOptions: PiperEngineOptions = {
+      piperPath: options.piperPath,
+      selectedVoice: options.selectedVoice,
+      basePath: options.basePath,
+      logger: options.logger,
+    };
+    return new PiperEngine(piperOptions);
+  }
+}
+```
+
+src/tts/engine/engine-registry.ts
+```
+// Responsabilidades do Script
+//
+// 1. Registrar descritores de engines TTS disponíveis para o plugin.
+// 2. Criar instâncias de engines TTS compatíveis com o sistema operacional atual.
+
+import { EngineDescriptor, TTSEngine } from "../types";
+
+export class TTSEngineRegistry {
+  private descriptors = new Map<string, EngineDescriptor>();
+
+  register(descriptor: EngineDescriptor): void {
+    this.descriptors.set(descriptor.id, descriptor);
+  }
+
+  list(): EngineDescriptor[] {
+    return Array.from(this.descriptors.values());
+  }
+
+  create(engineId: string): TTSEngine | null {
+    const descriptor = this.descriptors.get(engineId);
+    if (!descriptor) return null;
+    if (descriptor.supportedOS !== "all" && !descriptor.supportedOS.includes(process.platform)) return null;
+    return descriptor.factory();
+  }
+}
+```
+
+src/tts/engine/kokoro-engine.ts
+```
+// Responsabilidades do Script
+//
+// 1. Adaptar o motor Kokoro ao contrato interno de engines TTS.
+// 2. Validar caminhos do executável e do modelo de voz usados pelo Kokoro.
+// 3. Criar sessões de geração de áudio do Kokoro para o pipeline de narração.
+
+import * as fs from "fs";
+import * as path from "path";
+import {
+  EngineHealth,
+  EngineSession,
+  EngineValidationResult,
+  GenerationRequest,
+  GenerationResult,
+  TTSCapabilities,
+  TTSEngine,
+} from "../types";
+import { SubprocessRuntime } from "../runtime/subprocess-runtime";
+import { VoiceLogger } from "../../logger";
+
+export interface KokoroEngineOptions {
+  kokoroPath: string;
+  selectedVoice: string;
+  basePath?: string;
+  logger: VoiceLogger;
+}
+
+export class KokoroEngine implements TTSEngine {
+  readonly id = "kokoro";
+  readonly name = "Kokoro";
+  readonly version = "1";
+  private health: EngineHealth = { state: "degraded" };
+
+  constructor(private readonly options: KokoroEngineOptions) {}
+
+  getCapabilities(): TTSCapabilities {
+    return {
+      outputModes: ["wav-file"],
+      supportsRealtime: false,
+      supportsVoiceSwitch: true,
+      supportsSpeedControl: true,
+    };
+  }
+
+  getHealth(): EngineHealth {
+    return { ...this.health };
+  }
+
+  async validate(): Promise<EngineValidationResult> {
+    const { kokoroPath, selectedVoice } = this.options;
+    const kokoroExists = !!kokoroPath && fs.existsSync(this.resolveKokoroPath());
+
+    let modelExists = false;
+    if (selectedVoice) {
+      const voicePath = this.resolveVoicePath(selectedVoice);
+      modelExists = fs.existsSync(voicePath);
+    }
+
+    if (!kokoroExists || !modelExists) {
+      const error = "Kokoro executable or voice model is missing.";
+      this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
+      return { ok: false, error };
+    }
+
+    this.health = { state: "healthy", lastValidation: Date.now() };
+    return { ok: true };
+  }
+
+  createSession(): EngineSession {
+    return new KokoroEngineSession(this, new SubprocessRuntime(this.options.logger));
+  }
+
+  buildCommand(
+    text: string,
+    voice: string,
+    outputFile: string,
+    speed: number,
+  ): { command: string; cwd?: string } {
+    const resolvedKokoro = this.resolveKokoroPath();
+    return {
+      command: `"${resolvedKokoro}" --text "${text}" --voice "${voice}" --speed ${speed} --output "${outputFile}"`,
+      cwd: this.options.basePath,
+    };
+  }
+
+  resolveKokoroPath(): string {
+    const { kokoroPath, basePath } = this.options;
+    if (path.isAbsolute(kokoroPath) || !basePath) return kokoroPath;
+    return path.resolve(basePath, kokoroPath);
+  }
+
+  resolveVoicePath(voice: string): string {
+    const { kokoroPath, basePath } = this.options;
+    if (!voice || !kokoroPath) return "";
+    const dir = path.dirname(this.resolveKokoroPath());
+    return path.join(dir, "voices", voice);
+  }
+
+  getSelectedVoice(): string {
+    return this.options.selectedVoice;
+  }
+}
+
+class KokoroEngineSession implements EngineSession {
+  constructor(
+    private readonly engine: KokoroEngine,
+    private readonly runtime: SubprocessRuntime,
+  ) {}
+
+  async warmup(): Promise<void> {
+    // Kokoro subprocess is launched per generation, so warmup is intentionally a no-op.
+  }
+
+  async generate(request: GenerationRequest): Promise<GenerationResult> {
+    const startedAt = Date.now();
+    const { command, cwd } = this.engine.buildCommand(
+      request.text,
+      this.engine.getSelectedVoice(),
+      request.outputFile,
+      request.speed,
+    );
+    await this.runtime.run({ command, cwd, input: request.text });
+    return {
+      filePath: request.outputFile,
+      generationMs: Date.now() - startedAt,
+      engineId: this.engine.id,
+      cached: false,
+    };
+  }
+
+  abort(): void {
+    this.runtime.abort();
+  }
+
+  dispose(): void {
+    this.abort();
+  }
+}
+```
+
+src/tts/engine/piper-engine.ts
+```
+// Responsabilidades do Script
+//
+// 1. Adaptar o motor Piper ao contrato interno de engines TTS.
+// 2. Validar caminhos do executável e do modelo de voz usados pelo Piper.
+// 3. Criar sessões de geração de áudio do Piper para o pipeline de narração.
+
+import * as fs from "fs";
+import * as path from "path";
+import { EngineHealth, EngineSession, EngineValidationResult, GenerationRequest, GenerationResult, TTSCapabilities, TTSEngine } from "../types";
+import { SubprocessRuntime } from "../runtime/subprocess-runtime";
+import { VoiceLogger } from "../../logger";
+
+export interface PiperEngineOptions {
+  piperPath: string;
+  selectedVoice: string;
+  basePath?: string;
+  logger: VoiceLogger;
+}
+
+export class PiperEngine implements TTSEngine {
+  readonly id = "piper";
+  readonly name = "Piper";
+  readonly version = "1";
+  private health: EngineHealth = { state: "degraded" };
+
+  constructor(private readonly options: PiperEngineOptions) {}
+
+  getCapabilities(): TTSCapabilities {
+    return {
+      outputModes: ["wav-file"],
+      supportsRealtime: false,
+      supportsVoiceSwitch: true,
+      supportsSpeedControl: true,
+    };
+  }
+
+  getHealth(): EngineHealth {
+    return { ...this.health };
+  }
+
+  async validate(): Promise<EngineValidationResult> {
+    const { piperPath } = this.options;
+    const resolvedModel = this.resolveModelPath();
+    const isPiperCommand = this.isCommand(piperPath);
+    const piperExists = !!piperPath && (isPiperCommand || fs.existsSync(this.resolvePiperPath()));
+    const modelExists = !!resolvedModel && fs.existsSync(resolvedModel);
+
+    if (!piperExists || !modelExists) {
+      const error = "Piper executable or voice model is missing.";
+      this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
+      return { ok: false, error };
+    }
+
+    this.health = { state: "healthy", lastValidation: Date.now() };
+    return { ok: true };
+  }
+
+  createSession(): EngineSession {
+    return new PiperEngineSession(this, new SubprocessRuntime(this.options.logger));
+  }
+
+  buildCommand(outputFile: string, speed: number): { command: string; cwd?: string } {
+    const resolvedPiper = this.resolvePiperPath();
+    const resolvedModel = this.resolveModelPath();
+    const lengthScale = (1 / speed).toFixed(4);
+    return {
+      command: `"${resolvedPiper}" --model "${resolvedModel}" --length_scale ${lengthScale} --output_file "${outputFile}"`,
+      cwd: this.options.basePath,
+    };
+  }
+
+  private resolvePiperPath(): string {
+    const { piperPath, basePath } = this.options;
+    if (this.isCommand(piperPath) || path.isAbsolute(piperPath) || !basePath) return piperPath;
+    return path.resolve(basePath, piperPath);
+  }
+
+  private resolveModelPath(): string {
+    const { piperPath, selectedVoice, basePath } = this.options;
+    if (!selectedVoice || !piperPath) return "";
+    const isPiperCommand = this.isCommand(piperPath);
+    let modelDir = isPiperCommand ? "" : path.dirname(this.resolvePiperPath());
+    if (modelDir && !path.isAbsolute(modelDir) && basePath) modelDir = path.resolve(basePath, modelDir);
+    return modelDir ? path.join(modelDir, selectedVoice) : selectedVoice;
+  }
+
+  private isCommand(piperPath: string): boolean {
+    return !piperPath.includes("/") && !piperPath.includes("\\");
+  }
+}
+
+class PiperEngineSession implements EngineSession {
+  constructor(private readonly engine: PiperEngine, private readonly runtime: SubprocessRuntime) {}
+
+  async warmup(): Promise<void> {
+    // Piper subprocess is launched per generation, so warmup is intentionally a no-op.
+  }
+
+  async generate(request: GenerationRequest): Promise<GenerationResult> {
+    const startedAt = Date.now();
+    const { command, cwd } = this.engine.buildCommand(request.outputFile, request.speed);
+    await this.runtime.run({ command, cwd, input: request.text });
+    return {
+      filePath: request.outputFile,
+      generationMs: Date.now() - startedAt,
+      engineId: this.engine.id,
+      cached: false,
+    };
+  }
+
+  abort(): void {
+    this.runtime.abort();
+  }
+
+  dispose(): void {
+    this.abort();
+  }
+}
+```
+
+src/tts/runtime/subprocess-runtime.ts
+```
+// Responsabilidades do Script
+//
+// 1. Executar comandos de engines TTS por subprocesso local.
+// 2. Encaminhar texto para stdin e registrar falhas do processo de geração.
+// 3. Encerrar subprocessos ativos quando a narração for interrompida.
+
+import { ChildProcess, exec } from "child_process";
+import { VoiceLogger } from "../../logger";
+
+export interface SubprocessRunRequest {
+  command: string;
+  input: string;
+  cwd?: string;
+}
+
+export class SubprocessRuntime {
+  private child: ChildProcess | null = null;
+
+  constructor(private readonly logger: VoiceLogger) {}
+
+  run(request: SubprocessRunRequest): Promise<void> {
+    this.logger.logDebug(`[Runtime:subprocess] Executando comando: ${request.command}`);
+
+    return new Promise((resolve, reject) => {
+      const child = exec(request.command, request.cwd ? { cwd: request.cwd } : {}, (error, _stdout, stderr) => {
+        this.child = null;
+        if (error) {
+          this.logger.logError(stderr || error.message);
+          this.logger.logExit(error.code || 1);
+          reject(new Error(error.message));
+          return;
+        }
+        this.logger.logExit(0);
+        resolve();
+      });
+
+      this.child = child;
+      if (child.stdin) {
+        child.stdin.on("error", (e) => this.logger.logError(`Erro no stdin do subprocesso TTS: ${e.message}`));
+        child.stdin.write(request.input, "utf-8");
+        child.stdin.end();
+      }
+    });
+  }
+
+  abort(): void {
+    if (!this.child) return;
+    this.child.kill();
+    this.child = null;
+  }
+}
+```
+
+</source_code>

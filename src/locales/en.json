@@ -8,6 +8,9 @@
       "en": "English",
       "es": "Español"
     },
+    "marketplace": {
+      "coming_soon": "Coming soon"
+    },
     "piper_path": {
       "title": "Piper executable path",
       "description": "Absolute path to the Piper binary (example: C:\\piper\\piper.exe). ONNX models will be detected automatically in the same folder.",
@@ -58,7 +61,8 @@
       "summary_mode_tooltip": "Summary Mode: When enabled, the player will read only highlights (==text==) from this note.",
       "teleprompter_mode": "Teleprompter Mode",
       "teleprompter_mode_tooltip": "Teleprompter Mode: When enabled, the editor scrolls automatically with the narrated paragraph.",
-      "settings": "Settings..."
+      "settings": "Settings...",
+      "voice_engine": "Voice Engine"
     }
   },
   "commands": {
@@ -87,10 +91,19 @@
     "generating_audio": "Generating audio...",
     "audio_generated": "Audio generated successfully!",
     "audio_generation_error": "Error generating audio: {{error}}",
-    "model_scan_error": "Obsidian Voice: {{error}}"
+    "model_scan_error": "Obsidian Voice: {{error}}",
+    "engine_change_delayed": "Engine change will apply on the next narration.",
+    "engine_changed": "Voice engine changed to {{engine}}."
   },
   "errors": {
-    "missing_translation": "Missing translation: {{key}} ({{language}})"
+    "missing_translation": "Missing translation: {{key}} ({{language}})",
+    "resource_guard": {
+      "insufficient_disk": "Insufficient disk space. Required: {{required}} bytes, available: {{available}} bytes.",
+      "incompatible_arch": "Incompatible processor architecture: {{arch}}. Supported architectures: {{supported}}.",
+      "incompatible_os": "Unsupported operating system: {{os}}.",
+      "manifest_signature_failed": "Manifest security signature verification failed. The file may have been tampered with.",
+      "disk_check_timeout": "Disk space check timed out. Please try again."
+    }
   },
   "logs": {}
 }

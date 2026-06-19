@@ -8,6 +8,9 @@
       "en": "English",
       "es": "Español"
     },
+    "marketplace": {
+      "coming_soon": "Em breve"
+    },
     "piper_path": {
       "title": "Caminho do executável do Piper",
       "description": "Caminho absoluto para o binário do Piper (ex: C:\\piper\\piper.exe). Os modelos .onnx serão detectados automaticamente no mesmo diretório.",
@@ -58,7 +61,8 @@
       "summary_mode_tooltip": "Modo Resumo: Quando ativado, o player lerá apenas os destaques (==texto==) desta nota.",
       "teleprompter_mode": "Modo Teleprompter",
       "teleprompter_mode_tooltip": "Modo Teleprompter: Quando ativado, o editor rola automaticamente acompanhando o parágrafo narrado.",
-      "settings": "Configurações..."
+      "settings": "Configurações...",
+      "voice_engine": "Motor de Voz"
     }
   },
   "commands": {
@@ -87,10 +91,19 @@
     "generating_audio": "Gerando áudio...",
     "audio_generated": "Áudio gerado com sucesso!",
     "audio_generation_error": "Erro ao gerar áudio: {{error}}",
-    "model_scan_error": "Obsidian Voice: {{error}}"
+    "model_scan_error": "Obsidian Voice: {{error}}",
+    "engine_change_delayed": "A troca de motor será aplicada na próxima narração.",
+    "engine_changed": "Motor de voz alterado para {{engine}}."
   },
   "errors": {
-    "missing_translation": "Tradução ausente: {{key}} ({{language}})"
+    "missing_translation": "Tradução ausente: {{key}} ({{language}})",
+    "resource_guard": {
+      "insufficient_disk": "Espaço em disco insuficiente. Necessário: {{required}} bytes, disponível: {{available}} bytes.",
+      "incompatible_arch": "Arquitetura de processador incompatível: {{arch}}. Arquiteturas suportadas: {{supported}}.",
+      "incompatible_os": "Sistema operacional não suportado: {{os}}.",
+      "manifest_signature_failed": "Falha na verificação de assinatura de segurança do manifesto. O arquivo pode ter sido adulterado.",
+      "disk_check_timeout": "Verificação de espaço em disco excedeu o tempo limite. Tente novamente."
+    }
   },
   "logs": {}
 }

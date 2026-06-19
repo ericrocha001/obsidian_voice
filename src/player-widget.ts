@@ -130,6 +130,9 @@ export class ObsidianVoiceWidget {
   private onTeleprompterToggle: (active: boolean) => void;
   private openSettings: () => void;
   private onSpeedChange: (speed: number) => void;
+  private getInstalledEngines: () => { id: string; name: string; installed: boolean }[];
+  private onEngineChange: (engineId: 'piper' | 'kokoro') => void;
+  private getActiveEngineId: () => 'piper' | 'kokoro';
 
   private widgetEl:            HTMLElement | null = null;
   private miniIconEl:          HTMLElement | null = null;   // Círculo do miniplayer
@@ -163,7 +166,10 @@ export class ObsidianVoiceWidget {
     onResumoToggle: (active: boolean) => void,
     openSettings: () => void,
     onTeleprompterToggle: (active: boolean) => void,
-    onSpeedChange: (speed: number) => void
+    onSpeedChange: (speed: number) => void,
+    getInstalledEngines: () => { id: string; name: string; installed: boolean }[],
+    onEngineChange: (engineId: 'piper' | 'kokoro') => void,
+    getActiveEngineId: () => 'piper' | 'kokoro'
   ) {
     this.onToggle             = onToggle;
     this.onStop               = onStop;
@@ -173,6 +179,9 @@ export class ObsidianVoiceWidget {
     this.openSettings         = openSettings;
     this.onTeleprompterToggle = onTeleprompterToggle;
     this.onSpeedChange        = onSpeedChange;
+    this.getInstalledEngines  = getInstalledEngines;
+    this.onEngineChange       = onEngineChange;
+    this.getActiveEngineId    = getActiveEngineId;
     this.unsubscribeLanguageChanged = onLanguageChanged(() => this.refreshTexts());
   }
 
@@ -542,6 +551,44 @@ export class ObsidianVoiceWidget {
     // Separador
     const sep2 = this.toolsDropEl.createDiv();
     sep2.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
+
+    // ── Row: Seletor de Motor de Voz ──────────────────────
+    const engineRow = this.toolsDropEl.createDiv();
+    Object.assign(engineRow.style, { display: "flex", alignItems: "center", gap: "8px" });
+
+    const engineLabel = engineRow.createSpan();
+    engineLabel.textContent = t("widget.tools.voice_engine");
+    engineLabel.style.fontWeight = "500";
+    engineLabel.style.flex = "1";
+
+    const engineSelect = engineRow.createEl("select");
+    Object.assign(engineSelect.style, {
+      width: "120px", fontSize: "var(--font-ui-small)", padding: "2px 4px",
+      background: "var(--background-primary)", border: "1px solid var(--background-modifier-border)",
+      borderRadius: "4px", color: "var(--text-normal)", cursor: "pointer", flexShrink: "0",
+    });
+    // Popula opções baseadas nas engines instaladas
+    const engines = this.getInstalledEngines();
+    for (const engine of engines) {
+       const option = engineSelect.createEl("option");
+       option.value = engine.id;
+       option.textContent = engine.name;
+       if (!engine.installed) {
+         option.disabled = true;
+         option.textContent += " (não instalado)";
+       }
+    }
+
+    engineSelect.value = this.getActiveEngineId();
+
+    engineSelect.addEventListener("change", () => {
+      const value = engineSelect.value as 'piper' | 'kokoro';
+      this.onEngineChange(value);
+    });
+
+    // Separador
+    const sep3 = this.toolsDropEl.createDiv();
+    sep3.style.cssText = "height:1px; background:var(--background-modifier-border); margin:8px 0;";
 
     // ── Item: Configurações... ────────────────────────────
     const settingsItem = this.toolsDropEl.createDiv();

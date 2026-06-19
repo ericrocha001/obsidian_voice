@@ -8,7 +8,6 @@ export default defineConfig({
   entry: ["src/main.ts"],
   outDir: ".",
   outExtension: () => ({ js: ".js" }),
-  entryNames: "main",
   format: "cjs",
   external: ["obsidian", "@codemirror/state", "@codemirror/view"],
   sourcemap: true,

@@ -81,7 +81,27 @@ export class PiperEngine implements TTSEngine {
     const isPiperCommand = this.isCommand(piperPath);
     let modelDir = isPiperCommand ? "" : path.dirname(this.resolvePiperPath());
     if (modelDir && !path.isAbsolute(modelDir) && basePath) modelDir = path.resolve(basePath, modelDir);
-    return modelDir ? path.join(modelDir, selectedVoice) : selectedVoice;
+
+    const voiceFile = selectedVoice.endsWith('.onnx') ? selectedVoice : `${selectedVoice}.onnx`;
+    if (!modelDir) return voiceFile;
+
+    // Tenta o caminho direto primeiro
+    const directPath = path.join(modelDir, voiceFile);
+    if (fs.existsSync(directPath)) return directPath;
+
+    // Fallback: busca nos diretórios pais (até 3 níveis acima) se houver desalinhamento
+    let currentDir = modelDir;
+    for (let i = 0; i < 3; i++) {
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) break;
+      const candidatePath = path.join(parentDir, voiceFile);
+      if (fs.existsSync(candidatePath)) {
+        return candidatePath;
+      }
+      currentDir = parentDir;
+    }
+
+    return directPath;
   }
 
   private isCommand(piperPath: string): boolean {

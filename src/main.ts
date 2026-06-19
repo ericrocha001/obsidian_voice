@@ -18,12 +18,14 @@ import { VoiceLogger } from "./logger";
 import { EditorHighlighter, highlightField } from "./editor-highlighter";
 import { initializeI18n, t } from "./i18n";
 import { TTSPipelineService, ChunkResult } from "./tts/pipeline-service";
-import { PiperEngine } from "./tts/engine/piper-engine";
+import { TTSEngineFactory } from "./tts/engine/engine-factory";
+import { ModelManagementService } from "./services/model/model-management-service";
 
 export type PlayerState = "aguardando" | "tocando" | "pausado";
 
 export default class ObsidianVoicePlugin extends Plugin {
   settings!: ObsidianVoiceSettings;
+  modelManager!: ModelManagementService;
 
   private audioPlayer!: ObsidianAudioPlayer;
   private queue = new ObsidianVoiceQueue();
@@ -59,7 +61,69 @@ export default class ObsidianVoicePlugin extends Plugin {
     }
     this.logger = new VoiceLogger(basePath || process.cwd());
     this.highlighter.setLogger(this.logger);
+
+    // ── Model Management Service ─────────────────────────
+    this.modelManager = new ModelManagementService(
+      basePath || process.cwd(),
+      {
+        models: this.settings.models,
+        getPiperPath: () => this.settings.piperPath,
+        saveSettings: () => this.saveSettings(),
+      },
+      this.logger
+    );
+
     this.rebuildTTSPipeline();
+
+    // ── Self-Healing de Caminhos do Piper (Onboarding & Compatibilidade) ──
+    const selfHealPiper = async () => {
+      let changed = false;
+
+      // 1. Corrigir absolutePath no models se for diretório
+      const piperModel = this.settings.models.piper;
+      if (piperModel && piperModel.absolutePath) {
+        try {
+          const stats = await fs.promises.stat(piperModel.absolutePath);
+          if (stats.isDirectory()) {
+            const found = await this.modelManager.findPiperBinary(piperModel.absolutePath);
+            if (found) {
+              piperModel.absolutePath = found;
+              changed = true;
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 2. Corrigir piperPath se for diretório
+      if (this.settings.piperPath) {
+        try {
+          const stats = await fs.promises.stat(this.settings.piperPath);
+          if (stats.isDirectory()) {
+            const found = await this.modelManager.findPiperBinary(this.settings.piperPath);
+            if (found) {
+              this.settings.piperPath = found;
+              changed = true;
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 3. Sincronizar se piperPath estiver vazio mas o modelo estiver instalado
+      if (piperModel && piperModel.absolutePath && !this.settings.piperPath) {
+        try {
+          await fs.promises.access(piperModel.absolutePath);
+          this.settings.piperPath = piperModel.absolutePath;
+          changed = true;
+        } catch (_) {}
+      }
+
+      if (changed) {
+        await this.saveSettings();
+        this.rebuildTTSPipeline();
+        console.log('[Obsidian Voice] Self-Healing: Caminhos do Piper sincronizados com sucesso.');
+      }
+    };
+    selfHealPiper();
 
     // ── Ribbon ──────────────────────────────────────────────
     this.addRibbonIcon("headphones", t("commands.ribbon_narrate"), () => this.narrarNotaAtual());
@@ -75,7 +139,17 @@ export default class ObsidianVoicePlugin extends Plugin {
       (active: boolean) => this.onResumoToggle(active),
       () => this.openSettingsTab(),
       (active: boolean) => this.onTeleprompterToggle(active),
-      (speed: number) => this.onSpeedChange(speed)
+      (speed: number) => this.onSpeedChange(speed),
+      () => {
+        const engines: { id: string; name: string; installed: boolean }[] = [];
+        const piperInstalled = this.modelManager.isInstalled('piper');
+        const kokoroInstalled = this.modelManager.isInstalled('kokoro');
+        engines.push({ id: 'piper', name: 'Piper', installed: piperInstalled });
+        engines.push({ id: 'kokoro', name: 'Kokoro', installed: kokoroInstalled });
+        return engines;
+      },
+      (engineId: 'piper' | 'kokoro') => this.onEngineChange(engineId),
+      () => this.settings.ttsEngine,
     );
     // Sincroniza o estado inicial do toggle com as settings persistidas
     this.widget.setTeleprompterAtivo(this.settings.enableTeleprompterMode);
@@ -329,6 +403,22 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.audioPlayer.setPlaybackRate(speed);
   }
 
+  private async onEngineChange(engineId: 'piper' | 'kokoro') {
+    if (this.playerState === 'tocando') {
+      this.settings.ttsEngine = engineId;
+      await this.saveSettings();
+      new Notice(t("notices.engine_change_delayed"));
+      this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget (adiado)");
+      return;
+    }
+
+    this.settings.ttsEngine = engineId;
+    await this.saveSettings();
+    this.rebuildTTSPipeline();
+    new Notice(t("notices.engine_changed", { engine: engineId }));
+    this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget");
+  }
+
   private togglePlayPause() {
     // Estado ocioso: recomeça a narração do início
     if (this.playerState === "aguardando") {
@@ -538,9 +628,13 @@ export default class ObsidianVoicePlugin extends Plugin {
       basePath = this.app.vault.adapter.getBasePath();
     }
 
-    const engine = new PiperEngine({
-      piperPath: this.settings.piperPath,
+    const resolvedPath = this.modelManager ? this.modelManager.resolveBinaryPath(this.settings.ttsEngine) : '';
+
+    const engine = TTSEngineFactory.create({
+      ttsEngine: this.settings.ttsEngine,
+      piperPath: resolvedPath,
       selectedVoice: this.settings.selectedVoice,
+      selectedKokoroVoice: this.settings.selectedKokoroVoice,
       basePath,
       logger: this.logger,
     });
