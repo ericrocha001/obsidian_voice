@@ -1,11 +1,55 @@
-// Responsabilidades do Script
-//
-// 1. Fornecer API pública unificada (Facade) para instalação e remoção de modelos TTS.
-// 2. Orquestrar ManifestService, ResourceGuard, DownloadManager e ModelInstaller.
-// 3. Persistir metadados de modelos instalados via callback no data.json do plugin.
-// 4. Resolver caminhos de executáveis de forma polimórfica entre instalação gerenciada e manual.
+/*
+--- ARQUITETURA DO SCRIPT ---
 
-import * as fs from 'fs/promises';
+Responsabilidades do Script
+
+1. Fornecer API pública unificada (Facade) para instalação e remoção de modelos TTS.
+2. Orquestrar ManifestService, ResourceGuard, DownloadManager e ModelInstaller.
+3. Persistir metadados de modelos instalados via callback no data.json do plugin.
+4. Resolver caminhos de executáveis exclusivamente via metadados persistidos.
+5. Baixar vozes individuais do Piper com progresso em tempo real baseado em bytes.
+6. Migrar instalações legadas (versões antigas) para o novo formato de metadados.
+7. Utilizar diretório temporário do sistema operacional para staging, evitando peso no vault do usuário.
+8. Detectar e limpar metadata corrompido quando o arquivo físico não existe mais.
+
+Mapa de Relacionamentos do Script
+
+1. src/main.ts
+   - Tipo: Dependência Direta
+   - Relação: Consome instância do service para instalar/remover modelos.
+   - Criticidade: Alta
+
+2. src/settings.ts
+   - Tipo: Fluxo de Dados
+   - Relação: Fornece PiperVoiceEntry, cache de vozes e método installVoice() com progresso.
+   - Criticidade: Alta
+
+3. src/services/model/download-manager.ts
+   - Tipo: Dependência Direta
+   - Relação: Gerencia downloads com progresso isolado por callback.
+   - Criticidade: Alta
+
+4. src/services/model/model-installer.ts
+   - Tipo: Dependência Direta
+   - Relação: Orquestra extração e staging de modelos.
+   - Criticidade: Alta
+
+Invariantes do Script
+
+1. installedRootPath é a única fonte canônica para localização da instalação.
+2. executablePath é a única fonte canônica para localização do binário.
+3. Nenhuma rotina deduz caminhos: todas as operações usam metadados.
+4. A remoção só atualiza estado após confirmação física de exclusão.
+5. A migração legacy só roda para instalações antigas, nunca para instalações novas.
+6. O staging temporário nunca deve ocorrer dentro do vault do usuário.
+7. O metadata de instalação só é considerado válido quando o arquivo físico existe no caminho registrado.
+8. getPiperRoot() retorna o diretório do executável, não a raiz da instalação.
+
+--- FIM ARQUITETURA DO SCRIPT ---
+*/
+
+import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { exec } from 'child_process';
@@ -47,6 +91,48 @@ export interface PiperVoiceEntry {
   aliases: string[];
 }
 
+/**
+ * Contém a lógica de migração para instalações legadas.
+ * Executado apenas uma vez no onload.
+ * 
+ * INVARIANT: Esta classe SÓ lida com dados legados (absolutePath).
+ * Não deve ser usada para novas instalações.
+ */
+export class LegacyMigration {
+  /**
+   * Detecta se os metadados estão no formato legado (absolutePath como executável).
+   */
+  static needsMigration(metadata: any): boolean {
+    if (!metadata) return false;
+    return !metadata.installedRootPath && !!metadata.absolutePath;
+  }
+
+  /**
+   * Converte metadados legados para o novo formato canônico.
+   * Retorna os metadados migrados ou null se não houver caminho legacy.
+   */
+  static migrate(metadata: any): InstalledModelMetadata | null {
+    if (metadata.installedRootPath) {
+      return metadata;
+    }
+
+    const legacyPath = metadata.absolutePath;
+    if (!legacyPath) return null;
+
+    const installRoot = path.dirname(legacyPath);
+
+    const migrated: InstalledModelMetadata = {
+      id: metadata.id,
+      activeVersion: metadata.activeVersion,
+      installedRootPath: installRoot,
+      executablePath: legacyPath,
+      installedAt: metadata.installedAt,
+    };
+
+    return migrated;
+  }
+}
+
 export class ModelManagementService {
   private manifestService: ManifestService;
   private resourceGuard: ResourceGuard;
@@ -63,7 +149,7 @@ export class ModelManagementService {
     this.settingsRef = settingsRef;
     this.logger = logger;
 
-    const binDir = path.join(basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin');
+    const stagingRoot = path.join(os.tmpdir(), 'obsidian-voice-staging');
 
     this.manifestService = new ManifestService(MANIFEST_URL);
     this.resourceGuard = new ResourceGuard(basePath);
@@ -84,23 +170,39 @@ export class ModelManagementService {
       },
     };
 
-    this.installer = new ModelInstaller(binDir, callbacks);
+    this.installer = new ModelInstaller(stagingRoot, callbacks, this.isInstalled.bind(this));
+  }
+
+  getPiperInstallRoot(): string {
+    if (process.platform === 'win32') {
+      return path.join(os.homedir(), 'AppData', 'Roaming', 'obsidian-voice', 'bin', 'piper');
+    } else if (process.platform === 'darwin') {
+      return path.join(os.homedir(), 'Library', 'Application Support', 'obsidian-voice', 'bin', 'piper');
+    } else {
+      return path.join(os.homedir(), '.local', 'share', 'obsidian-voice', 'bin', 'piper');
+    }
   }
 
   isInstalled(modelId: ModelId): boolean {
-    return !!this.settingsRef.models[modelId];
+    const metadata = this.settingsRef.models[modelId];
+    if (!metadata) return false;
+
+    try {
+      return fs.existsSync(metadata.installedRootPath);
+    } catch {
+      return false;
+    }
   }
 
-  /**
-   * Resolve o caminho absoluto do executável do modelo.
-   * Prioriza o caminho salvo nos metadados de instalação gerenciada.
-   * Fallback para settings.piperPath (instalação manual legada).
-   */
   resolveBinaryPath(modelId: ModelId): string {
     const metadata = this.settingsRef.models[modelId];
-    if (metadata?.absolutePath) return metadata.absolutePath;
-    if (modelId === 'piper') return this.settingsRef.getPiperPath() ?? '';
-    return '';
+    if (!metadata?.executablePath) return '';
+    return metadata.executablePath;
+  }
+
+  getInstallRoot(modelId: ModelId): string {
+    const metadata = this.settingsRef.models[modelId];
+    return metadata?.installedRootPath || '';
   }
 
   isInstalling(modelId: ModelId): boolean {
@@ -123,11 +225,24 @@ export class ModelManagementService {
     this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
   }
 
+  getPiperRoot(): string {
+    const metadata = this.settingsRef.models.piper;
+    if (!metadata?.executablePath) return '';
+    return path.dirname(metadata.executablePath);
+  }
+
   async install(
     modelId: ModelId,
     onStateChange: (state: InstallState) => void,
     onProgress?: (percent: number) => void,
   ): Promise<void> {
+    // Detecta metadata corrompido: arquivo físico movido/removido manualmente
+    const metadata = this.settingsRef.models[modelId];
+    if (metadata && metadata.installedRootPath && !fs.existsSync(metadata.installedRootPath)) {
+      delete this.settingsRef.models[modelId];
+      await this.settingsRef.saveSettings();
+    }
+
     if (this.isInstalled(modelId) && !this.isInstalling(modelId)) {
       throw new Error(`Modelo "${modelId}" já está instalado.`);
     }
@@ -138,14 +253,11 @@ export class ModelManagementService {
     }
 
     const machine = this.installer.getMachine(modelId);
-    machine.setOnStateChange((state) => {
-      this.installer.getMachine(modelId).setOnStateChange(() => {});
-      onStateChange(state);
-    });
+    machine.setOnStateChange(() => {});
+    machine.setOnStateChange(onStateChange);
 
     machine.transitionTo(InstallState.FETCHING_MANIFEST);
     onStateChange(InstallState.FETCHING_MANIFEST);
-    machine.setOnStateChange(onStateChange);
 
     const manifest = await this.ensureManifest();
     const modelEntry = manifest.models[modelId];
@@ -178,8 +290,11 @@ export class ModelManagementService {
     const archiveName = `${modelId}-${platformKey}.zip`;
     const archivePath = path.join(tmpDir, archiveName);
 
-    if (onProgress) {
-      const onDownloadProgress = (progress: { percent: number }) => onProgress(progress.percent);
+    const onDownloadProgress = onProgress
+      ? (progress: { percent: number }) => onProgress(progress.percent)
+      : null;
+
+    if (onDownloadProgress) {
       this.downloadManager.on('progress', onDownloadProgress);
     }
 
@@ -190,41 +305,192 @@ export class ModelManagementService {
         expectedSha256: platformEntry.sha256,
       });
     } finally {
-      this.downloadManager.removeAllListeners('progress');
+      if (onDownloadProgress) {
+        this.downloadManager.off('progress', onDownloadProgress);
+      }
     }
 
-    const destDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', modelId);
+    const destDir = modelId === 'piper'
+      ? this.getPiperInstallRoot()
+      : path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', modelId);
 
     await this.installer.install(modelId, archivePath, destDir, manifest.version);
-
-    // Runtime Registration: localizar binário e validar saúde
-    await this.registerRuntime(modelId);
   }
 
   async installVoice(voice: PiperVoiceEntry, onProgress?: (percent: number) => void): Promise<void> {
-    const piperPathSetting = this.settingsRef.models.piper?.absolutePath;
-    if (!piperPathSetting) {
+    const basePiperDir = this.getPiperRoot();
+    if (!basePiperDir) {
       throw new Error('Piper não está instalado.');
     }
 
-    const destDir = path.dirname(piperPathSetting);
+    const voiceSubDir = path.join(basePiperDir, voice.key);
+    await fsp.mkdir(voiceSubDir, { recursive: true });
+
     const base = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
 
-    const tasks: { url: string; dest: string; md5: string }[] = [];
+    const totalBytes = Object.values(voice.files).reduce((sum, meta) => sum + meta.size_bytes, 0);
+    let downloadedBytes = 0;
+
+    const tasks: { url: string; dest: string; md5: string; sizeBytes: number }[] = [];
+
     for (const [rel, meta] of Object.entries(voice.files)) {
       const fileName = path.basename(rel);
-      const dest = path.join(destDir, fileName);
-      tasks.push({ url: base + rel, dest, md5: meta.md5_digest });
+      const dest = path.join(voiceSubDir, fileName);
+      tasks.push({ url: base + rel, dest, md5: meta.md5_digest, sizeBytes: meta.size_bytes });
     }
 
     for (const task of tasks) {
+      const onFileProgress = (progress: { bytesDownloaded: number }) => {
+        if (onProgress) {
+          const currentTotal = downloadedBytes + progress.bytesDownloaded;
+          const percent = Math.round((currentTotal / totalBytes) * 100);
+          onProgress(percent);
+        }
+      };
+
       await this.downloadManager.download({
         url: task.url,
         destPath: task.dest,
         expectedMd5: task.md5,
+        onProgress: onFileProgress,
       });
-      if (onProgress) onProgress(100);
+
+      downloadedBytes += task.sizeBytes;
     }
+
+    if (onProgress) onProgress(100);
+    console.log(`[ModelManagementService] Voz ${voice.key} instalada em: ${voiceSubDir}`);
+  }
+
+  async migrateLegacyMetadata(): Promise<boolean> {
+    const piperMetadata = this.settingsRef.models.piper;
+
+    if (!LegacyMigration.needsMigration(piperMetadata)) {
+      return false;
+    }
+
+    const migrated = LegacyMigration.migrate(piperMetadata!);
+    if (!migrated) return false;
+
+    this.settingsRef.models.piper = migrated;
+    await this.settingsRef.saveSettings();
+
+    console.log('[ModelManagementService] Metadados legacy migrados para formato canônico.');
+    return true;
+  }
+
+  async migratePiperFromVault(): Promise<boolean> {
+    const oldBinDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', 'piper');
+    const newBinDir = this.getPiperInstallRoot();
+
+    if (!fs.existsSync(oldBinDir)) return false;
+    if (fs.existsSync(newBinDir)) return false;
+
+    await fsp.mkdir(newBinDir, { recursive: true });
+
+    const entries = await fsp.readdir(oldBinDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const src = path.join(oldBinDir, entry.name);
+      const dest = path.join(newBinDir, entry.name);
+      await fsp.rename(src, dest);
+    }
+
+    const executablePath = this.findExecutable(newBinDir);
+    if (!executablePath) {
+      throw new Error('Binário do Piper não encontrado após migração.');
+    }
+
+    const metadata = this.settingsRef.models.piper;
+    if (metadata) {
+      const migrated = LegacyMigration.needsMigration(metadata)
+        ? LegacyMigration.migrate(metadata)!
+        : metadata;
+
+      migrated.installedRootPath = newBinDir;
+      migrated.executablePath = executablePath;
+      this.settingsRef.models.piper = migrated;
+      await this.settingsRef.saveSettings();
+    }
+
+    console.log('[ModelManagementService] Piper migrado do Vault para local padrão.');
+    return true;
+  }
+
+  private findExecutable(dir: string): string | null {
+    const candidates = process.platform === 'win32' ? ['piper.exe', 'piper'] : ['piper'];
+
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory() && candidates.includes(entry.name)) {
+          return path.join(dir, entry.name);
+        }
+      }
+    } catch {
+      // Diretório não existe ou erro de leitura
+    }
+
+    return null;
+  }
+
+  async migrateVoicesToSubfolders(): Promise<boolean> {
+    const basePiperDir = this.getPiperRoot();
+    if (!basePiperDir) return false;
+
+    const entries = await fsp.readdir(basePiperDir, { withFileTypes: true });
+    const hasVoicesInRoot = entries.some(entry =>
+      !entry.isDirectory() && entry.name.endsWith('.onnx')
+    );
+
+    if (!hasVoicesInRoot) return false;
+
+    if (!this.voicesCache) {
+      await this.fetchPiperVoices();
+    }
+
+    let migratedCount = 0;
+
+    for (const voice of this.voicesCache || []) {
+      const allFilesExist = Object.keys(voice.files).every(rel => {
+        const fileName = path.basename(rel);
+        const filePath = path.join(basePiperDir, fileName);
+        return fs.existsSync(filePath);
+      });
+
+      if (!allFilesExist) continue;
+
+      const voiceSubDir = path.join(basePiperDir, voice.key);
+      await fsp.mkdir(voiceSubDir, { recursive: true });
+
+      for (const rel of Object.keys(voice.files)) {
+        const fileName = path.basename(rel);
+        const src = path.join(basePiperDir, fileName);
+        const dest = path.join(voiceSubDir, fileName);
+
+        if (fs.existsSync(src)) {
+          await fsp.copyFile(src, dest);
+        }
+      }
+
+      migratedCount++;
+      console.log(`[ModelManagementService] Voz migrada: ${voice.key}`);
+    }
+
+    if (migratedCount > 0) {
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          const ext = path.extname(entry.name).toLowerCase();
+          if (ext === '.onnx' || ext === '.json') {
+            const filePath = path.join(basePiperDir, entry.name);
+            await fsp.unlink(filePath).catch(() => {});
+          }
+        }
+      }
+      console.log(`[ModelManagementService] ${migratedCount} vozes migradas para subpastas.`);
+      return true;
+    }
+
+    return false;
   }
 
   async remove(modelId: ModelId): Promise<void> {
@@ -232,8 +498,12 @@ export class ModelManagementService {
       throw new Error(`Modelo "${modelId}" não está instalado.`);
     }
 
-    const destDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', modelId);
-    await this.installer.remove(modelId, destDir);
+    const metadata = this.settingsRef.models[modelId];
+    if (!metadata?.installedRootPath) {
+      throw new Error(`Metadados de instalação corrompidos para "${modelId}".`);
+    }
+
+    await this.installer.remove(modelId, metadata.installedRootPath);
   }
 
   private resolvePlatformKey(): string {
@@ -241,33 +511,6 @@ export class ModelManagementService {
     if (process.platform === 'win32') return `windows-${arch}`;
     if (process.platform === 'darwin') return `macos-${arch}`;
     return `linux-${arch}`;
-  }
-
-  async findPiperBinary(binDir: string): Promise<string> {
-    const candidates: string[] = process.platform === 'win32' ? ['piper.exe'] : ['piper'];
-
-    async function walk(dir: string): Promise<string | null> {
-      let entries: { name: string; isDirectory: () => boolean }[] = [];
-      try {
-        entries = await fs.readdir(dir, { withFileTypes: true });
-      } catch {
-        return null;
-      }
-      for (const entry of entries) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          const found = await walk(full);
-          if (found) return found;
-        } else if (candidates.includes(entry.name)) {
-          return full;
-        }
-      }
-      return null;
-    }
-
-    const found = await walk(binDir);
-    if (!found) throw new Error('Binário do Piper não encontrado após instalação.');
-    return found;
   }
 
   private async healthcheckPiper(piperPath: string): Promise<void> {
@@ -280,37 +523,11 @@ export class ModelManagementService {
     } catch (err: any) {
       const code = err?.code ?? -1;
       if (process.platform !== 'win32' && code === 'EACCES') {
-        await fs.chmod(piperPath, 0o755);
+        await fsp.chmod(piperPath, 0o755);
         await run();
         return;
       }
       throw new Error(`Healthcheck do Piper falhou: ${err?.message || String(err)}`);
-    }
-  }
-
-  private async registerRuntime(modelId: ModelId): Promise<void> {
-    if (modelId !== 'piper') return;
-
-    const binDir = path.join(this.basePath, '.obsidian', 'plugins', 'obsidian-voice', 'bin', 'piper');
-    const piperPath = await this.findPiperBinary(binDir);
-
-    // Persiste metadados de forma atômica antes do healthcheck.
-    // Garante que o status "Instalado" seja salvo mesmo se o healthcheck falhar.
-    this.settingsRef.models.piper = {
-      id: 'piper',
-      activeVersion: 'official-2023.11.14-2',
-      absolutePath: piperPath,
-      installedAt: Date.now(),
-    } as any;
-
-    await this.settingsRef.saveSettings();
-
-    // Healthcheck isolado: falhas de permissão temporária não abortam o fluxo.
-    try {
-      await this.healthcheckPiper(piperPath);
-    } catch (err: any) {
-      this.logger.logError(`Healthcheck do Piper falhou (não-fatal): ${err?.message || String(err)}`);
-      console.warn('[ModelManagementService] Healthcheck do Piper falhou (não-fatal):', err);
     }
   }
 }

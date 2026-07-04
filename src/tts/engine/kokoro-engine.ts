@@ -74,11 +74,10 @@ export class KokoroEngine implements TTSEngine {
     text: string,
     voice: string,
     outputFile: string,
-    speed: number,
   ): { command: string; cwd?: string } {
     const resolvedKokoro = this.resolveKokoroPath();
     return {
-      command: `"${resolvedKokoro}" --text "${text}" --voice "${voice}" --speed ${speed} --output "${outputFile}"`,
+      command: `"${resolvedKokoro}" --text "${text}" --voice "${voice}" --output "${outputFile}"`,
       cwd: this.options.basePath,
     };
   }
@@ -117,7 +116,6 @@ class KokoroEngineSession implements EngineSession {
       request.text,
       this.engine.getSelectedVoice(),
       request.outputFile,
-      request.speed,
     );
     await this.runtime.run({ command, cwd, input: request.text });
     return {

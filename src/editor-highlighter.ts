@@ -8,7 +8,7 @@
 import { StateEffect, StateField, Extension } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import { Editor } from "obsidian";
-import { VoiceLogger } from "./logger";
+import { VoiceLogger, DEBUG_MODE } from "./logger";
 
 let moduleLogger: VoiceLogger | null = null;
 const highlightDiagnostics = {
@@ -17,7 +17,9 @@ const highlightDiagnostics = {
   effectCount: 0,
 };
 
-function logHighlightDiagnostic(message: string, payload?: unknown): void {
+function logHighlightDiagnostic(message: string, payloadFactory?: () => unknown): void {
+  if (!DEBUG_MODE) return;
+  const payload = payloadFactory ? payloadFactory() : undefined;
   let serializedPayload = "";
   if (payload !== undefined) {
     try {
@@ -69,42 +71,48 @@ export const setHighlightEffect = StateEffect.define<{ from: number; to: number 
 export const highlightField = StateField.define<DecorationSet>({
   create() {
     highlightDiagnostics.createCount += 1;
-    logHighlightDiagnostic("highlightField.create() executado.", {
+    logHighlightDiagnostic("highlightField.create() executado.", () => ({
       createCount: highlightDiagnostics.createCount,
       updateCount: highlightDiagnostics.updateCount,
       effectCount: highlightDiagnostics.effectCount,
-    });
+    }));
     return Decoration.none;
   },
   update(decorations, tr) {
     highlightDiagnostics.updateCount += 1;
-    logHighlightDiagnostic("highlightField.update() executado.", {
+    // Curto-circuito de alta performance: se não há decorations ativas e não há
+    // efeito de destaque na transação, retorna imediatamente sem processar map/efeitos.
+    const hasHighlightEffect = tr.effects.some(e => e.is(setHighlightEffect));
+    if (decorations.size === 0 && !hasHighlightEffect) {
+      return Decoration.none;
+    }
+    logHighlightDiagnostic("highlightField.update() executado.", () => ({
       createCount: highlightDiagnostics.createCount,
       updateCount: highlightDiagnostics.updateCount,
       effectCount: highlightDiagnostics.effectCount,
       effectsInTransaction: tr.effects.length,
       docChanged: tr.docChanged,
       selection: tr.state.selection?.toJSON?.(),
-    });
+    }));
 
     decorations = decorations.map(tr.changes);
 
     if (tr.effects.length > 0) {
       moduleLogger?.logDebug(`[Field] update chamado. tr.effects.length = ${tr.effects.length}`);
-      console.log("[Obsidian Voice Field] update chamado. Efeitos no tr:", tr.effects.length);
+      if (DEBUG_MODE) console.log("[Obsidian Voice Field] update chamado. Efeitos no tr:", tr.effects.length);
     }
 
     for (const effect of tr.effects) {
       if (effect.is(setHighlightEffect)) {
         highlightDiagnostics.effectCount += 1;
-        logHighlightDiagnostic("setHighlightEffect chegou ao highlightField.update().", {
+        logHighlightDiagnostic("setHighlightEffect chegou ao highlightField.update().", () => ({
           effectValue: effect.value,
           createCount: highlightDiagnostics.createCount,
           updateCount: highlightDiagnostics.updateCount,
           effectCount: highlightDiagnostics.effectCount,
-        });
+        }));
         moduleLogger?.logDebug(`[Field] setHighlightEffect recebido com valor: ${JSON.stringify(effect.value)}`);
-        console.log("[Obsidian Voice Field] setHighlightEffect recebido no update:", effect.value);
+        if (DEBUG_MODE) console.log("[Obsidian Voice Field] setHighlightEffect recebido no update:", effect.value);
         if (effect.value) {
           const { from, to } = effect.value;
           const deco = Decoration.mark({
@@ -235,7 +243,7 @@ export class EditorHighlighter {
 
       dispatchDiagnostics.currentEditorStateExtensions = describeEditorStateExtensions(view.state);
 
-      logHighlightDiagnostic("Relatorio antes de view.dispatch(setHighlightEffect).", dispatchDiagnostics);
+      logHighlightDiagnostic("Relatorio antes de view.dispatch(setHighlightEffect).", () => dispatchDiagnostics);
 
       view.dispatch({
         effects: setHighlightEffect.of({ from, to })

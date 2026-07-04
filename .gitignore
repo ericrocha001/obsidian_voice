@@ -4,3 +4,10 @@ node_modules/
 data.json
 *.map
 .obsidian/
+code_checkpoints/
+.vscode/
+.kilo
+code_awareness/
+codefetch/
+.codefetchignore
+AGENTS.md

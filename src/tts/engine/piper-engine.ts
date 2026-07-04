@@ -3,6 +3,12 @@
 // 1. Adaptar o motor Piper ao contrato interno de engines TTS.
 // 2. Validar caminhos do executável e do modelo de voz usados pelo Piper.
 // 3. Criar sessões de geração de áudio do Piper para o pipeline de narração.
+//
+// Invariantes do Script
+//
+// 1. piperInstallRoot é a única fonte canônica para localização das vozes do Piper.
+// 2. Busca em fallback apenas para compatibilidade com instalações legadas (não para corrigir novas).
+//
 
 import * as fs from "fs";
 import * as path from "path";
@@ -12,6 +18,7 @@ import { VoiceLogger } from "../../logger";
 
 export interface PiperEngineOptions {
   piperPath: string;
+  piperInstallRoot: string;
   selectedVoice: string;
   basePath?: string;
   logger: VoiceLogger;
@@ -39,7 +46,7 @@ export class PiperEngine implements TTSEngine {
   }
 
   async validate(): Promise<EngineValidationResult> {
-    const { piperPath } = this.options;
+    const { piperPath, piperInstallRoot } = this.options;
     const resolvedModel = this.resolveModelPath();
     const isPiperCommand = this.isCommand(piperPath);
     const piperExists = !!piperPath && (isPiperCommand || fs.existsSync(this.resolvePiperPath()));
@@ -59,12 +66,11 @@ export class PiperEngine implements TTSEngine {
     return new PiperEngineSession(this, new SubprocessRuntime(this.options.logger));
   }
 
-  buildCommand(outputFile: string, speed: number): { command: string; cwd?: string } {
+  buildCommand(outputFile: string): { command: string; cwd?: string } {
     const resolvedPiper = this.resolvePiperPath();
     const resolvedModel = this.resolveModelPath();
-    const lengthScale = (1 / speed).toFixed(4);
     return {
-      command: `"${resolvedPiper}" --model "${resolvedModel}" --length_scale ${lengthScale} --output_file "${outputFile}"`,
+      command: `"${resolvedPiper}" --model "${resolvedModel}" --output_file "${outputFile}"`,
       cwd: this.options.basePath,
     };
   }
@@ -76,32 +82,31 @@ export class PiperEngine implements TTSEngine {
   }
 
   private resolveModelPath(): string {
-    const { piperPath, selectedVoice, basePath } = this.options;
-    if (!selectedVoice || !piperPath) return "";
-    const isPiperCommand = this.isCommand(piperPath);
-    let modelDir = isPiperCommand ? "" : path.dirname(this.resolvePiperPath());
-    if (modelDir && !path.isAbsolute(modelDir) && basePath) modelDir = path.resolve(basePath, modelDir);
+    const { piperInstallRoot, selectedVoice } = this.options;
+    if (!selectedVoice || !piperInstallRoot) return "";
 
+    // Usar a raiz da instalação como fonte canônica (eliminada dedução de path)
     const voiceFile = selectedVoice.endsWith('.onnx') ? selectedVoice : `${selectedVoice}.onnx`;
-    if (!modelDir) return voiceFile;
 
-    // Tenta o caminho direto primeiro
-    const directPath = path.join(modelDir, voiceFile);
+    // Padrão novo: busca na subpasta isolada
+    const subfolderPath = path.join(piperInstallRoot, selectedVoice, voiceFile);
+    if (fs.existsSync(subfolderPath)) return subfolderPath;
+
+    // Padrão antigo: tenta o caminho direto na raiz do diretório do Piper
+    const directPath = path.join(piperInstallRoot, voiceFile);
     if (fs.existsSync(directPath)) return directPath;
 
-    // Fallback: busca nos diretórios pais (até 3 níveis acima) se houver desalinhamento
-    let currentDir = modelDir;
+    // Fallback legado: busca nos diretórios pais (até 3 níveis acima) - apenas para compatibilidade
+    let currentDir = piperInstallRoot;
     for (let i = 0; i < 3; i++) {
       const parentDir = path.dirname(currentDir);
       if (parentDir === currentDir) break;
       const candidatePath = path.join(parentDir, voiceFile);
-      if (fs.existsSync(candidatePath)) {
-        return candidatePath;
-      }
+      if (fs.existsSync(candidatePath)) return candidatePath;
       currentDir = parentDir;
     }
 
-    return directPath;
+    return subfolderPath;
   }
 
   private isCommand(piperPath: string): boolean {
@@ -118,7 +123,7 @@ class PiperEngineSession implements EngineSession {
 
   async generate(request: GenerationRequest): Promise<GenerationResult> {
     const startedAt = Date.now();
-    const { command, cwd } = this.engine.buildCommand(request.outputFile, request.speed);
+    const { command, cwd } = this.engine.buildCommand(request.outputFile);
     await this.runtime.run({ command, cwd, input: request.text });
     return {
       filePath: request.outputFile,

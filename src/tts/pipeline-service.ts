@@ -24,8 +24,7 @@ export class TTSPipelineService {
     private readonly vault: Vault,
     private readonly queue: ObsidianVoiceQueue,
     private readonly engine: TTSEngine,
-    private readonly logger: VoiceLogger,
-    private readonly getSpeed: () => number
+    private readonly logger: VoiceLogger
   ) {}
 
   async validate(): Promise<{ ok: boolean; error?: string }> {
@@ -57,6 +56,13 @@ export class TTSPipelineService {
     return currentPromise;
   }
 
+  async cancelCurrentGeneration(): Promise<void> {
+    if (this.session) {
+      this.session.abort();
+    }
+    await this.cleanupPrefetchedChunk();
+  }
+
   prefetch(): void {
     this.nextChunkPromise = this.prefetchNextChunk();
   }
@@ -69,10 +75,10 @@ export class TTSPipelineService {
     await this.cleanupPrefetchedChunk();
   }
 
-  async runTest(text: string, outputFile: string, speed: number): Promise<GenerationResult> {
+  async runTest(text: string, outputFile: string): Promise<GenerationResult> {
     if (!this.session) this.session = this.engine.createSession();
     await this.session.warmup();
-    return this.generate(text, outputFile, speed);
+    return this.generate(text, outputFile);
   }
 
   private async prefetchNextChunk(): Promise<ChunkResult> {
@@ -86,7 +92,7 @@ export class TTSPipelineService {
     const absolutePath = path.join(cacheDir, filename);
 
     try {
-      const metadata = await this.generate(chunk.text, absolutePath, this.getSpeed());
+      const metadata = await this.generate(chunk.text, absolutePath);
       return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
     } catch (error: any) {
       const message = error?.message || String(error);
@@ -95,12 +101,12 @@ export class TTSPipelineService {
     }
   }
 
-  private async generate(text: string, outputFile: string, speed: number): Promise<GenerationResult> {
+  private async generate(text: string, outputFile: string): Promise<GenerationResult> {
     if (!this.breaker.canExecute()) throw new Error(`TTS engine circuit is ${this.breaker.getState()}. Try again later.`);
     if (!this.session) this.session = this.engine.createSession();
 
     try {
-      const result = await this.session.generate({ text, outputFile, speed });
+      const result = await this.session.generate({ text, outputFile });
       this.breaker.recordSuccess();
       this.logger.logGeneration(result);
       return result;

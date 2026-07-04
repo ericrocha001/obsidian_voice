@@ -28,6 +28,7 @@ export interface DownloadOptions {
   expectedSha256?: string;
   expectedMd5?: string;
   signal?: AbortSignal;
+  onProgress?: (progress: DownloadProgress) => void;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -172,10 +173,15 @@ function computeMd5(filePath: string): Promise<string> {
 
 export class DownloadManager extends EventEmitter {
   async download(options: DownloadOptions): Promise<void> {
-    const { url, destPath, expectedSha256, expectedMd5, signal } = options;
+    const { url, destPath, expectedSha256, expectedMd5, signal, onProgress: optionsOnProgress } = options;
     const partPath = `${destPath}.part`;
 
-    const onProgress = (progress: DownloadProgress) => this.emit('progress', progress);
+    const onProgress = (progress: DownloadProgress) => {
+      if (optionsOnProgress) {
+        optionsOnProgress(progress);
+      }
+      this.emit('progress', progress);
+    };
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {

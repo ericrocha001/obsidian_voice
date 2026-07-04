@@ -93,7 +93,17 @@
     "audio_generation_error": "Erro ao gerar áudio: {{error}}",
     "model_scan_error": "Obsidian Voice: {{error}}",
     "engine_change_delayed": "A troca de motor será aplicada na próxima narração.",
-    "engine_changed": "Motor de voz alterado para {{engine}}."
+    "engine_changed": "Motor de voz alterado para {{engine}}.",
+    "voice_activated": "Voz ativada: {{voice}}",
+    "voice_removed": "Voz {{voice}} removida com sucesso."
+  },
+  "confirmations": {
+    "remove_voice": "Tem certeza que deseja remover a voz {{voice}}? Isso liberará {{size}} MB de espaço em disco.",
+    "remove_piper": "Tem certeza que deseja remover o Piper? Isso também removerá todas as vozes instaladas."
+  },
+  "buttons": {
+    "remove": "Remover",
+    "removing": "Removendo..."
   },
   "errors": {
     "missing_translation": "Tradução ausente: {{key}} ({{language}})",
@@ -103,7 +113,8 @@
       "incompatible_os": "Sistema operacional não suportado: {{os}}.",
       "manifest_signature_failed": "Falha na verificação de assinatura de segurança do manifesto. O arquivo pode ter sido adulterado.",
       "disk_check_timeout": "Verificação de espaço em disco excedeu o tempo limite. Tente novamente."
-    }
+    },
+    "remove_voice_failed": "Falha ao remover voz {{voice}}: {{error}}"
   },
   "logs": {}
 }

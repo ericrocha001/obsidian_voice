@@ -11,9 +11,11 @@ export class ObsidianAudioPlayer {
   private audio: HTMLAudioElement | null = null;
   private vault: Vault;
   private currentChunk: string | null = null;
+  private playbackRate: number = 1.0;
 
-  constructor(vault: Vault) {
+  constructor(vault: Vault, initialRate: number = 1.0) {
     this.vault = vault;
+    this.playbackRate = initialRate;
   }
 
   playFile(filePath: string, filename: string, onEnded: () => void) {
@@ -21,8 +23,18 @@ export class ObsidianAudioPlayer {
 
     this.currentChunk = filename;
     this.audio = new Audio(filePath);
+    this.audio.playbackRate = this.playbackRate;
+
+    // Garante que o playbackRate seja reaplicado assim que o áudio estiver carregado.
+    // No Chromium, o playbackRate setado antes do carregamento completo pode ser ignorado,
+    // fazendo o novo chunk iniciar sempre em 1x (velocidade padrão).
+    const reapplyRate = () => {
+      if (this.audio) this.audio.playbackRate = this.playbackRate;
+    };
+    this.audio.addEventListener("canplay", reapplyRate);
 
     this.audio.onended = () => {
+      this.audio?.removeEventListener("canplay", reapplyRate);
       if (this.currentChunk) {
         this.cleanupChunk(this.currentChunk);
         this.currentChunk = null;
@@ -43,13 +55,19 @@ export class ObsidianAudioPlayer {
 
     if (this.audio.paused) {
       this.audio.play();
+      // Reaplica o playbackRate imediatamente após retomar, pois o navegador
+      // pode ignorar o valor salvo durante pausa/retomada no Chromium.
+      this.audio.playbackRate = this.playbackRate;
     } else {
       this.audio.pause();
     }
   }
 
-  /** Aplica velocidade de reprodução ao chunk ativo sem interromper o áudio. */
+  /** Aplica velocidade de reprodução ao chunk ativo e persiste para próximas instâncias.
+   *  Evita atualizações redundantes no hardware de áudio quando o valor não mudou. */
   setPlaybackRate(rate: number) {
+    if (Math.abs(this.playbackRate - rate) < 0.001) return;
+    this.playbackRate = rate;
     if (this.audio) this.audio.playbackRate = rate;
   }
 

@@ -5,6 +5,8 @@
 // 3. Gerenciar o ponteiro de leitura e realizar buscas por índice de linha em memória.
 // 4. Filtrar apenas destaques (==texto==) quando o modo Audio-Resumo estiver ativo.
 
+import { stripFrontmatter } from "./utils/markdown";
+
 export interface AudioChunk {
   index: number;
   text: string;
@@ -39,34 +41,13 @@ export class ObsidianVoiceQueue {
       return;
     }
 
-    const rawLines = rawText.split(/\r?\n/);
-    let inFrontmatter = false;
+    const textWithoutFrontmatter = stripFrontmatter(rawText);
+    const rawLines = textWithoutFrontmatter.split(/\r?\n/);
     let inCodeBlock = false;
 
     for (let i = 0; i < rawLines.length; i++) {
       const line = rawLines[i];
       const trimmed = line.trim();
-
-      // Detecta Frontmatter no início do arquivo
-      if (i === 0 && trimmed === "---") {
-        inFrontmatter = true;
-        continue;
-      }
-      if (inFrontmatter) {
-        if (trimmed === "---") {
-          inFrontmatter = false;
-        }
-        continue;
-      }
-
-      // Detecta blocos de código
-      if (trimmed.startsWith("```")) {
-        inCodeBlock = !inCodeBlock;
-        continue;
-      }
-      if (inCodeBlock) {
-        continue;
-      }
 
       // Detecta cabeçalhos H1-H3 para navegação por capítulos
       const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
@@ -145,23 +126,13 @@ export class ObsidianVoiceQueue {
    * Funciona corretamente em ambos os modos (normal e readOnlyHighlights).
    */
   private buildChapters(rawText: string) {
-    const rawLines = rawText.split(/\r?\n/);
-    let inFrontmatter = false;
+    const textWithoutFrontmatter = stripFrontmatter(rawText);
+    const rawLines = textWithoutFrontmatter.split(/\r?\n/);
     let inCodeBlock = false;
 
     for (let i = 0; i < rawLines.length; i++) {
       const trimmed = rawLines[i].trim();
 
-      // Frontmatter
-      if (i === 0 && trimmed === "---") { inFrontmatter = true; continue; }
-      if (inFrontmatter) {
-        if (trimmed === "---") inFrontmatter = false;
-        continue;
-      }
-
-      // Code blocks
-      if (trimmed.startsWith("```")) { inCodeBlock = !inCodeBlock; continue; }
-      if (inCodeBlock) continue;
 
       // Headings H1-H3
       const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);

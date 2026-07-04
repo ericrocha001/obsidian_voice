@@ -23,7 +23,6 @@ export interface EngineHealth {
 export interface GenerationRequest {
   text: string;
   outputFile: string;
-  speed: number;
 }
 
 export interface GenerationResult {

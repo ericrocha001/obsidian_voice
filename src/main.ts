@@ -4,6 +4,24 @@
 // 2. Executar o motor Piper TTS via subprocesso e gerenciar o pipeline de áudio com pre-fetching.
 // 3. Orquestrar a narração de notas Markdown limpas controlando o estado global do player.
 // 4. Gerenciar a coexistência entre scroll automático (Teleprompter) e rolagem manual do usuário.
+//
+// Mapa de Relacionamentos do Script
+//
+// 1. src/services/model/model-management-service.ts
+//    - Tipo: Dependência Direta
+//    - Relação: Usa modelManager para instalar/remover modelos e migrar instalações legadas.
+//    - Criticidade: Alta
+//
+// 2. src/settings.ts
+//    - Tipo: Fluxo de Dados
+//    - Relação: Consome settings e notifica mudanças de estado.
+//    - Criticidade: Alta
+//
+// Invariantes do Script
+//
+// 1. O Self-Healing SÓ roda para migrar instalações legadas, nunca para corrigir instalações novas.
+// 2. A raiz da instalação é sempre obtida de installedRootPath nos metadados.
+// 3. O rebuildTTSPipeline usa resolveBinaryPath que retorna apenas executável dos metadados.
 
 import * as fs from "fs";
 import * as os from "os";
@@ -13,13 +31,14 @@ import { EditorView } from "@codemirror/view";
 import { ObsidianAudioPlayer } from "./audio-player";
 import { ObsidianVoiceQueue } from "./queue";
 import { ObsidianVoiceWidget } from "./player-widget";
+import { stripFrontmatter } from "./utils/markdown";
 import { ObsidianVoiceSettingTab, ObsidianVoiceSettings, DEFAULT_SETTINGS } from "./settings";
 import { VoiceLogger } from "./logger";
 import { EditorHighlighter, highlightField } from "./editor-highlighter";
 import { initializeI18n, t } from "./i18n";
 import { TTSPipelineService, ChunkResult } from "./tts/pipeline-service";
 import { TTSEngineFactory } from "./tts/engine/engine-factory";
-import { ModelManagementService } from "./services/model/model-management-service";
+import { ModelManagementService, LegacyMigration } from "./services/model/model-management-service";
 
 export type PlayerState = "aguardando" | "tocando" | "pausado";
 
@@ -36,9 +55,9 @@ export default class ObsidianVoicePlugin extends Plugin {
   private ttsPipeline!: TTSPipelineService;
   private currentParagraphText = "";
   private activeEditor: import("obsidian").Editor | null = null;
-  private lastNarratedPath: string | null = null;   // Rastreia a nota narrada por último
+  private lastNarratedPath: string | null = null;
+  private currentSessionId: number = 0;
 
-  // ── Controle de Scroll Manual ─────────────────────────────
   private isUserScrolling = false;
   private userScrollTimeout: ReturnType<typeof setTimeout> | null = null;
   private scrollListenerEl: HTMLElement | null = null;
@@ -53,7 +72,7 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.highlighter = new EditorHighlighter();
     this.registerEditorExtension([highlightField]);
 
-    this.audioPlayer = new ObsidianAudioPlayer(this.app.vault);
+    this.audioPlayer = new ObsidianAudioPlayer(this.app.vault, this.settings.playbackSpeed);
 
     let basePath = "";
     if (this.app.vault.adapter instanceof FileSystemAdapter) {
@@ -62,7 +81,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.logger = new VoiceLogger(basePath || process.cwd());
     this.highlighter.setLogger(this.logger);
 
-    // ── Model Management Service ─────────────────────────
     this.modelManager = new ModelManagementService(
       basePath || process.cwd(),
       {
@@ -75,62 +93,28 @@ export default class ObsidianVoicePlugin extends Plugin {
 
     this.rebuildTTSPipeline();
 
-    // ── Self-Healing de Caminhos do Piper (Onboarding & Compatibilidade) ──
-    const selfHealPiper = async () => {
-      let changed = false;
+    // Self-Healing de Metadados: migrar apenas instalações legadas
+    await this.migrateLegacyMetadataIfNeeded();
 
-      // 1. Corrigir absolutePath no models se for diretório
-      const piperModel = this.settings.models.piper;
-      if (piperModel && piperModel.absolutePath) {
-        try {
-          const stats = await fs.promises.stat(piperModel.absolutePath);
-          if (stats.isDirectory()) {
-            const found = await this.modelManager.findPiperBinary(piperModel.absolutePath);
-            if (found) {
-              piperModel.absolutePath = found;
-              changed = true;
-            }
-          }
-        } catch (_) {}
+    // Migrar Piper do Vault para local padrão (uma única vez)
+    try {
+      const migrated = await this.modelManager.migratePiperFromVault();
+      if (migrated) {
+        new Notice('Piper movido para local padrão. Seu Vault está mais leve agora!');
       }
+    } catch (err: any) {
+      console.warn('[Obsidian Voice] Migração do Piper falhou:', err);
+    }
 
-      // 2. Corrigir piperPath se for diretório
-      if (this.settings.piperPath) {
-        try {
-          const stats = await fs.promises.stat(this.settings.piperPath);
-          if (stats.isDirectory()) {
-            const found = await this.modelManager.findPiperBinary(this.settings.piperPath);
-            if (found) {
-              this.settings.piperPath = found;
-              changed = true;
-            }
-          }
-        } catch (_) {}
-      }
+    // Migrar vozes já instaladas no formato antigo para subpastas
+    try {
+      await this.modelManager.migrateVoicesToSubfolders();
+    } catch (err: any) {
+      console.warn('[Obsidian Voice] Migração das vozes para subpastas falhou:', err);
+    }
 
-      // 3. Sincronizar se piperPath estiver vazio mas o modelo estiver instalado
-      if (piperModel && piperModel.absolutePath && !this.settings.piperPath) {
-        try {
-          await fs.promises.access(piperModel.absolutePath);
-          this.settings.piperPath = piperModel.absolutePath;
-          changed = true;
-        } catch (_) {}
-      }
-
-      if (changed) {
-        await this.saveSettings();
-        this.rebuildTTSPipeline();
-        console.log('[Obsidian Voice] Self-Healing: Caminhos do Piper sincronizados com sucesso.');
-      }
-    };
-    selfHealPiper();
-
-    // ── Ribbon ──────────────────────────────────────────────
     this.addRibbonIcon("headphones", t("commands.ribbon_narrate"), () => this.narrarNotaAtual());
 
-
-
-    // ── Widget Flutuante (sempre visível, inicia minimizado) ──────────
     this.widget = new ObsidianVoiceWidget(
       () => this.togglePlayPause(),
       async () => this.pararNarracao(),
@@ -151,11 +135,10 @@ export default class ObsidianVoicePlugin extends Plugin {
       (engineId: 'piper' | 'kokoro') => this.onEngineChange(engineId),
       () => this.settings.ttsEngine,
     );
-    // Sincroniza o estado inicial do toggle com as settings persistidas
     this.widget.setTeleprompterAtivo(this.settings.enableTeleprompterMode);
+    this.widget.setSpeed(this.settings.playbackSpeed);
     this.widget.show("aguardando", activeDocument.body);
 
-    // Escuta mudanças de nota ativa para interromper a narração anterior silenciosamente
     this.registerEvent(
       this.app.workspace.on("file-open", async (file) => {
         if (!file || (this.lastNarratedPath && this.lastNarratedPath !== file.path)) {
@@ -164,10 +147,8 @@ export default class ObsidianVoicePlugin extends Plugin {
       })
     );
 
-    // ── Aba de Configurações ─────────────────────────────────
     this.addSettingTab(new ObsidianVoiceSettingTab(this.app, this));
 
-    // ── Comandos ─────────────────────────────────────────────
     this.addCommand({
       id: "testar-motor-tts-piper",
       name: t("commands.test_piper"),
@@ -200,10 +181,8 @@ export default class ObsidianVoicePlugin extends Plugin {
         const estado = this.queue.readOnlyHighlights ? t("notices.enabled") : t("notices.disabled");
         new Notice(t("notices.summary_mode", { state: estado }));
 
-        // Sincroniza visualmente o toggle do menu de ferramentas (se aberto)
         this.widget.setResumoAtivo(this.queue.readOnlyHighlights);
 
-        // Se a narração estiver ativa, reinicia com o novo filtro
         if (this.playerState === "tocando" || this.playerState === "pausado") {
           this.pararNarracao().then(() => this.narrarNotaAtual());
         }
@@ -218,7 +197,6 @@ export default class ObsidianVoicePlugin extends Plugin {
         const cursor = editor.getCursor();
         const currentLineText = editor.getLine(cursor.line);
 
-        // Se o player já estiver ativo (tocando/pausado), a fila já está populada
         if (this.playerState === "tocando" || this.playerState === "pausado") {
           let targetIndex = this.queue.getChunkIndexByLine(cursor.line);
           if (targetIndex === 0 && cursor.line !== 0) {
@@ -226,36 +204,30 @@ export default class ObsidianVoicePlugin extends Plugin {
           }
           await this.jumpToChapter(targetIndex);
         } else {
-          // Inicialização Fria (Plugin não estava rodando)
           const valido = await this.validarConfiguracoes();
           if (!valido) return;
 
           const fullText = editor.getValue();
           this.activeEditor = editor;
 
-          // Popula a fila com o texto completo para preservar os line numbers
           this.queue.startQueue(fullText);
 
-          // Localiza o índice correspondente
           let targetIndex = this.queue.getChunkIndexByLine(cursor.line);
           if (targetIndex === 0 && cursor.line !== 0) {
             targetIndex = this.queue.findChunkIndexByLineText(currentLineText);
           }
 
-          // Inicia a reprodução
           await this.jumpToChapter(targetIndex);
         }
       }
     });
 
-    // ── Navegação Universal por Clique ────────────────────────
     this.registerDomEvent(document, "click", (evt: MouseEvent) => {
       if (!this.settings.enableTeleprompterMode) return;
       if (this.playerState !== "tocando") {
         return;
       }
 
-      // Evita conflito: ignora cliques que ocorram no widget ou fora do editor
       const target = evt.target as HTMLElement | null;
       if (target && target.closest("#obsidian-voice-widget")) {
         return;
@@ -318,6 +290,7 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   async onunload() {
+    if (this.logger) this.logger.dispose();
     this.audioPlayer.stop();
     this.queue.reset();
     await this.ttsPipeline.stop();
@@ -335,15 +308,12 @@ export default class ObsidianVoicePlugin extends Plugin {
     console.log("[Obsidian Voice] Plugin descarregado.");
   }
 
-  // ── Estado do Player ─────────────────────────────────────
-
   private getPlayerState(): PlayerState {
     return this.playerState;
   }
 
   private updatePlayerState(state: PlayerState) {
     this.playerState = state;
-    // O widget é permanente: nunca escondemos, apenas atualizamos o estado visual
     this.widget.show(state, activeDocument.body);
   }
 
@@ -354,6 +324,7 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   private async pararNarracaoSilenciosamente() {
+    this.currentSessionId++;
     this.queue.reset();
     this.audioPlayer.stop();
     await this.ttsPipeline.stop();
@@ -365,17 +336,14 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.activeEditor = null;
   }
 
-  /** Callback do toggle de Modo Resumo no menu de ferramentas do widget. */
   private onResumoToggle(active: boolean) {
     this.queue.readOnlyHighlights = active;
     const estado = active ? t("notices.enabled") : t("notices.disabled");
     new Notice(t("notices.summary_mode", { state: estado }));
 
     if (this.playerState === "tocando") {
-      // Interrompe imediatamente e reinicia com o novo filtro
       this.pararNarracao().then(() => this.narrarNotaAtual());
     } else if (this.playerState === "pausado") {
-      // Regenera a fila silenciosamente para o próximo play
       const activeFile = this.app.workspace.getActiveFile();
       if (activeFile) {
         const editor = this.getActiveEditor();
@@ -390,7 +358,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     }
   }
 
-  /** Callback do toggle do Modo Teleprompter no menu de ferramentas do widget. */
   private async onTeleprompterToggle(active: boolean) {
     this.settings.enableTeleprompterMode = active;
     await this.saveSettings();
@@ -398,9 +365,10 @@ export default class ObsidianVoicePlugin extends Plugin {
     new Notice(t("notices.teleprompter_mode", { state: estado }));
   }
 
-  /** Callback do slider de velocidade: aplica imediatamente no chunk em reprodução. */
   private onSpeedChange(speed: number) {
     this.audioPlayer.setPlaybackRate(speed);
+    this.settings.playbackSpeed = speed;
+    this.saveSettings();
   }
 
   private async onEngineChange(engineId: 'piper' | 'kokoro') {
@@ -420,7 +388,6 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   private togglePlayPause() {
-    // Estado ocioso: recomeça a narração do início
     if (this.playerState === "aguardando") {
       this.narrarNotaAtual();
       return;
@@ -429,13 +396,11 @@ export default class ObsidianVoicePlugin extends Plugin {
     const next: PlayerState = this.playerState === "tocando" ? "pausado" : "tocando";
 
     if (next === "pausado") {
-      // Pausar: suspende o áudio e limpa o highlight
       this.audioPlayer.toggle();
       this.updatePlayerState("pausado");
       this.activeEditor = this.getActiveEditor();
       if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
     } else {
-      // Retomar: se o áudio ainda está pausado no player, simplesmente resume
       if (this.audioPlayer.isActive()) {
         this.audioPlayer.toggle();
         this.updatePlayerState("tocando");
@@ -448,24 +413,20 @@ export default class ObsidianVoicePlugin extends Plugin {
           );
         }
       } else {
-        // O chunk foi descartado (ex: após um pulo): reinicia a partir do índice atual da fila
         this.updatePlayerState("tocando");
         this.playNextParagraph();
       }
     }
   }
 
-  // ── Narração Principal ───────────────────────────────────
-
   private async narrarNotaAtual() {
+    this.currentSessionId++;
     const activeFile = this.app.workspace.getActiveFile();
     if (!(activeFile instanceof TFile)) {
       new Notice(t("notices.no_active_note"));
       return;
     }
 
-    // Busca o editor que está exibindo o arquivo ativo, independente do foco atual.
-    // getActiveViewOfType() falha quando a ribbon/comando rouba o foco da janela.
     this.activeEditor = this.getActiveEditor();
     if (!this.activeEditor) {
       this.logger.logDebug("[Main] narrarNotaAtual: nenhuma leaf com o arquivo ativo encontrada.");
@@ -497,16 +458,15 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   private cleanMarkdown(text: string): string {
-    return text
-      .replace(/^---[\s\S]*?---\n?/m, "")
+    const cleaned = stripFrontmatter(text)
       .replace(/```[\s\S]*?```/g, "")
       .replace(/(?<![#\S])#[^\s#][^\s]*/g, "")
       .replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, "$2")
       .replace(/\[\[([^\]]+)\]\]/g, "$1")
+      .replace(/==(.*?)==/g, "$1")
       .trim();
+    return cleaned;
   }
-
-  // ── Validação ────────────────────────────────────────────
 
   private async validarConfiguracoes(): Promise<boolean> {
     this.rebuildTTSPipeline();
@@ -519,12 +479,13 @@ export default class ObsidianVoicePlugin extends Plugin {
     return true;
   }
 
-  // ── Pipeline de Áudio com Pre-fetching ───────────────────
-
   private async playNextParagraph() {
     if (this.playerState === "pausado") return;
 
+    const sessionId = this.currentSessionId;
     const chunk = await this.ttsPipeline.getNextChunk();
+
+    if (this.currentSessionId !== sessionId) return;
 
     if (chunk === null) {
       this.queue.reset();
@@ -549,16 +510,13 @@ export default class ObsidianVoicePlugin extends Plugin {
       return;
     }
 
-    // Se o usuário pausou enquanto o áudio estava sendo gerado, interrompe a reprodução e guarda o chunk
     if (this.getPlayerState() === "pausado") {
       this.ttsPipeline.holdChunk(chunk);
       return;
     }
 
-    // Inicia a geração do próximo chunk em segundo plano enquanto toca o atual
     this.ttsPipeline.prefetch();
 
-    // Destaca o parágrafo atual usando o editor capturado no início da narração
     this.currentParagraphText = chunk.text;
     this.activeEditor = this.getActiveEditor();
     if (this.activeEditor) {
@@ -577,7 +535,9 @@ export default class ObsidianVoicePlugin extends Plugin {
 
   private async jumpToLine(lineNumber: number) {
     console.log(`[Obsidian Voice] Pulando para a linha: ${lineNumber}`);
+    this.currentSessionId++;
     this.audioPlayer.stop();
+    await this.ttsPipeline.cancelCurrentGeneration();
     await this.ttsPipeline.resetPrefetch();
 
     const targetIndex = this.queue.getChunkIndexByLine(lineNumber);
@@ -590,7 +550,9 @@ export default class ObsidianVoicePlugin extends Plugin {
 
   private async jumpToChapter(chunkIndex: number) {
     console.log(`[Obsidian Voice] Pulando para o capítulo no chunk index: ${chunkIndex}`);
+    this.currentSessionId++;
     this.audioPlayer.stop();
+    await this.ttsPipeline.cancelCurrentGeneration();
     await this.ttsPipeline.resetPrefetch();
 
     this.queue.setCurrentIndex(chunkIndex);
@@ -599,9 +561,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.ttsPipeline.prefetch();
     this.playNextParagraph();
   }
-
-
-  // ── Motor Piper ──────────────────────────────────────────
 
   private async runPiperTest() {
     const valido = await this.validarConfiguracoes();
@@ -614,7 +573,7 @@ export default class ObsidianVoicePlugin extends Plugin {
     const testFile = path.join(cacheDir, "teste.wav");
 
     try {
-      await this.ttsPipeline.runTest(texto, testFile, 1.0);
+      await this.ttsPipeline.runTest(texto, testFile);
       new Notice(t("notices.audio_generated"));
       try { if (fs.existsSync(testFile)) fs.unlinkSync(testFile); } catch (_) {}
     } catch (error: any) {
@@ -629,10 +588,12 @@ export default class ObsidianVoicePlugin extends Plugin {
     }
 
     const resolvedPath = this.modelManager ? this.modelManager.resolveBinaryPath(this.settings.ttsEngine) : '';
+    const piperInstallRoot = this.modelManager ? this.modelManager.getPiperRoot() : '';
 
     const engine = TTSEngineFactory.create({
       ttsEngine: this.settings.ttsEngine,
       piperPath: resolvedPath,
+      piperInstallRoot,
       selectedVoice: this.settings.selectedVoice,
       selectedKokoroVoice: this.settings.selectedKokoroVoice,
       basePath,
@@ -643,8 +604,7 @@ export default class ObsidianVoicePlugin extends Plugin {
       this.app.vault,
       this.queue,
       engine,
-      this.logger,
-      () => this.widget.getSpeed()
+      this.logger
     );
   }
 
@@ -659,8 +619,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     });
     return editor;
   }
-
-  // ── Controle de Scroll Manual ────────────────────────────
 
   private onUserScrollActivity = () => {
     this.isUserScrolling = true;
@@ -692,8 +650,26 @@ export default class ObsidianVoicePlugin extends Plugin {
     if (!this.scrollListenerEl) return;
     this.scrollListenerEl.removeEventListener("wheel",     this.onUserScrollActivity);
     this.scrollListenerEl.removeEventListener("touchmove", this.onUserScrollActivity);
-    // keydown anônimo: o próprio GC limpa quando o elemento é removido do DOM
     this.scrollListenerEl = null;
     this.isUserScrolling  = false;
+  }
+
+  /**
+   * Self-Healing: migra apenas instalações legadas (formato antigo com absolutePath).
+   * INVARIANT: Não modifica instalações que já estão no formato canônico.
+   */
+  private async migrateLegacyMetadataIfNeeded(): Promise<void> {
+    const piperMetadata = this.settings.models.piper;
+
+    // INVARIANT: Só migrar se estiver no formato legado
+    if (!LegacyMigration.needsMigration(piperMetadata)) {
+      return;
+    }
+
+    // Realizar migração
+    await this.modelManager.migrateLegacyMetadata();
+
+    // Reconstruir pipeline com os novos caminhos
+    this.rebuildTTSPipeline();
   }
 }

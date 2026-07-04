@@ -4,14 +4,15 @@
 // 2. Gerenciar os estados visuais: ocioso, tocando, pausado, minimizado e expandido.
 // 3. Exibir animação de onda sonora no miniplayer quando o áudio estiver tocando.
 // 4. Expor o valor atual de velocidade do slider e os estados dos Modos Resumo e Teleprompter ao orquestrador.
+// 5. Sincronizar visualmente o slider e o label de velocidade com o valor persistido nas configurações.
 
 import { setIcon } from "obsidian";
 import { PlayerState } from "./main";
 import { ChapterInfo } from "./queue";
 import { onLanguageChanged, t } from "./i18n";
 
-const SPEED_MIN     = 1.0;
-const SPEED_MAX     = 2.0;
+const SPEED_MIN     = 0.5;
+const SPEED_MAX     = 3.0;
 const SPEED_STEP    = 0.1;
 const SPEED_DEFAULT = 1.0;
 
@@ -148,8 +149,10 @@ export class ObsidianVoiceWidget {
   private indicatorEl:         HTMLElement | null = null;
   private chaptersDropEl:      HTMLElement | null = null;
   private toolsDropEl:         HTMLElement | null = null;
-  private resumoToggleEl:      HTMLInputElement | null = null;
+  private resumoToggleEl:       HTMLInputElement | null = null;
   private teleprompterToggleEl: HTMLInputElement | null = null;
+  private speedSliderEl:        HTMLInputElement | null = null;
+  private speedLabelEl:         HTMLSpanElement  | null = null;
 
   private speedValue        = SPEED_DEFAULT;
   private isMinimized       = true;   // Começa minimizado
@@ -213,7 +216,9 @@ export class ObsidianVoiceWidget {
       this.chaptersBtn  = null;
       this.toolsBtn     = null;
       this.indicatorEl  = null;
-      this.resumoToggleEl = null;
+      this.resumoToggleEl  = null;
+      this.speedSliderEl   = null;
+      this.speedLabelEl    = null;
     }
     if (this.unsubscribeLanguageChanged) {
       this.unsubscribeLanguageChanged();
@@ -233,6 +238,13 @@ export class ObsidianVoiceWidget {
   setTeleprompterAtivo(active: boolean) {
     this.teleprompterAtivo = active;
     if (this.teleprompterToggleEl) this.teleprompterToggleEl.checked = active;
+  }
+
+  /** Define o valor da velocidade no slider externamente (ex: na inicialização com valor salvo). */
+  setSpeed(speed: number) {
+    this.speedValue = speed;
+    if (this.speedSliderEl) this.speedSliderEl.value = String(speed);
+    if (this.speedLabelEl)  this.speedLabelEl.textContent = `${speed.toFixed(1)}x`;
   }
 
   // ── Construção do DOM ────────────────────────────────────
@@ -335,10 +347,12 @@ export class ObsidianVoiceWidget {
     slider.step  = String(SPEED_STEP);
     slider.value = String(this.speedValue);
     slider.style.width = "72px";
+    this.speedSliderEl = slider;
 
     const speedLabel = speedWrapper.createSpan();
     speedLabel.textContent = `${this.speedValue.toFixed(1)}x`;
     Object.assign(speedLabel.style, { minWidth: "30px", fontWeight: "600", textAlign: "right" });
+    this.speedLabelEl = speedLabel;
 
     slider.addEventListener("input", () => {
       this.speedValue = parseFloat(slider.value);
