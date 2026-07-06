@@ -8,6 +8,7 @@ Responsabilidades do Script
 3. Gerenciar o ponteiro de leitura e realizar buscas por índice de linha em memória.
 4. Filtrar apenas destaques (==texto==) quando o modo Audio-Resumo estiver ativo.
 5. Manter índice reverso para busca O(1) de chunks por texto.
+6. Compensar offset do frontmatter para mapear corretamente cliques do editor em chunks.
 
 Mapa de Relacionamentos do Script
 
@@ -27,11 +28,12 @@ Invariantes do Script
 2. O índice reverso deve ser limpo ao resetar a fila.
 3. A busca de chunks por texto deve retornar -1 ou o índice correto, nunca lançar exceção.
 4. Os chunks devem ser criados com índices sequenciais começando de 0.
+5. O offset do frontmatter deve ser calculado uma única vez em startQueue() e reutilizado em todas as buscas por linha.
 
 --- FIM ARQUITETURA DO SCRIPT ---
 */
 
-import { stripFrontmatter } from "./utils/markdown";
+import { detectAndStripFrontmatter } from "./utils/markdown";
 
 export interface AudioChunk {
   index: number;
@@ -51,6 +53,7 @@ export class ObsidianVoiceQueue {
   private chapters: ChapterInfo[] = [];
   private currentIndex = 0;
   private readonly MAX_CHUNK_LENGTH = 500;
+  private frontmatterLineOffset = 0;
 
   /** Quando true, a fila é populada apenas com os destaques ==texto== da nota. */
   readOnlyHighlights = false;
@@ -65,36 +68,37 @@ export class ObsidianVoiceQueue {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.frontmatterLineOffset = 0;
 
     // Limpa o índice reverso
     this.chunkIndex.clear();
 
+    // Usa a função centralizada que retorna tanto o texto limpo quanto o offset
+    // Isso evita processar o texto duas vezes (uma para detectar, outra para remover)
+    const frontmatterResult = detectAndStripFrontmatter(rawText);
+    this.frontmatterLineOffset = frontmatterResult ? frontmatterResult.lineCount : 0;
+
+    // Usa o texto já processado ou o original se não houver frontmatter
+    const textWithoutFrontmatter = frontmatterResult ? frontmatterResult.strippedText : rawText;
+
+    // Passa texto bruto em highlights (startLine é relativo ao rawText)
+    // Passa texto sem frontmatter no modo normal (startLine é relativo ao textWithoutFrontmatter)
+    const chapterText = this.readOnlyHighlights ? rawText : textWithoutFrontmatter;
+
     if (this.readOnlyHighlights) {
+      // buildHighlightsQueue recebe o texto bruto pois destaques podem estar em qualquer lugar
+      // Os startLine são relativos ao texto bruto (com frontmatter)
       this.buildHighlightsQueue(rawText);
-      // Capítulos são extraídos APÓS os chunks estarem prontos
-      this.buildChapters(rawText);
+      // Capítulos são extraítos APÓS os chunks estarem prontos
+      this.buildChapters(chapterText);
       return;
     }
 
-    const textWithoutFrontmatter = stripFrontmatter(rawText);
     const rawLines = textWithoutFrontmatter.split(/\r?\n/);
-    let inCodeBlock = false;
 
     for (let i = 0; i < rawLines.length; i++) {
       const line = rawLines[i];
       const trimmed = line.trim();
-
-      // Detecta cabeçalhos H1-H3 para navegação por capítulos
-      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
-      if (headingMatch) {
-        const level = headingMatch[1].length;
-        const title = headingMatch[2].trim();
-        this.chapters.push({
-          title,
-          chunkIndex: this.chunks.length,
-          level
-        });
-      }
 
       // Limpa a linha de marcações Markdown e formatações
       const cleanLine = this.cleanLineMarkdown(line);
@@ -130,6 +134,9 @@ export class ObsidianVoiceQueue {
         }
       }
     }
+
+    // Extrai capítulos APÓS todos os chunks estarem prontos
+    this.buildChapters(chapterText);
   }
 
   /**
@@ -168,21 +175,29 @@ export class ObsidianVoiceQueue {
   }
 
   /**
-   * Extrai capítulos (H1-H3) do texto bruto e os associa ao primeiro chunk
-   * que começa na linha do heading ou imediatamente após ela.
-   * Funciona corretamente em ambos os modos (normal e readOnlyHighlights).
+   * Extrai capítulos (H1-H3) do texto bruto, ignorando frontmatter e blocos de código.
+   * Usada nos dois modos (normal e readOnlyHighlights) para garantir alinhamento do índice.
+   * Suporta headings com indentação (até 3 espaços segundo CommonMark spec).
    */
-  private buildChapters(rawText: string) {
-    const textWithoutFrontmatter = stripFrontmatter(rawText);
-    const rawLines = textWithoutFrontmatter.split(/\r?\n/);
+  private buildChapters(sourceText: string) {
+    const lines = sourceText.split(/\r?\n/);
     let inCodeBlock = false;
 
-    for (let i = 0; i < rawLines.length; i++) {
-      const trimmed = rawLines[i].trim();
+    for (let i = 0; i < lines.length; i++) {
+      // Pula linhas dentro do frontmatter (até o offset)
+      if (i < this.frontmatterLineOffset) continue;
 
+      const line = lines[i];
+      const trimmed = line.trim();
+      
+      // Detecção de code blocks - usa trimmed para consistência
+      if (trimmed.startsWith("```")) {
+        inCodeBlock = !inCodeBlock;
+      }
+      if (inCodeBlock) continue;
 
-      // Headings H1-H3
-      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+      // Headings H1-H3 - usa trimmed para suportar indentação
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
       if (!headingMatch) continue;
 
       const level = headingMatch[1].length;
@@ -231,6 +246,7 @@ export class ObsidianVoiceQueue {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.frontmatterLineOffset = 0;
     this.chunkIndex.clear();
   }
 
@@ -247,10 +263,13 @@ export class ObsidianVoiceQueue {
   getChunkIndexByLine(lineNumber: number): number {
     if (this.chunks.length === 0) return 0;
 
+    // Compensa o offset do frontmatter
+    const adjustedLineNumber = Math.max(0, lineNumber - this.frontmatterLineOffset);
+
     // Tenta encontrar o primeiro chunk que contém a linha no intervalo [startLine, endLine]
     for (let i = 0; i < this.chunks.length; i++) {
       const chunk = this.chunks[i];
-      if (lineNumber >= chunk.startLine && lineNumber <= chunk.endLine) {
+      if (adjustedLineNumber >= chunk.startLine && adjustedLineNumber <= chunk.endLine) {
         return chunk.index;
       }
     }
@@ -261,8 +280,8 @@ export class ObsidianVoiceQueue {
     for (let i = 0; i < this.chunks.length; i++) {
       const chunk = this.chunks[i];
       const diff = Math.min(
-        Math.abs(lineNumber - chunk.startLine),
-        Math.abs(lineNumber - chunk.endLine)
+        Math.abs(adjustedLineNumber - chunk.startLine),
+        Math.abs(adjustedLineNumber - chunk.endLine)
       );
       if (diff < minDiff) {
         minDiff = diff;

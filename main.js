@@ -5606,12 +5606,17 @@ var ObsidianAudioPlayer = class {
 
 // src/utils/markdown.ts
 function stripFrontmatter(text) {
-  if (!text.startsWith("---\n") && !text.startsWith("---\r\n")) return text;
+  const result = detectAndStripFrontmatter(text);
+  return result ? result.strippedText : text;
+}
+function detectAndStripFrontmatter(text) {
+  if (!text.startsWith("---\n") && !text.startsWith("---\r\n")) return null;
   const isCrLf = text.startsWith("---\r\n");
   const endMark = isCrLf ? "\r\n---\r\n" : "\n---\n";
   const endMarkAlt = isCrLf ? "\r\n---" : "\n---";
   let endIndex = text.indexOf(endMark, 4);
   let matchLength = 0;
+  let lineCount = 2;
   if (endIndex !== -1) {
     matchLength = endIndex + endMark.length;
   } else {
@@ -5621,9 +5626,15 @@ function stripFrontmatter(text) {
     }
   }
   if (endIndex !== -1) {
-    return text.slice(matchLength);
+    const frontmatter = text.slice(0, matchLength);
+    const newlineMatches = frontmatter.match(/\n/g);
+    lineCount = newlineMatches ? newlineMatches.length : 2;
+    return {
+      strippedText: text.slice(matchLength),
+      lineCount
+    };
   }
-  return text;
+  return null;
 }
 
 // src/queue.ts
@@ -5633,6 +5644,7 @@ var ObsidianVoiceQueue = class {
     this.chapters = [];
     this.currentIndex = 0;
     this.MAX_CHUNK_LENGTH = 500;
+    this.frontmatterLineOffset = 0;
     /** Quando true, a fila é populada apenas com os destaques ==texto== da nota. */
     this.readOnlyHighlights = false;
     // Índice reverso para busca de chunks por texto.
@@ -5645,28 +5657,21 @@ var ObsidianVoiceQueue = class {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.frontmatterLineOffset = 0;
     this.chunkIndex.clear();
+    const frontmatterResult = detectAndStripFrontmatter(rawText);
+    this.frontmatterLineOffset = frontmatterResult ? frontmatterResult.lineCount : 0;
+    const textWithoutFrontmatter = frontmatterResult ? frontmatterResult.strippedText : rawText;
+    const chapterText = this.readOnlyHighlights ? rawText : textWithoutFrontmatter;
     if (this.readOnlyHighlights) {
       this.buildHighlightsQueue(rawText);
-      this.buildChapters(rawText);
+      this.buildChapters(chapterText);
       return;
     }
-    const textWithoutFrontmatter = stripFrontmatter(rawText);
     const rawLines = textWithoutFrontmatter.split(/\r?\n/);
-    let inCodeBlock = false;
     for (let i = 0; i < rawLines.length; i++) {
       const line = rawLines[i];
       const trimmed = line.trim();
-      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
-      if (headingMatch) {
-        const level = headingMatch[1].length;
-        const title = headingMatch[2].trim();
-        this.chapters.push({
-          title,
-          chunkIndex: this.chunks.length,
-          level
-        });
-      }
       const cleanLine = this.cleanLineMarkdown(line);
       if (!cleanLine) {
         continue;
@@ -5696,6 +5701,7 @@ var ObsidianVoiceQueue = class {
         }
       }
     }
+    this.buildChapters(chapterText);
   }
   /**
    * Popula a fila exclusivamente com os trechos destacados (==texto==) da nota.
@@ -5726,17 +5732,22 @@ var ObsidianVoiceQueue = class {
     }
   }
   /**
-   * Extrai capítulos (H1-H3) do texto bruto e os associa ao primeiro chunk
-   * que começa na linha do heading ou imediatamente após ela.
-   * Funciona corretamente em ambos os modos (normal e readOnlyHighlights).
+   * Extrai capítulos (H1-H3) do texto bruto, ignorando frontmatter e blocos de código.
+   * Usada nos dois modos (normal e readOnlyHighlights) para garantir alinhamento do índice.
+   * Suporta headings com indentação (até 3 espaços segundo CommonMark spec).
    */
-  buildChapters(rawText) {
-    const textWithoutFrontmatter = stripFrontmatter(rawText);
-    const rawLines = textWithoutFrontmatter.split(/\r?\n/);
+  buildChapters(sourceText) {
+    const lines = sourceText.split(/\r?\n/);
     let inCodeBlock = false;
-    for (let i = 0; i < rawLines.length; i++) {
-      const trimmed = rawLines[i].trim();
-      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+    for (let i = 0; i < lines.length; i++) {
+      if (i < this.frontmatterLineOffset) continue;
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        inCodeBlock = !inCodeBlock;
+      }
+      if (inCodeBlock) continue;
+      const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
       if (!headingMatch) continue;
       const level = headingMatch[1].length;
       const title = headingMatch[2].trim();
@@ -5774,6 +5785,7 @@ var ObsidianVoiceQueue = class {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.frontmatterLineOffset = 0;
     this.chunkIndex.clear();
   }
   getChapters() {
@@ -5786,9 +5798,10 @@ var ObsidianVoiceQueue = class {
   }
   getChunkIndexByLine(lineNumber) {
     if (this.chunks.length === 0) return 0;
+    const adjustedLineNumber = Math.max(0, lineNumber - this.frontmatterLineOffset);
     for (let i = 0; i < this.chunks.length; i++) {
       const chunk = this.chunks[i];
-      if (lineNumber >= chunk.startLine && lineNumber <= chunk.endLine) {
+      if (adjustedLineNumber >= chunk.startLine && adjustedLineNumber <= chunk.endLine) {
         return chunk.index;
       }
     }
@@ -5797,8 +5810,8 @@ var ObsidianVoiceQueue = class {
     for (let i = 0; i < this.chunks.length; i++) {
       const chunk = this.chunks[i];
       const diff = Math.min(
-        Math.abs(lineNumber - chunk.startLine),
-        Math.abs(lineNumber - chunk.endLine)
+        Math.abs(adjustedLineNumber - chunk.startLine),
+        Math.abs(adjustedLineNumber - chunk.endLine)
       );
       if (diff < minDiff) {
         minDiff = diff;
@@ -8809,7 +8822,6 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     });
     this.registerDomEvent(document, "click", (evt) => {
       if (!this.isClickListenerActive) return;
-      if (!this.settings.enableTeleprompterMode) return;
       if (this.playerState !== "tocando") {
         return;
       }

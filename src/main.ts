@@ -244,10 +244,12 @@ export default class ObsidianVoicePlugin extends Plugin {
       // Portão de silêncio: se o plugin não está ativo, ignora o clique imediatamente
       if (!this.isClickListenerActive) return;
 
-      if (!this.settings.enableTeleprompterMode) return;
       if (this.playerState !== "tocando") {
         return;
       }
+      // BUGFIX: Removida trava artificial que exigia teleprompter ativo para o clique funcionar.
+      // O clique para pular e o teleprompter são funcionalidades independentes.
+      // Usuário pode querer iniciar narração a partir de um clique sem scroll automático.
 
       const target = evt.target as HTMLElement | null;
       if (target && target.closest("#obsidian-voice-widget")) {
