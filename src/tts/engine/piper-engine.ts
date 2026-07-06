@@ -1,27 +1,47 @@
-// Responsabilidades do Script
-//
-// 1. Adaptar o motor Piper ao contrato interno de engines TTS.
-// 2. Validar caminhos do executável e do modelo de voz usados pelo Piper.
-// 3. Criar sessões de geração de áudio do Piper para o pipeline de narração.
-//
-// Invariantes do Script
-//
-// 1. piperInstallRoot é a única fonte canônica para localização das vozes do Piper.
-// 2. Busca em fallback apenas para compatibilidade com instalações legadas (não para corrigir novas).
-//
+/*
+--- ARQUITETURA DO SCRIPT ---
+
+Responsabilidades do Script
+
+1. Adaptar o motor Piper ao contrato interno de engines TTS.
+2. Validar caminhos do executável e do modelo de voz usados pelo Piper.
+3. Criar sessões de geração de áudio do Piper para o pipeline de narração.
+
+Mapa de Relacionamentos do Script
+
+1. subprocess-runtime.ts
+   - Tipo: Dependência Direta
+   - Relação: Cria SubprocessRuntime para executar o comando Piper.
+   - Criticidade: Alta
+
+2. engine-factory.ts
+   - Tipo: Dependência Inversa
+   - Relação: PiperEngine é instanciado pela fábrica de engines.
+   - Criticidade: Alta
+
+3. pipeline-service.ts
+   - Tipo: Fluxo de Dados
+   - Relação: Consome sessões geradas por PiperEngine.
+   - Criticidade: Alta
+
+Invariantes do Script
+
+1. piperInstallRoot é a única fonte canônica para localização das vozes do Piper.
+2. Busca em fallback apenas para compatibilidade com instalações legadas (não para corrigir novas).
+
+--- FIM ARQUITETURA DO SCRIPT ---
+*/
 
 import * as fs from "fs";
 import * as path from "path";
 import { EngineHealth, EngineSession, EngineValidationResult, GenerationRequest, GenerationResult, TTSCapabilities, TTSEngine } from "../types";
 import { SubprocessRuntime } from "../runtime/subprocess-runtime";
-import { VoiceLogger } from "../../logger";
 
 export interface PiperEngineOptions {
   piperPath: string;
   piperInstallRoot: string;
   selectedVoice: string;
   basePath?: string;
-  logger: VoiceLogger;
 }
 
 export class PiperEngine implements TTSEngine {
@@ -63,7 +83,7 @@ export class PiperEngine implements TTSEngine {
   }
 
   createSession(): EngineSession {
-    return new PiperEngineSession(this, new SubprocessRuntime(this.options.logger));
+    return new PiperEngineSession(this, new SubprocessRuntime());
   }
 
   buildCommand(outputFile: string): { command: string; cwd?: string } {

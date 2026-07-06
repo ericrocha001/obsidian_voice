@@ -1,13 +1,40 @@
-// Responsabilidades do Script
-//
-// 1. Instanciar o motor TTS correto com base no identificador da engine ativa.
-// 2. Desacoplar o main.ts da criação direta de classes de motor específicas.
-// 3. Fornecer a raiz da instalação do Piper para o motor (fonte canônica de localização de vozes).
+/*
+--- ARQUITETURA DO SCRIPT ---
+
+Responsabilidades do Script
+
+1. Instanciar o motor TTS correto com base no identificador da engine ativa.
+2. Desacoplar o main.ts da criação direta de classes de motor específicas.
+3. Fornecer a raiz da instalação do Piper para o motor (fonte canônica de localização de vozes).
+
+Mapa de Relacionamentos do Script
+
+1. piper-engine.ts
+   - Tipo: Dependência Direta
+   - Relação: Instancia PiperEngine quando a engine ativa é "piper".
+   - Criticidade: Alta
+
+2. kokoro-engine.ts
+   - Tipo: Dependência Direta
+   - Relação: Instancia KokoroEngine quando a engine ativa é "kokoro".
+   - Criticidade: Alta
+
+3. main.ts
+   - Tipo: Dependência Inversa
+   - Relação: Consome TTSEngineFactory.create() para obter a engine correta.
+   - Criticidade: Alta
+
+Invariantes do Script
+
+1. A engine retornada deve sempre implementar a interface TTSEngine.
+2. Nunca deve instanciar uma engine não suportada.
+
+--- FIM ARQUITETURA DO SCRIPT ---
+*/
 
 import { TTSEngine } from "../types";
 import { PiperEngine, PiperEngineOptions } from "./piper-engine";
 import { KokoroEngine, KokoroEngineOptions } from "./kokoro-engine";
-import { VoiceLogger } from "../../logger";
 
 export interface EngineFactoryOptions {
   ttsEngine: 'piper' | 'kokoro';
@@ -16,7 +43,6 @@ export interface EngineFactoryOptions {
   selectedVoice: string;
   selectedKokoroVoice: string;
   basePath?: string;
-  logger: VoiceLogger;
 }
 
 export class TTSEngineFactory {
@@ -26,7 +52,6 @@ export class TTSEngineFactory {
         kokoroPath: options.piperPath,
         selectedVoice: options.selectedKokoroVoice,
         basePath: options.basePath,
-        logger: options.logger,
       };
       return new KokoroEngine(kokoroOptions);
     }
@@ -36,7 +61,6 @@ export class TTSEngineFactory {
       piperInstallRoot: options.piperInstallRoot,
       selectedVoice: options.selectedVoice,
       basePath: options.basePath,
-      logger: options.logger,
     };
     return new PiperEngine(piperOptions);
   }

@@ -1657,8 +1657,8 @@ var require_streamx = __commonJS({
             return this;
           },
           next() {
-            return new Promise(function(resolve5, reject) {
-              promiseResolve = resolve5;
+            return new Promise(function(resolve4, reject) {
+              promiseResolve = resolve4;
               promiseReject = reject;
               const data = stream.read();
               if (data !== null) ondata(data);
@@ -1691,11 +1691,11 @@ var require_streamx = __commonJS({
         }
         function destroy(err) {
           stream.destroy(err);
-          return new Promise((resolve5, reject) => {
-            if (stream._duplexState & DESTROYED) return resolve5({ value: void 0, done: true });
+          return new Promise((resolve4, reject) => {
+            if (stream._duplexState & DESTROYED) return resolve4({ value: void 0, done: true });
             stream.once("close", function() {
               if (err) reject(err);
-              else resolve5({ value: void 0, done: true });
+              else resolve4({ value: void 0, done: true });
             });
           });
         }
@@ -1739,8 +1739,8 @@ var require_streamx = __commonJS({
         const writes = pending + (ws._duplexState & WRITE_WRITING ? 1 : 0);
         if (writes === 0) return Promise.resolve(true);
         if (state.drains === null) state.drains = [];
-        return new Promise((resolve5) => {
-          state.drains.push({ writes, resolve: resolve5 });
+        return new Promise((resolve4) => {
+          state.drains.push({ writes, resolve: resolve4 });
         });
       }
       write(data) {
@@ -1845,10 +1845,10 @@ var require_streamx = __commonJS({
       cb(null);
     }
     function pipelinePromise(...streams) {
-      return new Promise((resolve5, reject) => {
+      return new Promise((resolve4, reject) => {
         return pipeline(...streams, (err) => {
           if (err) return reject(err);
-          resolve5();
+          resolve4();
         });
       });
     }
@@ -2520,16 +2520,16 @@ var require_extract = __commonJS({
           entryCallback = null;
           cb(err);
         }
-        function onnext(resolve5, reject) {
+        function onnext(resolve4, reject) {
           if (error) {
             return reject(error);
           }
           if (entryStream) {
-            resolve5({ value: entryStream, done: false });
+            resolve4({ value: entryStream, done: false });
             entryStream = null;
             return;
           }
-          promiseResolve = resolve5;
+          promiseResolve = resolve4;
           promiseReject = reject;
           consumeCallback(null);
           if (extract2._finished && promiseResolve) {
@@ -2557,11 +2557,11 @@ var require_extract = __commonJS({
         function destroy(err) {
           extract2.destroy(err);
           consumeCallback(err);
-          return new Promise((resolve5, reject) => {
-            if (extract2.destroyed) return resolve5({ value: void 0, done: true });
+          return new Promise((resolve4, reject) => {
+            if (extract2.destroyed) return resolve4({ value: void 0, done: true });
             extract2.once("close", function() {
               if (err) reject(err);
-              else resolve5({ value: void 0, done: true });
+              else resolve4({ value: void 0, done: true });
             });
           });
         }
@@ -3157,7 +3157,7 @@ var require_utils = __commonJS({
     module2.exports = Utils;
     Utils.prototype.makeDir = function(folder) {
       const self = this;
-      function mkdirSync4(fpath) {
+      function mkdirSync3(fpath) {
         let resolvedPath = fpath.split(self.sep)[0];
         fpath.split(self.sep).forEach(function(name) {
           if (!name || name.substr(-1, 1) === ":") return;
@@ -3175,27 +3175,27 @@ var require_utils = __commonJS({
           if (stat && stat.isFile()) throw Errors.FILE_IN_THE_WAY(`"${resolvedPath}"`);
         });
       }
-      mkdirSync4(folder);
+      mkdirSync3(folder);
     };
-    Utils.prototype.writeFileTo = function(path12, content, overwrite, attr) {
+    Utils.prototype.writeFileTo = function(path11, content, overwrite, attr) {
       const self = this;
-      if (self.fs.existsSync(path12)) {
+      if (self.fs.existsSync(path11)) {
         if (!overwrite) return false;
-        var stat = self.fs.statSync(path12);
+        var stat = self.fs.statSync(path11);
         if (stat.isDirectory()) {
           return false;
         }
       }
-      var folder = pth.dirname(path12);
+      var folder = pth.dirname(path11);
       if (!self.fs.existsSync(folder)) {
         self.makeDir(folder);
       }
       var fd;
       try {
-        fd = self.fs.openSync(path12, "w", 438);
+        fd = self.fs.openSync(path11, "w", 438);
       } catch (e) {
-        self.fs.chmodSync(path12, 438);
-        fd = self.fs.openSync(path12, "w", 438);
+        self.fs.chmodSync(path11, 438);
+        fd = self.fs.openSync(path11, "w", 438);
       }
       if (fd) {
         try {
@@ -3204,31 +3204,31 @@ var require_utils = __commonJS({
           self.fs.closeSync(fd);
         }
       }
-      self.fs.chmodSync(path12, attr || 438);
+      self.fs.chmodSync(path11, attr || 438);
       return true;
     };
-    Utils.prototype.writeFileToAsync = function(path12, content, overwrite, attr, callback) {
+    Utils.prototype.writeFileToAsync = function(path11, content, overwrite, attr, callback) {
       if (typeof attr === "function") {
         callback = attr;
         attr = void 0;
       }
       const self = this;
-      self.fs.exists(path12, function(exist) {
+      self.fs.exists(path11, function(exist) {
         if (exist && !overwrite) return callback(false);
-        self.fs.stat(path12, function(err, stat) {
+        self.fs.stat(path11, function(err, stat) {
           if (exist && stat.isDirectory()) {
             return callback(false);
           }
-          var folder = pth.dirname(path12);
+          var folder = pth.dirname(path11);
           self.fs.exists(folder, function(exists) {
             if (!exists) self.makeDir(folder);
-            self.fs.open(path12, "w", 438, function(err2, fd) {
+            self.fs.open(path11, "w", 438, function(err2, fd) {
               if (err2) {
-                self.fs.chmod(path12, 438, function() {
-                  self.fs.open(path12, "w", 438, function(err3, fd2) {
+                self.fs.chmod(path11, 438, function() {
+                  self.fs.open(path11, "w", 438, function(err3, fd2) {
                     self.fs.write(fd2, content, 0, content.length, 0, function() {
                       self.fs.close(fd2, function() {
-                        self.fs.chmod(path12, attr || 438, function() {
+                        self.fs.chmod(path11, attr || 438, function() {
                           callback(true);
                         });
                       });
@@ -3238,13 +3238,13 @@ var require_utils = __commonJS({
               } else if (fd) {
                 self.fs.write(fd, content, 0, content.length, 0, function() {
                   self.fs.close(fd, function() {
-                    self.fs.chmod(path12, attr || 438, function() {
+                    self.fs.chmod(path11, attr || 438, function() {
                       callback(true);
                     });
                   });
                 });
               } else {
-                self.fs.chmod(path12, attr || 438, function() {
+                self.fs.chmod(path11, attr || 438, function() {
                   callback(true);
                 });
               }
@@ -3253,7 +3253,7 @@ var require_utils = __commonJS({
         });
       });
     };
-    Utils.prototype.findFiles = function(path12) {
+    Utils.prototype.findFiles = function(path11) {
       const self = this;
       function findSync(dir, pattern, recursive) {
         if (typeof pattern === "boolean") {
@@ -3262,16 +3262,16 @@ var require_utils = __commonJS({
         }
         let files = [];
         self.fs.readdirSync(dir).forEach(function(file) {
-          const path13 = pth.join(dir, file);
-          const stat = self.fs.statSync(path13);
-          if (!pattern || pattern.test(path13)) {
-            files.push(pth.normalize(path13) + (stat.isDirectory() ? self.sep : ""));
+          const path12 = pth.join(dir, file);
+          const stat = self.fs.statSync(path12);
+          if (!pattern || pattern.test(path12)) {
+            files.push(pth.normalize(path12) + (stat.isDirectory() ? self.sep : ""));
           }
-          if (stat.isDirectory() && recursive) files = files.concat(findSync(path13, pattern, recursive));
+          if (stat.isDirectory() && recursive) files = files.concat(findSync(path12, pattern, recursive));
         });
         return files;
       }
-      return findSync(path12, void 0, true);
+      return findSync(path11, void 0, true);
     };
     Utils.prototype.findFilesAsync = function(dir, cb) {
       const self = this;
@@ -3326,14 +3326,14 @@ var require_utils = __commonJS({
           return "UNSUPPORTED (" + method + ")";
       }
     };
-    Utils.canonical = function(path12) {
-      if (!path12) return "";
-      const safeSuffix = pth.posix.normalize("/" + path12.split("\\").join("/"));
+    Utils.canonical = function(path11) {
+      if (!path11) return "";
+      const safeSuffix = pth.posix.normalize("/" + path11.split("\\").join("/"));
       return pth.join(".", safeSuffix);
     };
-    Utils.zipnamefix = function(path12) {
-      if (!path12) return "";
-      const safeSuffix = pth.posix.normalize("/" + path12.split("\\").join("/"));
+    Utils.zipnamefix = function(path11) {
+      if (!path11) return "";
+      const safeSuffix = pth.posix.normalize("/" + path11.split("\\").join("/"));
       return pth.posix.join(".", safeSuffix);
     };
     Utils.findLast = function(arr, callback) {
@@ -3350,9 +3350,9 @@ var require_utils = __commonJS({
       prefix = pth.resolve(pth.normalize(prefix));
       var parts = name.split("/");
       for (var i = 0, l = parts.length; i < l; i++) {
-        var path12 = pth.normalize(pth.join(prefix, parts.slice(i, l).join(pth.sep)));
-        if (path12.indexOf(prefix) === 0) {
-          return path12;
+        var path11 = pth.normalize(pth.join(prefix, parts.slice(i, l).join(pth.sep)));
+        if (path11.indexOf(prefix) === 0) {
+          return path11;
         }
       }
       return pth.normalize(pth.join(prefix, pth.basename(name)));
@@ -3393,8 +3393,8 @@ var require_fattr = __commonJS({
   "node_modules/adm-zip/util/fattr.js"(exports2, module2) {
     "use strict";
     var pth = require("path");
-    module2.exports = function(path12, { fs: fs14 }) {
-      var _path = path12 || "", _obj = newAttr(), _stat = null;
+    module2.exports = function(path11, { fs: fs13 }) {
+      var _path = path11 || "", _obj = newAttr(), _stat = null;
       function newAttr() {
         return {
           directory: false,
@@ -3405,8 +3405,8 @@ var require_fattr = __commonJS({
           atime: 0
         };
       }
-      if (_path && fs14.existsSync(_path)) {
-        _stat = fs14.statSync(_path);
+      if (_path && fs13.existsSync(_path)) {
+        _stat = fs13.statSync(_path);
         _obj.directory = _stat.isDirectory();
         _obj.mtime = _stat.mtime;
         _obj.atime = _stat.atime;
@@ -5190,10 +5190,10 @@ var require_adm_zip = __commonJS({
          * @param {function|string} [props.namefix] - optional function to help fix filename
          */
         addLocalFolderPromise: function(localPath2, props) {
-          return new Promise((resolve5, reject) => {
+          return new Promise((resolve4, reject) => {
             this.addLocalFolderAsync2(Object.assign({ localPath: localPath2 }, props), (err, done) => {
               if (err) reject(err);
-              if (done) resolve5(this);
+              if (done) resolve4(this);
             });
           });
         },
@@ -5380,12 +5380,12 @@ var require_adm_zip = __commonJS({
           keepOriginalPermission = get_Bool(false, keepOriginalPermission);
           overwrite = get_Bool(false, overwrite);
           if (!callback) {
-            return new Promise((resolve5, reject) => {
+            return new Promise((resolve4, reject) => {
               this.extractAllToAsync(targetPath, overwrite, keepOriginalPermission, function(err) {
                 if (err) {
                   reject(err);
                 } else {
-                  resolve5(this);
+                  resolve4(this);
                 }
               });
             });
@@ -5483,11 +5483,11 @@ var require_adm_zip = __commonJS({
                  */
         writeZipPromise: function(targetFileName, props) {
           const { overwrite, perm } = Object.assign({ overwrite: true }, props);
-          return new Promise((resolve5, reject) => {
+          return new Promise((resolve4, reject) => {
             if (!targetFileName && opts.filename) targetFileName = opts.filename;
             if (!targetFileName) reject("ADM-ZIP: ZIP File Name Missing");
             this.toBufferPromise().then((zipData) => {
-              const ret = (done) => done ? resolve5(done) : reject("ADM-ZIP: Wasn't able to write zip file");
+              const ret = (done) => done ? resolve4(done) : reject("ADM-ZIP: Wasn't able to write zip file");
               filetools.writeFileToAsync(targetFileName, zipData, overwrite, perm, ret);
             }, reject);
           });
@@ -5496,8 +5496,8 @@ var require_adm_zip = __commonJS({
          * @returns {Promise<Buffer>} A promise to the Buffer.
          */
         toBufferPromise: function() {
-          return new Promise((resolve5, reject) => {
-            _zip.toAsyncBuffer(resolve5, reject);
+          return new Promise((resolve4, reject) => {
+            _zip.toAsyncBuffer(resolve4, reject);
           });
         },
         /**
@@ -5527,9 +5527,9 @@ __export(main_exports, {
   default: () => ObsidianVoicePlugin
 });
 module.exports = __toCommonJS(main_exports);
-var fs13 = __toESM(require("fs"));
+var fs12 = __toESM(require("fs"));
 var os3 = __toESM(require("os"));
-var path11 = __toESM(require("path"));
+var path10 = __toESM(require("path"));
 var import_obsidian6 = require("obsidian");
 
 // src/audio-player.ts
@@ -5594,12 +5594,12 @@ var ObsidianAudioPlayer = class {
   }
   async cleanupChunk(filename) {
     try {
-      if (fs.existsSync(filename)) {
-        fs.unlinkSync(filename);
-        console.log("[Obsidian Voice] Arquivo tempor\xE1rio removido:", filename);
-      }
+      await fs.promises.unlink(filename);
+      console.log("[Obsidian Voice] Arquivo tempor\xE1rio removido:", filename);
     } catch (e) {
-      console.warn("[Obsidian Voice] N\xE3o foi poss\xEDvel remover o chunk:", filename, e);
+      if ((e == null ? void 0 : e.code) !== "ENOENT") {
+        console.warn("[Obsidian Voice] N\xE3o foi poss\xEDvel remover o chunk:", filename, e);
+      }
     }
   }
 };
@@ -5635,11 +5635,17 @@ var ObsidianVoiceQueue = class {
     this.MAX_CHUNK_LENGTH = 500;
     /** Quando true, a fila é populada apenas com os destaques ==texto== da nota. */
     this.readOnlyHighlights = false;
+    // Índice reverso para busca de chunks por texto.
+    // Limitações:
+    // - Texto é normalizado (lowercase, sem espaços extras) antes da indexação
+    // - A busca exata é O(n) no pior caso devido à normalização adicional
+    this.chunkIndex = /* @__PURE__ */ new Map();
   }
   startQueue(rawText) {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.chunkIndex.clear();
     if (this.readOnlyHighlights) {
       this.buildHighlightsQueue(rawText);
       this.buildChapters(rawText);
@@ -5666,21 +5672,27 @@ var ObsidianVoiceQueue = class {
         continue;
       }
       if (cleanLine.length <= this.MAX_CHUNK_LENGTH) {
+        const chunkIndex = this.chunks.length;
         this.chunks.push({
-          index: this.chunks.length,
+          index: chunkIndex,
           text: cleanLine,
           startLine: i,
           endLine: i
         });
+        const normalized = this.normalizeForIndex(cleanLine, chunkIndex);
+        this.chunkIndex.set(normalized, chunkIndex);
       } else {
         const subChunks = this.splitParagraph(cleanLine, this.MAX_CHUNK_LENGTH);
         for (const sub of subChunks) {
+          const chunkIndex = this.chunks.length;
           this.chunks.push({
-            index: this.chunks.length,
+            index: chunkIndex,
             text: sub,
             startLine: i,
             endLine: i
           });
+          const normalized = this.normalizeForIndex(sub, chunkIndex);
+          this.chunkIndex.set(normalized, chunkIndex);
         }
       }
     }
@@ -5701,12 +5713,15 @@ var ObsidianVoiceQueue = class {
         if (!text) continue;
         const cleanText = this.cleanLineMarkdown(text);
         if (!cleanText) continue;
+        const chunkIndex = this.chunks.length;
         this.chunks.push({
-          index: this.chunks.length,
+          index: chunkIndex,
           text: cleanText,
           startLine: i,
           endLine: i
         });
+        const normalized = this.normalizeForIndex(cleanText, chunkIndex);
+        this.chunkIndex.set(normalized, chunkIndex);
       }
     }
   }
@@ -5739,6 +5754,15 @@ var ObsidianVoiceQueue = class {
     }
     return this.chunks.length > 0 ? this.chunks[this.chunks.length - 1].index : 0;
   }
+  /**
+   * Normaliza texto para uso como chave de busca no índice reverso.
+   * Inclui o índice do chunk para garantir unicidade.
+   * Usa apenas os primeiros 100 caracteres para evitar chaves muito longas.
+   */
+  normalizeForIndex(text, chunkIndex) {
+    const normalized = text.toLowerCase().replace(/\s+/g, " ").trim().substring(0, 100);
+    return `${chunkIndex}:${normalized}`;
+  }
   getNextChunk() {
     if (!this.hasMore()) return null;
     return this.chunks[this.currentIndex++];
@@ -5750,6 +5774,7 @@ var ObsidianVoiceQueue = class {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.chunkIndex.clear();
   }
   getChapters() {
     return this.chapters;
@@ -5784,13 +5809,16 @@ var ObsidianVoiceQueue = class {
   }
   findChunkIndexByLineText(lineText) {
     if (!lineText || !lineText.trim()) return 0;
-    const cleanedLine = this.cleanLineMarkdown(lineText).toLowerCase();
+    const cleanedLine = this.cleanLineMarkdown(lineText);
     if (!cleanedLine) return 0;
-    const index = this.chunks.findIndex((chunk) => {
-      const chunkText = chunk.text.toLowerCase();
-      return chunkText.includes(cleanedLine) || cleanedLine.includes(chunkText);
-    });
-    return index !== -1 ? index : 0;
+    const normalized = cleanedLine.toLowerCase().replace(/\s+/g, " ").trim().substring(0, 100);
+    for (const [key, index] of this.chunkIndex.entries()) {
+      const keyText = key.substring(key.indexOf(":") + 1);
+      if (keyText === normalized) {
+        return index;
+      }
+    }
+    return 0;
   }
   /**
    * Limpa marcações markdown e formatações de uma linha individual.
@@ -6857,7 +6885,11 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
     const gridContainer = voicesSection.createDiv({ cls: "ov-voices-grid" });
     let voices = [];
     try {
-      await this.plugin.modelManager.fetchPiperVoices();
+      await this.plugin.modelManager.fetchPiperVoices((loading) => {
+        if (loading) {
+          new import_obsidian2.Notice("Carregando cat\xE1logo de vozes...");
+        }
+      });
       voices = this.plugin.modelManager.voicesCache || [];
     } catch (e) {
       new import_obsidian2.Notice("Falha ao carregar cat\xE1logo de vozes.");
@@ -7076,172 +7108,26 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
   }
 };
 
-// src/logger.ts
-var fs3 = __toESM(require("fs"));
-var path2 = __toESM(require("path"));
-var DEBUG_MODE = false;
-var VoiceLogger = class {
-  constructor(vaultPath) {
-    this.logBuffer = [];
-    this.flushTimer = null;
-    this.logPath = path2.resolve(vaultPath, "voice_debug.log");
-    this.startFlushTimer();
-  }
-  startFlushTimer() {
-    if (this.flushTimer) return;
-    this.flushTimer = setInterval(async () => {
-      if (this.logBuffer.length === 0) return;
-      const logsToWrite = this.logBuffer.join("");
-      this.logBuffer = [];
-      try {
-        await fs3.promises.appendFile(this.logPath, logsToWrite, "utf-8");
-      } catch (e) {
-        console.error("[Obsidian Voice] Falha ao descarregar log:", e);
-      }
-    }, 3e3);
-  }
-  dispose() {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = null;
-    }
-    if (this.logBuffer.length > 0) {
-      const logsToWrite = this.logBuffer.join("");
-      this.logBuffer = [];
-      try {
-        fs3.appendFileSync(this.logPath, logsToWrite, "utf-8");
-      } catch (e) {
-        console.error("[Obsidian Voice] Falha ao descarregar log no dispose:", e);
-      }
-    }
-  }
-  writeLog(level, message) {
-    const timestamp = (/* @__PURE__ */ new Date()).toISOString();
-    const logLine = `[${timestamp}] [${level}] ${message}
-`;
-    this.logBuffer.push(logLine);
-  }
-  logTentativa(texto, comando) {
-    const trecho = texto.length > 60 ? texto.substring(0, 60) + "..." : texto;
-    this.writeLog("INFO", `Tentativa de execu\xE7\xE3o - Comando: ${comando} | Texto: "${trecho}"`);
-  }
-  logError(message) {
-    this.writeLog("ERROR", `Erro do processo: ${message}`);
-  }
-  logExit(code) {
-    this.writeLog("INFO", `Processo finalizado com c\xF3digo: ${code}`);
-  }
-  logDebug(message) {
-    if (DEBUG_MODE) {
-      this.writeLog("DEBUG", message);
-    }
-  }
-  logEngineEvent(engineId, phase, message) {
-    this.writeLog("INFO", `Engine=${engineId} | Fase=${phase} | ${message}`);
-  }
-  logGeneration(result) {
-    this.writeLog(
-      "INFO",
-      `Engine=${result.engineId} | gera\xE7\xE3o=${result.generationMs}ms | arquivo=${result.filePath} | cache=${result.cached}`
-    );
-  }
-};
-
 // src/editor-highlighter.ts
 var import_state = require("@codemirror/state");
 var import_view = require("@codemirror/view");
-var moduleLogger = null;
-var highlightDiagnostics = {
-  createCount: 0,
-  updateCount: 0,
-  effectCount: 0
-};
-function logHighlightDiagnostic(message, payloadFactory) {
-  if (!DEBUG_MODE) return;
-  const payload = payloadFactory ? payloadFactory() : void 0;
-  let serializedPayload = "";
-  if (payload !== void 0) {
-    try {
-      serializedPayload = ` ${JSON.stringify(payload, null, 2)}`;
-    } catch (error) {
-      serializedPayload = ` [payload n\xE3o serializ\xE1vel: ${error instanceof Error ? error.message : String(error)}]`;
-    }
-  }
-  moduleLogger == null ? void 0 : moduleLogger.logDebug(`[Diagnostico Highlight] ${message}${serializedPayload}`);
-  if (payload === void 0) {
-    console.log(`[Obsidian Voice Highlight Diagnostic] ${message}`);
-  } else {
-    console.log(`[Obsidian Voice Highlight Diagnostic] ${message}`, payload);
-  }
-}
-function describeEditorStateExtensions(state) {
-  var _a;
-  const stateAny = state;
-  const config = stateAny == null ? void 0 : stateAny.config;
-  if (!config) {
-    return {
-      available: false,
-      reason: "state.config n\xE3o est\xE1 acess\xEDvel"
-    };
-  }
-  const highlightFieldId = highlightField.id;
-  const fieldAddress = highlightFieldId ? (_a = config.address) == null ? void 0 : _a[highlightFieldId] : void 0;
-  const knownFieldIds = config.address ? Object.keys(config.address).filter((key) => config.address[key] != null) : [];
-  return {
-    available: true,
-    highlightFieldId,
-    highlightFieldAddress: fieldAddress != null ? fieldAddress : null,
-    highlightFieldPresentInConfig: fieldAddress != null,
-    knownStateFieldIds: knownFieldIds,
-    facetCount: Array.isArray(config.facets) ? config.facets.length : void 0,
-    staticValuesCount: Array.isArray(config.staticValues) ? config.staticValues.length : void 0,
-    dynamicSlotsCount: Array.isArray(config.dynamicSlots) ? config.dynamicSlots.length : void 0
-  };
-}
+var isHighlighterActive = false;
 var setHighlightEffect = import_state.StateEffect.define();
 var highlightField = import_state.StateField.define({
   create() {
-    highlightDiagnostics.createCount += 1;
-    logHighlightDiagnostic("highlightField.create() executado.", () => ({
-      createCount: highlightDiagnostics.createCount,
-      updateCount: highlightDiagnostics.updateCount,
-      effectCount: highlightDiagnostics.effectCount
-    }));
     return import_view.Decoration.none;
   },
   update(decorations, tr) {
-    highlightDiagnostics.updateCount += 1;
+    if (!isHighlighterActive) {
+      return tr.docChanged ? decorations.map(tr.changes) : decorations;
+    }
     const hasHighlightEffect = tr.effects.some((e) => e.is(setHighlightEffect));
     if (decorations.size === 0 && !hasHighlightEffect) {
       return import_view.Decoration.none;
     }
-    logHighlightDiagnostic("highlightField.update() executado.", () => {
-      var _a, _b;
-      return {
-        createCount: highlightDiagnostics.createCount,
-        updateCount: highlightDiagnostics.updateCount,
-        effectCount: highlightDiagnostics.effectCount,
-        effectsInTransaction: tr.effects.length,
-        docChanged: tr.docChanged,
-        selection: (_b = (_a = tr.state.selection) == null ? void 0 : _a.toJSON) == null ? void 0 : _b.call(_a)
-      };
-    });
     decorations = decorations.map(tr.changes);
-    if (tr.effects.length > 0) {
-      moduleLogger == null ? void 0 : moduleLogger.logDebug(`[Field] update chamado. tr.effects.length = ${tr.effects.length}`);
-      if (DEBUG_MODE) console.log("[Obsidian Voice Field] update chamado. Efeitos no tr:", tr.effects.length);
-    }
     for (const effect of tr.effects) {
       if (effect.is(setHighlightEffect)) {
-        highlightDiagnostics.effectCount += 1;
-        logHighlightDiagnostic("setHighlightEffect chegou ao highlightField.update().", () => ({
-          effectValue: effect.value,
-          createCount: highlightDiagnostics.createCount,
-          updateCount: highlightDiagnostics.updateCount,
-          effectCount: highlightDiagnostics.effectCount
-        }));
-        moduleLogger == null ? void 0 : moduleLogger.logDebug(`[Field] setHighlightEffect recebido com valor: ${JSON.stringify(effect.value)}`);
-        if (DEBUG_MODE) console.log("[Obsidian Voice Field] setHighlightEffect recebido no update:", effect.value);
         if (effect.value) {
           const { from, to } = effect.value;
           const deco = import_view.Decoration.mark({
@@ -7260,11 +7146,13 @@ var highlightField = import_state.StateField.define({
 var EditorHighlighter = class {
   constructor() {
     this.lastSourceIndex = 0;
-    this.logger = null;
+    // Cache de normalização do documento
+    this.cachedDocText = "";
+    this.cachedOriginalToAlphanum = [];
+    this.cachedSourceStr = "";
   }
-  setLogger(logger) {
-    this.logger = logger;
-    moduleLogger = logger;
+  setActive(active) {
+    isHighlighterActive = active;
   }
   getExtension() {
     return highlightField;
@@ -7279,29 +7167,26 @@ var EditorHighlighter = class {
     this.lastSourceIndex = 0;
   }
   highlightParagraph(editor, paragraphText, scrollEnabled = true) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m;
-    const briefText = paragraphText.substring(0, 40) + "...";
-    (_a = this.logger) == null ? void 0 : _a.logDebug(`[Highlighter] highlightParagraph chamado para: "${briefText}"`);
-    console.log("[Obsidian Voice Highlighter] highlightParagraph chamado para texto:", briefText);
     const view = editor.cm;
     if (!view) {
-      (_b = this.logger) == null ? void 0 : _b.logDebug("[Highlighter] EditorView (cm) n\xE3o encontrado no editor.");
       console.warn("[Obsidian Voice Highlighter] EditorView (cm) n\xE3o encontrado no editor.");
       return;
     }
     const docText = view.state.doc.toString();
-    (_c = this.logger) == null ? void 0 : _c.logDebug(`[Highlighter] Comprimento do documento: ${docText.length}`);
-    console.log("[Obsidian Voice Highlighter] Comprimento do docText:", docText.length);
-    const originalToAlphanum = [];
-    for (let i = 0; i < docText.length; i++) {
-      const char = docText[i];
-      if (/^\p{L}|\p{N}$/u.test(char)) {
-        originalToAlphanum.push({ char: char.toLowerCase(), origIdx: i });
+    if (docText !== this.cachedDocText) {
+      const originalToAlphanum2 = [];
+      for (let i = 0; i < docText.length; i++) {
+        const char = docText[i];
+        if (/^\p{L}|\p{N}$/u.test(char)) {
+          originalToAlphanum2.push({ char: char.toLowerCase(), origIdx: i });
+        }
       }
+      this.cachedOriginalToAlphanum = originalToAlphanum2;
+      this.cachedSourceStr = originalToAlphanum2.map((x) => x.char).join("");
+      this.cachedDocText = docText;
     }
-    const sourceStr = originalToAlphanum.map((x) => x.char).join("");
-    (_d = this.logger) == null ? void 0 : _d.logDebug(`[Highlighter] Comprimento da string normalizada do documento: ${sourceStr.length}`);
-    console.log("[Obsidian Voice Highlighter] Comprimento da sourceStr normalizada:", sourceStr.length);
+    const sourceStr = this.cachedSourceStr;
+    const originalToAlphanum = this.cachedOriginalToAlphanum;
     const cleanTarget = [];
     for (let i = 0; i < paragraphText.length; i++) {
       const char = paragraphText[i];
@@ -7310,52 +7195,21 @@ var EditorHighlighter = class {
       }
     }
     const targetStr = cleanTarget.join("");
-    (_e = this.logger) == null ? void 0 : _e.logDebug(`[Highlighter] Comprimento da string normalizada do par\xE1grafo: ${targetStr.length}`);
-    console.log("[Obsidian Voice Highlighter] Comprimento da targetStr normalizada:", targetStr.length);
     if (!targetStr) {
-      (_f = this.logger) == null ? void 0 : _f.logDebug("[Highlighter] targetStr normalizada est\xE1 vazia.");
       console.warn("[Obsidian Voice Highlighter] targetStr normalizada est\xE1 vazia.");
       return;
     }
-    (_g = this.logger) == null ? void 0 : _g.logDebug(`[Highlighter] Procurando a partir de lastSourceIndex: ${this.lastSourceIndex}`);
-    console.log("[Obsidian Voice Highlighter] Buscando a partir do \xEDndice:", this.lastSourceIndex);
     let matchIndex = sourceStr.indexOf(targetStr, this.lastSourceIndex);
     if (matchIndex === -1) {
-      (_h = this.logger) == null ? void 0 : _h.logDebug("[Highlighter] Par\xE1grafo n\xE3o encontrado ap\xF3s lastSourceIndex. Buscando do in\xEDcio...");
-      console.log("[Obsidian Voice Highlighter] Par\xE1grafo n\xE3o encontrado a partir do lastSourceIndex. Tentando do in\xEDcio...");
       matchIndex = sourceStr.indexOf(targetStr, 0);
     }
     if (matchIndex !== -1) {
       this.lastSourceIndex = matchIndex + targetStr.length;
       const from = originalToAlphanum[matchIndex].origIdx;
       const to = originalToAlphanum[matchIndex + targetStr.length - 1].origIdx + 1;
-      const foundTextSample = docText.substring(from, to).substring(0, 40) + "...";
-      (_i = this.logger) == null ? void 0 : _i.logDebug(`[Highlighter] Encontrado! Range original: [${from}, ${to}]. Texto correspondente: "${foundTextSample}"`);
-      console.log(`[Obsidian Voice Highlighter] Par\xE1grafo encontrado! Range original: [${from}, ${to}]. Texto correspondente: "${foundTextSample}"`);
-      const dispatchDiagnostics = {
-        viewExists: !!view,
-        stateExists: !!(view == null ? void 0 : view.state),
-        createCount: highlightDiagnostics.createCount,
-        updateCount: highlightDiagnostics.updateCount,
-        effectCount: highlightDiagnostics.effectCount
-      };
-      try {
-        const currentFieldValue = (_j = view.state) == null ? void 0 : _j.field(highlightField, false);
-        dispatchDiagnostics.highlightFieldPresentInDispatchView = currentFieldValue !== void 0;
-        dispatchDiagnostics.highlightFieldValueSummary = currentFieldValue ? {
-          constructorName: (_k = currentFieldValue.constructor) == null ? void 0 : _k.name,
-          isDecorationNone: currentFieldValue === import_view.Decoration.none
-        } : currentFieldValue;
-      } catch (error) {
-        dispatchDiagnostics.highlightFieldReadError = error instanceof Error ? error.message : String(error);
-      }
-      dispatchDiagnostics.currentEditorStateExtensions = describeEditorStateExtensions(view.state);
-      logHighlightDiagnostic("Relatorio antes de view.dispatch(setHighlightEffect).", () => dispatchDiagnostics);
       view.dispatch({
         effects: setHighlightEffect.of({ from, to })
       });
-      (_l = this.logger) == null ? void 0 : _l.logDebug("[Highlighter] Efeito setHighlightEffect despachado.");
-      console.log("[Obsidian Voice Highlighter] Efeito setHighlightEffect despachado.");
       if (scrollEnabled) {
         const rect = view.coordsAtPos(from);
         if (rect && view.scrollDOM) {
@@ -7374,16 +7228,15 @@ var EditorHighlighter = class {
         }
       }
     } else {
-      (_m = this.logger) == null ? void 0 : _m.logDebug(`[Highlighter] Par\xE1grafo n\xE3o p\xF4de ser localizado no documento. Buscado: "${targetStr.substring(0, 30)}..."`);
       console.warn("[Obsidian Voice Highlighter] Par\xE1grafo n\xE3o p\xF4de ser localizado no documento.");
     }
   }
 };
 
 // src/tts/pipeline-service.ts
-var fs4 = __toESM(require("fs"));
+var fs3 = __toESM(require("fs"));
 var os = __toESM(require("os"));
-var path3 = __toESM(require("path"));
+var path2 = __toESM(require("path"));
 var import_obsidian3 = require("obsidian");
 
 // src/tts/circuit-breaker.ts
@@ -7420,11 +7273,10 @@ var CircuitBreaker = class {
 
 // src/tts/pipeline-service.ts
 var TTSPipelineService = class {
-  constructor(vault, queue, engine, logger) {
+  constructor(vault, queue, engine) {
     this.vault = vault;
     this.queue = queue;
     this.engine = engine;
-    this.logger = logger;
     this.nextChunkPromise = null;
     this.session = null;
     this.breaker = new CircuitBreaker();
@@ -7435,9 +7287,7 @@ var TTSPipelineService = class {
   async start() {
     await this.stop();
     this.session = this.engine.createSession();
-    this.logger.logEngineEvent(this.engine.id, "session", "warming");
     await this.session.warmup();
-    this.logger.logEngineEvent(this.engine.id, "session", "ready");
     this.nextChunkPromise = this.prefetchNextChunk();
   }
   async stop() {
@@ -7477,16 +7327,15 @@ var TTSPipelineService = class {
   async prefetchNextChunk() {
     const chunk = this.queue.getNextChunk();
     if (chunk === null) return null;
-    const cacheDir = path3.join(os.tmpdir(), "ObsidianVoiceCache");
-    if (!fs4.existsSync(cacheDir)) fs4.mkdirSync(cacheDir, { recursive: true });
+    const cacheDir = path2.join(os.tmpdir(), "ObsidianVoiceCache");
+    await fs3.promises.mkdir(cacheDir, { recursive: true });
     const filename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
-    const absolutePath = path3.join(cacheDir, filename);
+    const absolutePath = path2.join(cacheDir, filename);
     try {
       const metadata = await this.generate(chunk.text, absolutePath);
       return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
     } catch (error) {
       const message = (error == null ? void 0 : error.message) || String(error);
-      this.logger.logEngineEvent(this.engine.id, "generation", message);
       return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message };
     }
   }
@@ -7496,7 +7345,6 @@ var TTSPipelineService = class {
     try {
       const result = await this.session.generate({ text, outputFile });
       this.breaker.recordSuccess();
-      this.logger.logGeneration(result);
       return result;
     } catch (error) {
       this.breaker.recordFailure();
@@ -7506,7 +7354,7 @@ var TTSPipelineService = class {
   toResourcePath(absolutePath) {
     if (this.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
       const basePath = this.vault.adapter.getBasePath();
-      const relativePath = path3.relative(basePath, absolutePath);
+      const relativePath = path2.relative(basePath, absolutePath);
       return this.vault.adapter.getResourcePath(relativePath);
     }
     return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
@@ -7515,38 +7363,41 @@ var TTSPipelineService = class {
     if (!this.nextChunkPromise) return;
     const chunk = await this.nextChunkPromise;
     this.nextChunkPromise = null;
-    if ((chunk == null ? void 0 : chunk.absolutePath) && fs4.existsSync(chunk.absolutePath)) fs4.unlinkSync(chunk.absolutePath);
+    if (chunk == null ? void 0 : chunk.absolutePath) {
+      try {
+        await fs3.promises.unlink(chunk.absolutePath);
+      } catch (e) {
+        if ((e == null ? void 0 : e.code) !== "ENOENT") {
+          console.warn("[Obsidian Voice] N\xE3o foi poss\xEDvel remover o chunk prefetch:", chunk.absolutePath, e);
+        }
+      }
+    }
   }
 };
 
 // src/tts/engine/piper-engine.ts
-var fs5 = __toESM(require("fs"));
-var path4 = __toESM(require("path"));
+var fs4 = __toESM(require("fs"));
+var path3 = __toESM(require("path"));
 
 // src/tts/runtime/subprocess-runtime.ts
 var import_child_process = require("child_process");
 var SubprocessRuntime = class {
-  constructor(logger) {
-    this.logger = logger;
+  constructor() {
     this.child = null;
   }
   run(request) {
-    this.logger.logDebug(`[Runtime:subprocess] Executando comando: ${request.command}`);
-    return new Promise((resolve5, reject) => {
+    return new Promise((resolve4, reject) => {
       const child = (0, import_child_process.exec)(request.command, request.cwd ? { cwd: request.cwd } : {}, (error, _stdout, stderr) => {
         this.child = null;
         if (error) {
-          this.logger.logError(stderr || error.message);
-          this.logger.logExit(error.code || 1);
           reject(new Error(error.message));
           return;
         }
-        this.logger.logExit(0);
-        resolve5();
+        resolve4();
       });
       this.child = child;
       if (child.stdin) {
-        child.stdin.on("error", (e) => this.logger.logError(`Erro no stdin do subprocesso TTS: ${e.message}`));
+        child.stdin.on("error", (e) => console.warn(`Erro no stdin do subprocesso TTS: ${e.message}`));
         child.stdin.write(request.input, "utf-8");
         child.stdin.end();
       }
@@ -7583,8 +7434,8 @@ var PiperEngine = class {
     const { piperPath, piperInstallRoot } = this.options;
     const resolvedModel = this.resolveModelPath();
     const isPiperCommand = this.isCommand(piperPath);
-    const piperExists = !!piperPath && (isPiperCommand || fs5.existsSync(this.resolvePiperPath()));
-    const modelExists = !!resolvedModel && fs5.existsSync(resolvedModel);
+    const piperExists = !!piperPath && (isPiperCommand || fs4.existsSync(this.resolvePiperPath()));
+    const modelExists = !!resolvedModel && fs4.existsSync(resolvedModel);
     if (!piperExists || !modelExists) {
       const error = "Piper executable or voice model is missing.";
       this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
@@ -7594,7 +7445,7 @@ var PiperEngine = class {
     return { ok: true };
   }
   createSession() {
-    return new PiperEngineSession(this, new SubprocessRuntime(this.options.logger));
+    return new PiperEngineSession(this, new SubprocessRuntime());
   }
   buildCommand(outputFile) {
     const resolvedPiper = this.resolvePiperPath();
@@ -7606,23 +7457,23 @@ var PiperEngine = class {
   }
   resolvePiperPath() {
     const { piperPath, basePath } = this.options;
-    if (this.isCommand(piperPath) || path4.isAbsolute(piperPath) || !basePath) return piperPath;
-    return path4.resolve(basePath, piperPath);
+    if (this.isCommand(piperPath) || path3.isAbsolute(piperPath) || !basePath) return piperPath;
+    return path3.resolve(basePath, piperPath);
   }
   resolveModelPath() {
     const { piperInstallRoot, selectedVoice } = this.options;
     if (!selectedVoice || !piperInstallRoot) return "";
     const voiceFile = selectedVoice.endsWith(".onnx") ? selectedVoice : `${selectedVoice}.onnx`;
-    const subfolderPath = path4.join(piperInstallRoot, selectedVoice, voiceFile);
-    if (fs5.existsSync(subfolderPath)) return subfolderPath;
-    const directPath = path4.join(piperInstallRoot, voiceFile);
-    if (fs5.existsSync(directPath)) return directPath;
+    const subfolderPath = path3.join(piperInstallRoot, selectedVoice, voiceFile);
+    if (fs4.existsSync(subfolderPath)) return subfolderPath;
+    const directPath = path3.join(piperInstallRoot, voiceFile);
+    if (fs4.existsSync(directPath)) return directPath;
     let currentDir = piperInstallRoot;
     for (let i = 0; i < 3; i++) {
-      const parentDir = path4.dirname(currentDir);
+      const parentDir = path3.dirname(currentDir);
       if (parentDir === currentDir) break;
-      const candidatePath = path4.join(parentDir, voiceFile);
-      if (fs5.existsSync(candidatePath)) return candidatePath;
+      const candidatePath = path3.join(parentDir, voiceFile);
+      if (fs4.existsSync(candidatePath)) return candidatePath;
       currentDir = parentDir;
     }
     return subfolderPath;
@@ -7658,8 +7509,8 @@ var PiperEngineSession = class {
 };
 
 // src/tts/engine/kokoro-engine.ts
-var fs6 = __toESM(require("fs"));
-var path5 = __toESM(require("path"));
+var fs5 = __toESM(require("fs"));
+var path4 = __toESM(require("path"));
 var KokoroEngine = class {
   constructor(options) {
     this.options = options;
@@ -7681,11 +7532,11 @@ var KokoroEngine = class {
   }
   async validate() {
     const { kokoroPath, selectedVoice } = this.options;
-    const kokoroExists = !!kokoroPath && fs6.existsSync(this.resolveKokoroPath());
+    const kokoroExists = !!kokoroPath && fs5.existsSync(this.resolveKokoroPath());
     let modelExists = false;
     if (selectedVoice) {
       const voicePath = this.resolveVoicePath(selectedVoice);
-      modelExists = fs6.existsSync(voicePath);
+      modelExists = fs5.existsSync(voicePath);
     }
     if (!kokoroExists || !modelExists) {
       const error = "Kokoro executable or voice model is missing.";
@@ -7696,7 +7547,7 @@ var KokoroEngine = class {
     return { ok: true };
   }
   createSession() {
-    return new KokoroEngineSession(this, new SubprocessRuntime(this.options.logger));
+    return new KokoroEngineSession(this, new SubprocessRuntime());
   }
   buildCommand(text, voice, outputFile) {
     const resolvedKokoro = this.resolveKokoroPath();
@@ -7707,14 +7558,14 @@ var KokoroEngine = class {
   }
   resolveKokoroPath() {
     const { kokoroPath, basePath } = this.options;
-    if (path5.isAbsolute(kokoroPath) || !basePath) return kokoroPath;
-    return path5.resolve(basePath, kokoroPath);
+    if (path4.isAbsolute(kokoroPath) || !basePath) return kokoroPath;
+    return path4.resolve(basePath, kokoroPath);
   }
   resolveVoicePath(voice) {
     const { kokoroPath, basePath } = this.options;
     if (!voice || !kokoroPath) return "";
-    const dir = path5.dirname(this.resolveKokoroPath());
-    return path5.join(dir, "voices", voice);
+    const dir = path4.dirname(this.resolveKokoroPath());
+    return path4.join(dir, "voices", voice);
   }
   getSelectedVoice() {
     return this.options.selectedVoice;
@@ -7757,8 +7608,7 @@ var TTSEngineFactory = class {
       const kokoroOptions = {
         kokoroPath: options.piperPath,
         selectedVoice: options.selectedKokoroVoice,
-        basePath: options.basePath,
-        logger: options.logger
+        basePath: options.basePath
       };
       return new KokoroEngine(kokoroOptions);
     }
@@ -7766,17 +7616,16 @@ var TTSEngineFactory = class {
       piperPath: options.piperPath,
       piperInstallRoot: options.piperInstallRoot,
       selectedVoice: options.selectedVoice,
-      basePath: options.basePath,
-      logger: options.logger
+      basePath: options.basePath
     };
     return new PiperEngine(piperOptions);
   }
 };
 
 // src/services/model/model-management-service.ts
-var fs12 = __toESM(require("fs"));
+var fs11 = __toESM(require("fs"));
 var fsp3 = __toESM(require("fs/promises"));
-var path10 = __toESM(require("path"));
+var path9 = __toESM(require("path"));
 var os2 = __toESM(require("os"));
 var import_child_process3 = require("child_process");
 var import_util = require("util");
@@ -7918,10 +7767,10 @@ var ManifestService = class {
 
 // src/services/model/resource-guard.ts
 var import_child_process2 = require("child_process");
-var fs7 = __toESM(require("fs"));
+var fs6 = __toESM(require("fs"));
 var TIMEOUT_MS = 3e3;
 function execWithTimeout(command, cwd) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve4, reject) => {
     const controller = new AbortController();
     const timer = setTimeout(() => {
       controller.abort();
@@ -7933,12 +7782,12 @@ function execWithTimeout(command, cwd) {
         reject(error);
         return;
       }
-      resolve5(stdout.trim());
+      resolve4(stdout.trim());
     });
   });
 }
 async function getDiskFreeBytes(vaultPath) {
-  const safeCwd = await fs7.promises.access(vaultPath).then(() => vaultPath).catch(() => process.cwd()) || process.cwd();
+  const safeCwd = await fs6.promises.access(vaultPath).then(() => vaultPath).catch(() => process.cwd()) || process.cwd();
   if (process.platform === "win32") {
     const output2 = await execWithTimeout(
       'powershell -Command "(Get-Item -Path .).PSDrive.Free"',
@@ -8002,19 +7851,19 @@ var ResourceGuard = class {
 // src/services/model/download-manager.ts
 var https = __toESM(require("https"));
 var http = __toESM(require("http"));
-var fs8 = __toESM(require("fs"));
+var fs7 = __toESM(require("fs"));
 var crypto2 = __toESM(require("crypto"));
-var path6 = __toESM(require("path"));
+var path5 = __toESM(require("path"));
 var import_events = require("events");
 var MAX_REDIRECTS = 5;
 var MAX_RETRIES = 3;
 var BASE_RETRY_DELAY_MS = 1e3;
 function sleep(ms) {
-  return new Promise((resolve5) => setTimeout(resolve5, ms));
+  return new Promise((resolve4) => setTimeout(resolve4, ms));
 }
 function getFileSize(filePath) {
   try {
-    return fs8.statSync(filePath).size;
+    return fs7.statSync(filePath).size;
   } catch (e) {
     return 0;
   }
@@ -8023,7 +7872,7 @@ function isAbortError(err) {
   return err instanceof Error && err.name === "AbortError";
 }
 function resolveResponse(url, rangeStart, signal, redirectsLeft) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve4, reject) => {
     let settled = false;
     const parsed = new URL(url);
     const lib = parsed.protocol === "https:" ? https : http;
@@ -8048,10 +7897,10 @@ function resolveResponse(url, rangeStart, signal, redirectsLeft) {
             return;
           }
           const redirectUrl = new URL(resHeaders.location, url).href;
-          resolveResponse(redirectUrl, rangeStart, signal, redirectsLeft - 1).then(resolve5).catch(reject);
+          resolveResponse(redirectUrl, rangeStart, signal, redirectsLeft - 1).then(resolve4).catch(reject);
           return;
         }
-        resolve5(res);
+        resolve4(res);
       }
     );
     req.on("error", (err) => {
@@ -8071,20 +7920,20 @@ function resolveResponse(url, rangeStart, signal, redirectsLeft) {
 }
 async function attemptDownload(url, partPath, signal, onProgress) {
   var _a;
-  await fs8.promises.mkdir(path6.dirname(partPath), { recursive: true });
+  await fs7.promises.mkdir(path5.dirname(partPath), { recursive: true });
   const existingBytes = getFileSize(partPath);
   const response = await resolveResponse(url, existingBytes, signal, MAX_REDIRECTS);
   const { statusCode, headers } = response;
   const isResume = statusCode === 206 && existingBytes > 0;
   if (!isResume && existingBytes > 0) {
-    await fs8.promises.unlink(partPath).catch(() => {
+    await fs7.promises.unlink(partPath).catch(() => {
     });
   }
-  const writeStream = fs8.createWriteStream(partPath, { flags: isResume ? "a" : "w" });
+  const writeStream = fs7.createWriteStream(partPath, { flags: isResume ? "a" : "w" });
   const contentLength = parseInt((_a = headers["content-length"]) != null ? _a : "0", 10);
   const totalBytes = isResume ? existingBytes + contentLength : contentLength;
   let downloadedBytes = isResume ? existingBytes : 0;
-  await new Promise((resolve5, reject) => {
+  await new Promise((resolve4, reject) => {
     response.on("data", (chunk) => {
       downloadedBytes += chunk.length;
       const percent = totalBytes > 0 ? Math.round(downloadedBytes / totalBytes * 100) : 0;
@@ -8095,25 +7944,25 @@ async function attemptDownload(url, partPath, signal, onProgress) {
       reject(err);
     });
     writeStream.on("error", reject);
-    writeStream.on("finish", resolve5);
+    writeStream.on("finish", resolve4);
     response.pipe(writeStream);
   });
 }
 function computeSha256(filePath) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve4, reject) => {
     const hash = crypto2.createHash("sha256");
-    const stream = fs8.createReadStream(filePath);
+    const stream = fs7.createReadStream(filePath);
     stream.on("data", (chunk) => hash.update(Buffer.from(chunk)));
-    stream.on("end", () => resolve5(hash.digest("hex")));
+    stream.on("end", () => resolve4(hash.digest("hex")));
     stream.on("error", reject);
   });
 }
 function computeMd5(filePath) {
-  return new Promise((resolve5, reject) => {
+  return new Promise((resolve4, reject) => {
     const hash = crypto2.createHash("md5");
-    const stream = fs8.createReadStream(filePath);
+    const stream = fs7.createReadStream(filePath);
     stream.on("data", (chunk) => hash.update(Buffer.from(chunk)));
-    stream.on("end", () => resolve5(hash.digest("hex")));
+    stream.on("end", () => resolve4(hash.digest("hex")));
     stream.on("error", reject);
   });
 }
@@ -8151,7 +8000,7 @@ var DownloadManager = class extends import_events.EventEmitter {
       console.log("[DownloadManager] Download conclu\xEDdo. Verificando integridade SHA-256...");
       const actualSha256 = await computeSha256(partPath);
       if (actualSha256 !== expectedSha256) {
-        await fs8.promises.unlink(partPath).catch(() => {
+        await fs7.promises.unlink(partPath).catch(() => {
         });
         throw new Error(
           `[DownloadManager] Falha de integridade SHA-256: esperado ${expectedSha256}, obtido ${actualSha256}. Arquivo corrompido removido.`
@@ -8162,38 +8011,38 @@ var DownloadManager = class extends import_events.EventEmitter {
       console.log("[DownloadManager] Download conclu\xEDdo. Verificando integridade MD5...");
       const actualMd5 = await computeMd5(partPath);
       if (actualMd5 !== expectedMd5) {
-        await fs8.promises.unlink(partPath).catch(() => {
+        await fs7.promises.unlink(partPath).catch(() => {
         });
         throw new Error(
           `[DownloadManager] Falha de integridade MD5: esperado ${expectedMd5}, obtido ${actualMd5}. Arquivo corrompido removido.`
         );
       }
     }
-    await fs8.promises.rename(partPath, destPath);
+    await fs7.promises.rename(partPath, destPath);
     console.log(`[DownloadManager] Arquivo verificado e salvo em: ${destPath}`);
   }
 };
 
 // src/services/model/model-installer.ts
-var fs11 = __toESM(require("fs"));
+var fs10 = __toESM(require("fs"));
 var fsp2 = __toESM(require("fs/promises"));
-var path9 = __toESM(require("path"));
+var path8 = __toESM(require("path"));
 
 // src/services/model/archive-manager.ts
-var path7 = __toESM(require("path"));
-var fs9 = __toESM(require("fs"));
+var path6 = __toESM(require("path"));
+var fs8 = __toESM(require("fs"));
 var zlib = __toESM(require("zlib"));
 var tar = __toESM(require_tar_stream());
 var AdmZip = require_adm_zip();
 function isPathSafe(destFolder, filePathInArchive) {
-  const resolved = path7.resolve(destFolder, filePathInArchive);
-  const normalizedDest = path7.normalize(destFolder) + path7.sep;
-  const normalizedResolved = path7.normalize(resolved);
+  const resolved = path6.resolve(destFolder, filePathInArchive);
+  const normalizedDest = path6.normalize(destFolder) + path6.sep;
+  const normalizedResolved = path6.normalize(resolved);
   return normalizedResolved.startsWith(normalizedDest);
 }
 var ArchiveManager = class {
   async extract(archivePath, destFolder) {
-    const ext = path7.extname(archivePath).toLowerCase();
+    const ext = path6.extname(archivePath).toLowerCase();
     if (ext === ".zip") {
       await this.extractZip(archivePath, destFolder);
     } else if (ext === ".gz" || ext === ".tgz") {
@@ -8210,13 +8059,13 @@ var ArchiveManager = class {
       if (!isPathSafe(destFolder, entry.entryName)) {
         throw new Error("Zip Slip detectado: tentativa de escrita fora do diret\xF3rio destino.");
       }
-      const targetPath = path7.resolve(destFolder, entry.entryName);
-      fs9.mkdirSync(path7.dirname(targetPath), { recursive: true });
-      fs9.writeFileSync(targetPath, entry.getData());
+      const targetPath = path6.resolve(destFolder, entry.entryName);
+      fs8.mkdirSync(path6.dirname(targetPath), { recursive: true });
+      fs8.writeFileSync(targetPath, entry.getData());
     }
   }
   async extractTarGz(archivePath, destFolder) {
-    return new Promise((resolve5, reject) => {
+    return new Promise((resolve4, reject) => {
       const extract2 = tar.extract();
       const errors = [];
       extract2.on("entry", (header, stream, next) => {
@@ -8232,9 +8081,9 @@ var ArchiveManager = class {
           next();
           return;
         }
-        const targetPath = path7.resolve(destFolder, entryName);
-        fs9.mkdirSync(path7.dirname(targetPath), { recursive: true });
-        const writeStream = fs9.createWriteStream(targetPath);
+        const targetPath = path6.resolve(destFolder, entryName);
+        fs8.mkdirSync(path6.dirname(targetPath), { recursive: true });
+        const writeStream = fs8.createWriteStream(targetPath);
         stream.pipe(writeStream);
         writeStream.on("finish", next);
         writeStream.on("error", (err) => {
@@ -8246,11 +8095,11 @@ var ArchiveManager = class {
         if (errors.length > 0) {
           reject(new Error(errors.join("; ")));
         } else {
-          resolve5();
+          resolve4();
         }
       });
       extract2.on("error", (err) => reject(err));
-      fs9.createReadStream(archivePath).pipe(zlib.createGunzip()).pipe(extract2);
+      fs8.createReadStream(archivePath).pipe(zlib.createGunzip()).pipe(extract2);
     });
   }
   isPathSafe(destFolder, filePathInArchive) {
@@ -8259,30 +8108,30 @@ var ArchiveManager = class {
 };
 
 // src/services/model/staging-manager.ts
-var path8 = __toESM(require("path"));
-var fs10 = __toESM(require("fs/promises"));
+var path7 = __toESM(require("path"));
+var fs9 = __toESM(require("fs/promises"));
 var StagingManager = class {
   constructor(stagingRoot) {
     this.stagingRoot = stagingRoot;
   }
   async prepareStaging(modelId) {
-    const stagingDir = path8.join(this.stagingRoot, ".staging", `${modelId}-temp`);
-    await fs10.mkdir(stagingDir, { recursive: true });
-    const entries = await fs10.readdir(stagingDir);
+    const stagingDir = path7.join(this.stagingRoot, ".staging", `${modelId}-temp`);
+    await fs9.mkdir(stagingDir, { recursive: true });
+    const entries = await fs9.readdir(stagingDir);
     await Promise.all(
       entries.map(
-        (entry) => fs10.rm(path8.join(stagingDir, entry), { recursive: true, force: true })
+        (entry) => fs9.rm(path7.join(stagingDir, entry), { recursive: true, force: true })
       )
     );
     return stagingDir;
   }
   async promoteStaging(stagingDir, destDir) {
-    await fs10.rm(destDir, { recursive: true, force: true });
-    await fs10.mkdir(path8.dirname(destDir), { recursive: true });
-    await fs10.rename(stagingDir, destDir);
+    await fs9.rm(destDir, { recursive: true, force: true });
+    await fs9.mkdir(path7.dirname(destDir), { recursive: true });
+    await fs9.rename(stagingDir, destDir);
   }
   async cleanupStaging(stagingDir) {
-    await fs10.rm(stagingDir, { recursive: true, force: true });
+    await fs9.rm(stagingDir, { recursive: true, force: true });
   }
 };
 
@@ -8369,7 +8218,7 @@ async function findExecutableInDir(dir) {
     try {
       const entries = await fsp2.readdir(currentDir, { withFileTypes: true });
       for (const entry of entries) {
-        const fullPath = path9.join(currentDir, entry.name);
+        const fullPath = path8.join(currentDir, entry.name);
         if (entry.isDirectory()) {
           const found = await walk(fullPath);
           if (found) return found;
@@ -8442,14 +8291,14 @@ var ModelInstaller = class {
     }
     machine.transitionTo("REMOVING" /* REMOVING */);
     try {
-      const rootExists = fs11.existsSync(installRoot);
+      const rootExists = fs10.existsSync(installRoot);
       if (!rootExists) {
         machine.transitionTo("NOT_INSTALLED" /* NOT_INSTALLED */);
         (_b = (_a = this.callbacks).onRemoved) == null ? void 0 : _b.call(_a, modelId);
         return true;
       }
       await fsp2.rm(installRoot, { recursive: true, force: true });
-      const stillExists = fs11.existsSync(installRoot);
+      const stillExists = fs10.existsSync(installRoot);
       if (stillExists) {
         machine.transitionTo("FAILED" /* FAILED */);
         throw new Error(`Falha ao remover diret\xF3rio: ${installRoot}`);
@@ -8485,7 +8334,7 @@ var LegacyMigration = class {
     }
     const legacyPath = metadata.absolutePath;
     if (!legacyPath) return null;
-    const installRoot = path10.dirname(legacyPath);
+    const installRoot = path9.dirname(legacyPath);
     const migrated = {
       id: metadata.id,
       activeVersion: metadata.activeVersion,
@@ -8497,13 +8346,12 @@ var LegacyMigration = class {
   }
 };
 var ModelManagementService = class {
-  constructor(basePath, settingsRef, logger) {
+  constructor(basePath, settingsRef) {
     this.cachedManifest = null;
     this.voicesCache = null;
     this.basePath = basePath;
     this.settingsRef = settingsRef;
-    this.logger = logger;
-    const stagingRoot = path10.join(os2.tmpdir(), "obsidian-voice-staging");
+    const stagingRoot = path9.join(os2.tmpdir(), "obsidian-voice-staging");
     this.manifestService = new ManifestService(MANIFEST_URL);
     this.resourceGuard = new ResourceGuard(basePath);
     this.downloadManager = new DownloadManager();
@@ -8525,18 +8373,18 @@ var ModelManagementService = class {
   }
   getPiperInstallRoot() {
     if (process.platform === "win32") {
-      return path10.join(os2.homedir(), "AppData", "Roaming", "obsidian-voice", "bin", "piper");
+      return path9.join(os2.homedir(), "AppData", "Roaming", "obsidian-voice", "bin", "piper");
     } else if (process.platform === "darwin") {
-      return path10.join(os2.homedir(), "Library", "Application Support", "obsidian-voice", "bin", "piper");
+      return path9.join(os2.homedir(), "Library", "Application Support", "obsidian-voice", "bin", "piper");
     } else {
-      return path10.join(os2.homedir(), ".local", "share", "obsidian-voice", "bin", "piper");
+      return path9.join(os2.homedir(), ".local", "share", "obsidian-voice", "bin", "piper");
     }
   }
   isInstalled(modelId) {
     const metadata = this.settingsRef.models[modelId];
     if (!metadata) return false;
     try {
-      return fs12.existsSync(metadata.installedRootPath);
+      return fs11.existsSync(metadata.installedRootPath);
     } catch (e) {
       return false;
     }
@@ -8559,21 +8407,26 @@ var ModelManagementService = class {
     }
     return this.cachedManifest;
   }
-  async fetchPiperVoices() {
+  async fetchPiperVoices(onLoading) {
     if (this.voicesCache) return;
-    const url = "https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json";
-    const res = await (0, import_obsidian5.requestUrl)({ url, method: "GET", contentType: "application/json" });
-    const parsed = JSON.parse(res.text);
-    this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
+    if (onLoading) onLoading(true);
+    try {
+      const url = "https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json";
+      const res = await (0, import_obsidian5.requestUrl)({ url, method: "GET", contentType: "application/json" });
+      const parsed = JSON.parse(res.text);
+      this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
+    } finally {
+      if (onLoading) onLoading(false);
+    }
   }
   getPiperRoot() {
     const metadata = this.settingsRef.models.piper;
     if (!(metadata == null ? void 0 : metadata.executablePath)) return "";
-    return path10.dirname(metadata.executablePath);
+    return path9.dirname(metadata.executablePath);
   }
   async install(modelId, onStateChange, onProgress) {
     const metadata = this.settingsRef.models[modelId];
-    if (metadata && metadata.installedRootPath && !fs12.existsSync(metadata.installedRootPath)) {
+    if (metadata && metadata.installedRootPath && !fs11.existsSync(metadata.installedRootPath)) {
       delete this.settingsRef.models[modelId];
       await this.settingsRef.saveSettings();
     }
@@ -8613,9 +8466,9 @@ var ModelManagementService = class {
     }
     machine.transitionTo("DOWNLOADING" /* DOWNLOADING */);
     onStateChange("DOWNLOADING" /* DOWNLOADING */);
-    const tmpDir = path10.join(os2.tmpdir(), "obsidian-voice-downloads");
+    const tmpDir = path9.join(os2.tmpdir(), "obsidian-voice-downloads");
     const archiveName = `${modelId}-${platformKey}.zip`;
-    const archivePath = path10.join(tmpDir, archiveName);
+    const archivePath = path9.join(tmpDir, archiveName);
     const onDownloadProgress = onProgress ? (progress) => onProgress(progress.percent) : null;
     if (onDownloadProgress) {
       this.downloadManager.on("progress", onDownloadProgress);
@@ -8631,7 +8484,7 @@ var ModelManagementService = class {
         this.downloadManager.off("progress", onDownloadProgress);
       }
     }
-    const destDir = modelId === "piper" ? this.getPiperInstallRoot() : path10.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", modelId);
+    const destDir = modelId === "piper" ? this.getPiperInstallRoot() : path9.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", modelId);
     await this.installer.install(modelId, archivePath, destDir, manifest.version);
   }
   async installVoice(voice, onProgress) {
@@ -8639,15 +8492,15 @@ var ModelManagementService = class {
     if (!basePiperDir) {
       throw new Error("Piper n\xE3o est\xE1 instalado.");
     }
-    const voiceSubDir = path10.join(basePiperDir, voice.key);
+    const voiceSubDir = path9.join(basePiperDir, voice.key);
     await fsp3.mkdir(voiceSubDir, { recursive: true });
     const base = "https://huggingface.co/rhasspy/piper-voices/resolve/main/";
     const totalBytes = Object.values(voice.files).reduce((sum, meta) => sum + meta.size_bytes, 0);
     let downloadedBytes = 0;
     const tasks = [];
     for (const [rel, meta] of Object.entries(voice.files)) {
-      const fileName = path10.basename(rel);
-      const dest = path10.join(voiceSubDir, fileName);
+      const fileName = path9.basename(rel);
+      const dest = path9.join(voiceSubDir, fileName);
       tasks.push({ url: base + rel, dest, md5: meta.md5_digest, sizeBytes: meta.size_bytes });
     }
     for (const task of tasks) {
@@ -8682,15 +8535,15 @@ var ModelManagementService = class {
     return true;
   }
   async migratePiperFromVault() {
-    const oldBinDir = path10.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", "piper");
+    const oldBinDir = path9.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", "piper");
     const newBinDir = this.getPiperInstallRoot();
-    if (!fs12.existsSync(oldBinDir)) return false;
-    if (fs12.existsSync(newBinDir)) return false;
+    if (!fs11.existsSync(oldBinDir)) return false;
+    if (fs11.existsSync(newBinDir)) return false;
     await fsp3.mkdir(newBinDir, { recursive: true });
     const entries = await fsp3.readdir(oldBinDir, { withFileTypes: true });
     for (const entry of entries) {
-      const src = path10.join(oldBinDir, entry.name);
-      const dest = path10.join(newBinDir, entry.name);
+      const src = path9.join(oldBinDir, entry.name);
+      const dest = path9.join(newBinDir, entry.name);
       await fsp3.rename(src, dest);
     }
     const executablePath = this.findExecutable(newBinDir);
@@ -8711,10 +8564,10 @@ var ModelManagementService = class {
   findExecutable(dir) {
     const candidates = process.platform === "win32" ? ["piper.exe", "piper"] : ["piper"];
     try {
-      const entries = fs12.readdirSync(dir, { withFileTypes: true });
+      const entries = fs11.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         if (!entry.isDirectory() && candidates.includes(entry.name)) {
-          return path10.join(dir, entry.name);
+          return path9.join(dir, entry.name);
         }
       }
     } catch (e) {
@@ -8735,18 +8588,18 @@ var ModelManagementService = class {
     let migratedCount = 0;
     for (const voice of this.voicesCache || []) {
       const allFilesExist = Object.keys(voice.files).every((rel) => {
-        const fileName = path10.basename(rel);
-        const filePath = path10.join(basePiperDir, fileName);
-        return fs12.existsSync(filePath);
+        const fileName = path9.basename(rel);
+        const filePath = path9.join(basePiperDir, fileName);
+        return fs11.existsSync(filePath);
       });
       if (!allFilesExist) continue;
-      const voiceSubDir = path10.join(basePiperDir, voice.key);
+      const voiceSubDir = path9.join(basePiperDir, voice.key);
       await fsp3.mkdir(voiceSubDir, { recursive: true });
       for (const rel of Object.keys(voice.files)) {
-        const fileName = path10.basename(rel);
-        const src = path10.join(basePiperDir, fileName);
-        const dest = path10.join(voiceSubDir, fileName);
-        if (fs12.existsSync(src)) {
+        const fileName = path9.basename(rel);
+        const src = path9.join(basePiperDir, fileName);
+        const dest = path9.join(voiceSubDir, fileName);
+        if (fs11.existsSync(src)) {
           await fsp3.copyFile(src, dest);
         }
       }
@@ -8756,9 +8609,9 @@ var ModelManagementService = class {
     if (migratedCount > 0) {
       for (const entry of entries) {
         if (!entry.isDirectory()) {
-          const ext = path10.extname(entry.name).toLowerCase();
+          const ext = path9.extname(entry.name).toLowerCase();
           if (ext === ".onnx" || ext === ".json") {
-            const filePath = path10.join(basePiperDir, entry.name);
+            const filePath = path9.join(basePiperDir, entry.name);
             await fsp3.unlink(filePath).catch(() => {
             });
           }
@@ -8810,6 +8663,7 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     super(...arguments);
     this.queue = new ObsidianVoiceQueue();
     this.playerState = "aguardando";
+    this.isClickListenerActive = false;
     this.currentParagraphText = "";
     this.activeEditor = null;
     this.lastNarratedPath = null;
@@ -8838,16 +8692,13 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     if (this.app.vault.adapter instanceof import_obsidian6.FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
     }
-    this.logger = new VoiceLogger(basePath || process.cwd());
-    this.highlighter.setLogger(this.logger);
     this.modelManager = new ModelManagementService(
       basePath || process.cwd(),
       {
         models: this.settings.models,
         getPiperPath: () => this.settings.piperPath,
         saveSettings: () => this.saveSettings()
-      },
-      this.logger
+      }
     );
     this.rebuildTTSPipeline();
     await this.migrateLegacyMetadataIfNeeded();
@@ -8957,6 +8808,7 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       }
     });
     this.registerDomEvent(document, "click", (evt) => {
+      if (!this.isClickListenerActive) return;
       if (!this.settings.enableTeleprompterMode) return;
       if (this.playerState !== "tocando") {
         return;
@@ -9014,7 +8866,6 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     this.app.setting.openTabById(this.manifest.id);
   }
   async onunload() {
-    if (this.logger) this.logger.dispose();
     this.audioPlayer.stop();
     this.queue.reset();
     await this.ttsPipeline.stop();
@@ -9032,9 +8883,22 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
   getPlayerState() {
     return this.playerState;
   }
+  activatePlugin() {
+    this.isClickListenerActive = true;
+    this.highlighter.setActive(true);
+  }
+  deactivatePlugin() {
+    this.isClickListenerActive = false;
+    this.highlighter.setActive(false);
+  }
   updatePlayerState(state) {
     this.playerState = state;
     this.widget.show(state, activeDocument.body);
+    if (state === "tocando") {
+      this.activatePlugin();
+    } else {
+      this.deactivatePlugin();
+    }
   }
   async pararNarracao() {
     await this.pararNarracaoSilenciosamente();
@@ -9087,14 +8951,12 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       this.settings.ttsEngine = engineId;
       await this.saveSettings();
       new import_obsidian6.Notice(t("notices.engine_change_delayed"));
-      this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget (adiado)");
       return;
     }
     this.settings.ttsEngine = engineId;
     await this.saveSettings();
     this.rebuildTTSPipeline();
     new import_obsidian6.Notice(t("notices.engine_changed", { engine: engineId }));
-    this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget");
   }
   togglePlayPause() {
     if (this.playerState === "aguardando") {
@@ -9134,7 +8996,6 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     }
     this.activeEditor = this.getActiveEditor();
     if (!this.activeEditor) {
-      this.logger.logDebug("[Main] narrarNotaAtual: nenhuma leaf com o arquivo ativo encontrada.");
       console.warn("[Obsidian Voice] Nenhuma leaf com o arquivo ativo encontrada \u2014 highlight desativado.");
     }
     const conteudo = await this.app.vault.read(activeFile);
@@ -9164,7 +9025,6 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     const result = await this.ttsPipeline.validate();
     if (!result.ok) {
       new import_obsidian6.Notice(t("notices.piper_or_model_missing"));
-      if (result.error) this.logger.logError(result.error);
       return false;
     }
     return true;
@@ -9193,7 +9053,7 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       new import_obsidian6.Notice(t("notices.narration_error", { error: chunk.error }));
       console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
       try {
-        if (fs13.existsSync(chunk.absolutePath)) fs13.unlinkSync(chunk.absolutePath);
+        if (fs12.existsSync(chunk.absolutePath)) fs12.unlinkSync(chunk.absolutePath);
       } catch (_) {
       }
       return;
@@ -9209,7 +9069,6 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
       this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
     } else {
-      this.logger.logDebug(`[Main] playNextParagraph: activeEditor \xE9 null, highlight ignorado para: "${chunk.text.substring(0, 40)}"`);
       console.warn("[Obsidian Voice] activeEditor \xE9 null \u2014 highlight ignorado.");
     }
     console.log(`[Obsidian Voice] Reproduzindo chunk: ${chunk.resourcePath}`);
@@ -9245,14 +9104,14 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     if (!valido) return;
     const texto = "Teste de \xE1udio do Obsidian Voice";
     new import_obsidian6.Notice(t("notices.generating_audio"));
-    const cacheDir = path11.join(os3.tmpdir(), "ObsidianVoiceCache");
-    if (!fs13.existsSync(cacheDir)) fs13.mkdirSync(cacheDir, { recursive: true });
-    const testFile = path11.join(cacheDir, "teste.wav");
+    const cacheDir = path10.join(os3.tmpdir(), "ObsidianVoiceCache");
+    if (!fs12.existsSync(cacheDir)) fs12.mkdirSync(cacheDir, { recursive: true });
+    const testFile = path10.join(cacheDir, "teste.wav");
     try {
       await this.ttsPipeline.runTest(texto, testFile);
       new import_obsidian6.Notice(t("notices.audio_generated"));
       try {
-        if (fs13.existsSync(testFile)) fs13.unlinkSync(testFile);
+        if (fs12.existsSync(testFile)) fs12.unlinkSync(testFile);
       } catch (_) {
       }
     } catch (error) {
@@ -9272,17 +9131,19 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
       piperInstallRoot,
       selectedVoice: this.settings.selectedVoice,
       selectedKokoroVoice: this.settings.selectedKokoroVoice,
-      basePath,
-      logger: this.logger
+      basePath
     });
     this.ttsPipeline = new TTSPipelineService(
       this.app.vault,
       this.queue,
-      engine,
-      this.logger
+      engine
     );
   }
   getActiveEditor() {
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
+    if (activeView && activeView.file) {
+      return activeView.editor;
+    }
     const activeFile = this.app.workspace.getActiveFile();
     if (!activeFile) return null;
     let editor = null;

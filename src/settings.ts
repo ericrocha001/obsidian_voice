@@ -427,7 +427,11 @@ export class ObsidianVoiceSettingTab extends PluginSettingTab {
 
     let voices: PiperVoiceEntry[] = [];
     try {
-      await this.plugin.modelManager.fetchPiperVoices();
+      await this.plugin.modelManager.fetchPiperVoices((loading) => {
+        if (loading) {
+          new Notice("Carregando catálogo de vozes...");
+        }
+      });
       voices = (this.plugin.modelManager as any).voicesCache || [];
     } catch (e) {
       new Notice("Falha ao carregar catálogo de vozes.");

@@ -1,27 +1,49 @@
-// Responsabilidades do Script
-//
-// 1. Registrar o plugin no ciclo de vida do Obsidian e conectar os módulos isolados.
-// 2. Executar o motor Piper TTS via subprocesso e gerenciar o pipeline de áudio com pre-fetching.
-// 3. Orquestrar a narração de notas Markdown limpas controlando o estado global do player.
-// 4. Gerenciar a coexistência entre scroll automático (Teleprompter) e rolagem manual do usuário.
-//
-// Mapa de Relacionamentos do Script
-//
-// 1. src/services/model/model-management-service.ts
-//    - Tipo: Dependência Direta
-//    - Relação: Usa modelManager para instalar/remover modelos e migrar instalações legadas.
-//    - Criticidade: Alta
-//
-// 2. src/settings.ts
-//    - Tipo: Fluxo de Dados
-//    - Relação: Consome settings e notifica mudanças de estado.
-//    - Criticidade: Alta
-//
-// Invariantes do Script
-//
-// 1. O Self-Healing SÓ roda para migrar instalações legadas, nunca para corrigir instalações novas.
-// 2. A raiz da instalação é sempre obtida de installedRootPath nos metadados.
-// 3. O rebuildTTSPipeline usa resolveBinaryPath que retorna apenas executável dos metadados.
+/*
+--- ARQUITETURA DO SCRIPT ---
+
+Responsabilidades do Script
+
+1. Registrar o plugin no ciclo de vida do Obsidian e conectar os módulos isolados.
+2. Executar o motor TTS via subprocesso e gerenciar o pipeline de áudio com pre-fetching.
+3. Orquestrar a narração de notas Markdown limpas controlando o estado global do player.
+4. Gerenciar a coexistência entre scroll automático (Teleprompter) e rolagem manual do usuário.
+
+Mapa de Relacionamentos do Script
+
+1. model-management-service.ts
+   - Tipo: Dependência Direta
+   - Relação: Usa modelManager para instalar/remover modelos e migrar instalações legadas.
+   - Criticidade: Alta
+
+2. settings.ts
+   - Tipo: Fluxo de Dados
+   - Relação: Consome settings e notifica mudanças de estado.
+   - Criticidade: Alta
+
+3. tts/pipeline-service.ts
+   - Tipo: Dependência Direta
+   - Relação: Orquestra o ciclo de geração de áudio TTS.
+   - Criticidade: Alta
+
+4. editor-highlighter.ts
+   - Tipo: Dependência Direta
+   - Relação: Destaca parágrafos no editor durante narração.
+   - Criticidade: Alta
+
+5. tts/engine/engine-factory.ts
+   - Tipo: Dependência Direta
+   - Relação: Cria instância da engine TTS ativa.
+   - Criticidade: Alta
+
+Invariantes do Script
+
+1. O Self-Healing SÓ roda para migrar instalações legadas, nunca para corrigir instalações novas.
+2. A raiz da instalação é sempre obtida de installedRootPath nos metadados.
+3. O rebuildTTSPipeline usa resolveBinaryPath que retorna apenas executável dos metadados.
+4. updatePlayerState() é o único ponto de ativação/desativação de recursos do plugin.
+
+--- FIM ARQUITETURA DO SCRIPT ---
+*/
 
 import * as fs from "fs";
 import * as os from "os";
@@ -33,7 +55,6 @@ import { ObsidianVoiceQueue } from "./queue";
 import { ObsidianVoiceWidget } from "./player-widget";
 import { stripFrontmatter } from "./utils/markdown";
 import { ObsidianVoiceSettingTab, ObsidianVoiceSettings, DEFAULT_SETTINGS } from "./settings";
-import { VoiceLogger } from "./logger";
 import { EditorHighlighter, highlightField } from "./editor-highlighter";
 import { initializeI18n, t } from "./i18n";
 import { TTSPipelineService, ChunkResult } from "./tts/pipeline-service";
@@ -49,9 +70,9 @@ export default class ObsidianVoicePlugin extends Plugin {
   private audioPlayer!: ObsidianAudioPlayer;
   private queue = new ObsidianVoiceQueue();
   private widget!: ObsidianVoiceWidget;
-  private logger!: VoiceLogger;
   private highlighter!: EditorHighlighter;
   private playerState: PlayerState = "aguardando";
+  private isClickListenerActive = false;
   private ttsPipeline!: TTSPipelineService;
   private currentParagraphText = "";
   private activeEditor: import("obsidian").Editor | null = null;
@@ -78,8 +99,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     if (this.app.vault.adapter instanceof FileSystemAdapter) {
       basePath = this.app.vault.adapter.getBasePath();
     }
-    this.logger = new VoiceLogger(basePath || process.cwd());
-    this.highlighter.setLogger(this.logger);
 
     this.modelManager = new ModelManagementService(
       basePath || process.cwd(),
@@ -87,8 +106,7 @@ export default class ObsidianVoicePlugin extends Plugin {
         models: this.settings.models,
         getPiperPath: () => this.settings.piperPath,
         saveSettings: () => this.saveSettings(),
-      },
-      this.logger
+      }
     );
 
     this.rebuildTTSPipeline();
@@ -223,6 +241,9 @@ export default class ObsidianVoicePlugin extends Plugin {
     });
 
     this.registerDomEvent(document, "click", (evt: MouseEvent) => {
+      // Portão de silêncio: se o plugin não está ativo, ignora o clique imediatamente
+      if (!this.isClickListenerActive) return;
+
       if (!this.settings.enableTeleprompterMode) return;
       if (this.playerState !== "tocando") {
         return;
@@ -290,7 +311,6 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   async onunload() {
-    if (this.logger) this.logger.dispose();
     this.audioPlayer.stop();
     this.queue.reset();
     await this.ttsPipeline.stop();
@@ -312,9 +332,26 @@ export default class ObsidianVoicePlugin extends Plugin {
     return this.playerState;
   }
 
+  private activatePlugin(): void {
+    this.isClickListenerActive = true;
+    this.highlighter.setActive(true);
+  }
+
+  private deactivatePlugin(): void {
+    this.isClickListenerActive = false;
+    this.highlighter.setActive(false);
+  }
+
   private updatePlayerState(state: PlayerState) {
     this.playerState = state;
     this.widget.show(state, activeDocument.body);
+
+    // Ativa/desativa recursos baseado no estado
+    if (state === "tocando") {
+      this.activatePlugin();
+    } else {
+      this.deactivatePlugin();
+    }
   }
 
   private async pararNarracao() {
@@ -376,7 +413,6 @@ export default class ObsidianVoicePlugin extends Plugin {
       this.settings.ttsEngine = engineId;
       await this.saveSettings();
       new Notice(t("notices.engine_change_delayed"));
-      this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget (adiado)");
       return;
     }
 
@@ -384,7 +420,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     await this.saveSettings();
     this.rebuildTTSPipeline();
     new Notice(t("notices.engine_changed", { engine: engineId }));
-    this.logger.logEngineEvent(engineId, "switch", "Motor alterado via widget");
   }
 
   private togglePlayPause() {
@@ -429,7 +464,6 @@ export default class ObsidianVoicePlugin extends Plugin {
 
     this.activeEditor = this.getActiveEditor();
     if (!this.activeEditor) {
-      this.logger.logDebug("[Main] narrarNotaAtual: nenhuma leaf com o arquivo ativo encontrada.");
       console.warn("[Obsidian Voice] Nenhuma leaf com o arquivo ativo encontrada — highlight desativado.");
     }
 
@@ -473,7 +507,6 @@ export default class ObsidianVoicePlugin extends Plugin {
     const result = await this.ttsPipeline.validate();
     if (!result.ok) {
       new Notice(t("notices.piper_or_model_missing"));
-      if (result.error) this.logger.logError(result.error);
       return false;
     }
     return true;
@@ -523,7 +556,6 @@ export default class ObsidianVoicePlugin extends Plugin {
       const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
       this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
     } else {
-      this.logger.logDebug(`[Main] playNextParagraph: activeEditor é null, highlight ignorado para: "${chunk.text.substring(0, 40)}"`);
       console.warn("[Obsidian Voice] activeEditor é null — highlight ignorado.");
     }
 
@@ -597,20 +629,26 @@ export default class ObsidianVoicePlugin extends Plugin {
       selectedVoice: this.settings.selectedVoice,
       selectedKokoroVoice: this.settings.selectedKokoroVoice,
       basePath,
-      logger: this.logger,
     });
 
     this.ttsPipeline = new TTSPipelineService(
       this.app.vault,
       this.queue,
-      engine,
-      this.logger
+      engine
     );
   }
 
   private getActiveEditor(): Editor | null {
+    // Caminho rápido: view ativa é um MarkdownView
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView && activeView.file) {
+      return activeView.editor;
+    }
+
+    // Fallback: procurar em todas as leaves (para split views e cenários complexos)
     const activeFile = this.app.workspace.getActiveFile();
     if (!activeFile) return null;
+
     let editor: Editor | null = null;
     this.app.workspace.iterateAllLeaves((leaf) => {
       if (leaf.view instanceof MarkdownView && leaf.view.file?.path === activeFile.path) {

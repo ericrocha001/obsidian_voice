@@ -1,15 +1,48 @@
-// Responsabilidades do Script
-//
-// 1. Orquestrar o ciclo de sessão da engine TTS durante a narração.
-// 2. Pré-gerar chunks de áudio da fila de narração e limpar arquivos temporários.
-// 3. Aplicar blindagem de falhas e registrar metadados da geração TTS.
+/*
+--- ARQUITETURA DO SCRIPT ---
+
+Responsabilidades do Script
+
+1. Orquestrar o ciclo de sessão da engine TTS durante a narração.
+2. Pré-gerar chunks de áudio da fila de narração e limpar arquivos temporários.
+3. Aplicar blindagem de falhas (Circuit Breaker) na geração TTS.
+
+Mapa de Relacionamentos do Script
+
+1. queue.ts
+   - Tipo: Dependência Direta
+   - Relação: Consome fila de chunks para gerar áudio.
+   - Criticidade: Alta
+
+2. engine-factory.ts / engines
+   - Tipo: Dependência Direta
+   - Relação: Cria e gerencia sessões da engine TTS ativa.
+   - Criticidade: Alta
+
+3. main.ts
+   - Tipo: Dependência Inversa
+   - Relação: main.ts consome TTSPipelineService para orquestrar narração.
+   - Criticidade: Alta
+
+4. circuit-breaker.ts
+   - Tipo: Dependência Direta
+   - Relação: Protege contra falhas repetidas da engine TTS.
+   - Criticidade: Média
+
+Invariantes do Script
+
+1. Nunca deve haver mais de um prefetch ativo por vez.
+2. O Circuit Breaker deve ser respeitado antes de cada geração.
+3. Arquivos temporários devem ser limpos após o uso.
+
+--- FIM ARQUITETURA DO SCRIPT ---
+*/
 
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { FileSystemAdapter, Vault } from "obsidian";
 import { ObsidianVoiceQueue } from "../queue";
-import { VoiceLogger } from "../logger";
 import { CircuitBreaker } from "./circuit-breaker";
 import { EngineSession, GenerationResult, TTSEngine } from "./types";
 
@@ -23,8 +56,7 @@ export class TTSPipelineService {
   constructor(
     private readonly vault: Vault,
     private readonly queue: ObsidianVoiceQueue,
-    private readonly engine: TTSEngine,
-    private readonly logger: VoiceLogger
+    private readonly engine: TTSEngine
   ) {}
 
   async validate(): Promise<{ ok: boolean; error?: string }> {
@@ -34,9 +66,7 @@ export class TTSPipelineService {
   async start(): Promise<void> {
     await this.stop();
     this.session = this.engine.createSession();
-    this.logger.logEngineEvent(this.engine.id, "session", "warming");
     await this.session.warmup();
-    this.logger.logEngineEvent(this.engine.id, "session", "ready");
     this.nextChunkPromise = this.prefetchNextChunk();
   }
 
@@ -86,7 +116,7 @@ export class TTSPipelineService {
     if (chunk === null) return null;
 
     const cacheDir = path.join(os.tmpdir(), "ObsidianVoiceCache");
-    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+    await fs.promises.mkdir(cacheDir, { recursive: true });
 
     const filename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
     const absolutePath = path.join(cacheDir, filename);
@@ -96,7 +126,6 @@ export class TTSPipelineService {
       return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
     } catch (error: any) {
       const message = error?.message || String(error);
-      this.logger.logEngineEvent(this.engine.id, "generation", message);
       return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message };
     }
   }
@@ -108,7 +137,6 @@ export class TTSPipelineService {
     try {
       const result = await this.session.generate({ text, outputFile });
       this.breaker.recordSuccess();
-      this.logger.logGeneration(result);
       return result;
     } catch (error) {
       this.breaker.recordFailure();
@@ -129,6 +157,15 @@ export class TTSPipelineService {
     if (!this.nextChunkPromise) return;
     const chunk = await this.nextChunkPromise;
     this.nextChunkPromise = null;
-    if (chunk?.absolutePath && fs.existsSync(chunk.absolutePath)) fs.unlinkSync(chunk.absolutePath);
+    if (chunk?.absolutePath) {
+      try {
+        await fs.promises.unlink(chunk.absolutePath);
+      } catch (e: any) {
+        // Ignora ENOENT (arquivo já não existe)
+        if (e?.code !== 'ENOENT') {
+          console.warn("[Obsidian Voice] Não foi possível remover o chunk prefetch:", chunk.absolutePath, e);
+        }
+      }
+    }
   }
 }

@@ -1,9 +1,35 @@
-// Responsabilidades do Script
-//
-// 1. Limpar marcações Markdown e normalizar caracteres especiais em linhas individuais.
-// 2. Fatiar a nota em chunks mapeando as linhas físicas originais do editor (0-indexed).
-// 3. Gerenciar o ponteiro de leitura e realizar buscas por índice de linha em memória.
-// 4. Filtrar apenas destaques (==texto==) quando o modo Audio-Resumo estiver ativo.
+/*
+--- ARQUITETURA DO SCRIPT ---
+
+Responsabilidades do Script
+
+1. Limpar marcações Markdown e normalizar caracteres especiais em linhas individuais.
+2. Fatiar a nota em chunks mapeando as linhas físicas originais do editor (0-indexed).
+3. Gerenciar o ponteiro de leitura e realizar buscas por índice de linha em memória.
+4. Filtrar apenas destaques (==texto==) quando o modo Audio-Resumo estiver ativo.
+5. Manter índice reverso para busca O(1) de chunks por texto.
+
+Mapa de Relacionamentos do Script
+
+1. main.ts
+   - Tipo: Dependência Inversa
+   - Relação: main.ts consome ObsidianVoiceQueue para gerenciar chunks durante a narração.
+   - Criticidade: Alta
+
+2. editor-highlighter.ts
+   - Tipo: Dependência Direta
+   - Relação: Usa findChunkIndexByLineText para localizar chunks por texto.
+   - Criticidade: Alta
+
+Invariantes do Script
+
+1. O índice reverso (chunkIndex) deve ser limpo antes de iniciar uma nova fila.
+2. O índice reverso deve ser limpo ao resetar a fila.
+3. A busca de chunks por texto deve retornar -1 ou o índice correto, nunca lançar exceção.
+4. Os chunks devem ser criados com índices sequenciais começando de 0.
+
+--- FIM ARQUITETURA DO SCRIPT ---
+*/
 
 import { stripFrontmatter } from "./utils/markdown";
 
@@ -29,10 +55,19 @@ export class ObsidianVoiceQueue {
   /** Quando true, a fila é populada apenas com os destaques ==texto== da nota. */
   readOnlyHighlights = false;
 
+  // Índice reverso para busca de chunks por texto.
+  // Limitações:
+  // - Texto é normalizado (lowercase, sem espaços extras) antes da indexação
+  // - A busca exata é O(n) no pior caso devido à normalização adicional
+  private chunkIndex: Map<string, number> = new Map();
+
   startQueue(rawText: string) {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+
+    // Limpa o índice reverso
+    this.chunkIndex.clear();
 
     if (this.readOnlyHighlights) {
       this.buildHighlightsQueue(rawText);
@@ -69,21 +104,29 @@ export class ObsidianVoiceQueue {
 
       // Se exceder o tamanho máximo, subdivide
       if (cleanLine.length <= this.MAX_CHUNK_LENGTH) {
+        const chunkIndex = this.chunks.length;
         this.chunks.push({
-          index: this.chunks.length,
+          index: chunkIndex,
           text: cleanLine,
           startLine: i,
           endLine: i,
         });
+        // Atualiza o índice reverso
+        const normalized = this.normalizeForIndex(cleanLine, chunkIndex);
+        this.chunkIndex.set(normalized, chunkIndex);
       } else {
         const subChunks = this.splitParagraph(cleanLine, this.MAX_CHUNK_LENGTH);
         for (const sub of subChunks) {
+          const chunkIndex = this.chunks.length;
           this.chunks.push({
-            index: this.chunks.length,
+            index: chunkIndex,
             text: sub,
             startLine: i,
             endLine: i,
           });
+          // Atualiza o índice reverso
+          const normalized = this.normalizeForIndex(sub, chunkIndex);
+          this.chunkIndex.set(normalized, chunkIndex);
         }
       }
     }
@@ -110,12 +153,16 @@ export class ObsidianVoiceQueue {
         const cleanText = this.cleanLineMarkdown(text);
         if (!cleanText) continue;
 
+        const chunkIndex = this.chunks.length;
         this.chunks.push({
-          index: this.chunks.length,
+          index: chunkIndex,
           text: cleanText,
           startLine: i,
           endLine: i,
         });
+        // Atualiza o índice reverso
+        const normalized = this.normalizeForIndex(cleanText, chunkIndex);
+        this.chunkIndex.set(normalized, chunkIndex);
       }
     }
   }
@@ -161,6 +208,16 @@ export class ObsidianVoiceQueue {
     return this.chunks.length > 0 ? this.chunks[this.chunks.length - 1].index : 0;
   }
 
+  /**
+   * Normaliza texto para uso como chave de busca no índice reverso.
+   * Inclui o índice do chunk para garantir unicidade.
+   * Usa apenas os primeiros 100 caracteres para evitar chaves muito longas.
+   */
+  private normalizeForIndex(text: string, chunkIndex: number): string {
+    const normalized = text.toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 100);
+    return `${chunkIndex}:${normalized}`;
+  }
+
   getNextChunk(): AudioChunk | null {
     if (!this.hasMore()) return null;
     return this.chunks[this.currentIndex++];
@@ -174,6 +231,7 @@ export class ObsidianVoiceQueue {
     this.chunks = [];
     this.chapters = [];
     this.currentIndex = 0;
+    this.chunkIndex.clear();
   }
 
   getChapters(): ChapterInfo[] {
@@ -217,15 +275,22 @@ export class ObsidianVoiceQueue {
   findChunkIndexByLineText(lineText: string): number {
     if (!lineText || !lineText.trim()) return 0;
 
-    const cleanedLine = this.cleanLineMarkdown(lineText).toLowerCase();
+    // Limpa o markdown do texto buscado para consistência com o texto indexado
+    const cleanedLine = this.cleanLineMarkdown(lineText);
     if (!cleanedLine) return 0;
 
-    const index = this.chunks.findIndex(chunk => {
-      const chunkText = chunk.text.toLowerCase();
-      return chunkText.includes(cleanedLine) || cleanedLine.includes(chunkText);
-    });
+    // Busca no índice reverso por correspondência do texto (ignorando o prefixo do índice)
+    const normalized = cleanedLine.toLowerCase().replace(/\s+/g, ' ').trim().substring(0, 100);
 
-    return index !== -1 ? index : 0;
+    // Busca em todos os chunks (O(n) no pior caso, mas com texto curto)
+    for (const [key, index] of this.chunkIndex.entries()) {
+      const keyText = key.substring(key.indexOf(':') + 1); // Remove prefixo "indice:"
+      if (keyText === normalized) {
+        return index;
+      }
+    }
+
+    return 0;
   }
 
   /**

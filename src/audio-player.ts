@@ -86,12 +86,13 @@ export class ObsidianAudioPlayer {
 
   private async cleanupChunk(filename: string) {
     try {
-      if (fs.existsSync(filename)) {
-        fs.unlinkSync(filename);
-        console.log("[Obsidian Voice] Arquivo temporário removido:", filename);
+      await fs.promises.unlink(filename);
+      console.log("[Obsidian Voice] Arquivo temporário removido:", filename);
+    } catch (e: any) {
+      // Ignora ENOENT (arquivo já não existe)
+      if (e?.code !== 'ENOENT') {
+        console.warn("[Obsidian Voice] Não foi possível remover o chunk:", filename, e);
       }
-    } catch (e) {
-      console.warn("[Obsidian Voice] Não foi possível remover o chunk:", filename, e);
     }
   }
 }

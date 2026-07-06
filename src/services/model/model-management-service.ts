@@ -11,6 +11,7 @@ Responsabilidades do Script
 6. Migrar instalações legadas (versões antigas) para o novo formato de metadados.
 7. Utilizar diretório temporário do sistema operacional para staging, evitando peso no vault do usuário.
 8. Detectar e limpar metadata corrompido quando o arquivo físico não existe mais.
+9. Fornecer feedback de loading durante requests HTTP para o catálogo de vozes.
 
 Mapa de Relacionamentos do Script
 
@@ -62,7 +63,6 @@ import { ModelInstaller, type InstallCallbacks } from './model-installer';
 import { getModelEntry } from './model-catalog';
 import { InstallState } from '../../types/model';
 import type { ModelId, InstalledModelMetadata } from '../../types/model';
-import { VoiceLogger } from '../../logger';
 
 const MANIFEST_URL = 'https://raw.githubusercontent.com/ericrocha001/obsidian_voice/main/manifest-models.json';
 const execAsync = promisify(exec);
@@ -142,12 +142,10 @@ export class ModelManagementService {
   private basePath: string;
   private cachedManifest: ModelManifest | null = null;
   private voicesCache: PiperVoiceEntry[] | null = null;
-  private logger: VoiceLogger;
 
-  constructor(basePath: string, settingsRef: SettingsRef, logger: VoiceLogger) {
+  constructor(basePath: string, settingsRef: SettingsRef) {
     this.basePath = basePath;
     this.settingsRef = settingsRef;
-    this.logger = logger;
 
     const stagingRoot = path.join(os.tmpdir(), 'obsidian-voice-staging');
 
@@ -216,13 +214,19 @@ export class ModelManagementService {
     return this.cachedManifest;
   }
 
-  async fetchPiperVoices(): Promise<void> {
+  async fetchPiperVoices(onLoading?: (loading: boolean) => void): Promise<void> {
     if (this.voicesCache) return;
 
-    const url = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json';
-    const res = await requestUrl({ url, method: 'GET', contentType: 'application/json' });
-    const parsed = JSON.parse(res.text) as Record<string, PiperVoiceEntry>;
-    this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
+    if (onLoading) onLoading(true);
+
+    try {
+      const url = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json';
+      const res = await requestUrl({ url, method: 'GET', contentType: 'application/json' });
+      const parsed = JSON.parse(res.text) as Record<string, PiperVoiceEntry>;
+      this.voicesCache = Object.values(parsed).sort((a, b) => a.key.localeCompare(b.key));
+    } finally {
+      if (onLoading) onLoading(false);
+    }
   }
 
   getPiperRoot(): string {
