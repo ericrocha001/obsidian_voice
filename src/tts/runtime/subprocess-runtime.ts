@@ -3,26 +3,22 @@
 
 Responsabilidades do Script
 
-1. Executar comandos de engines TTS por subprocesso local.
-2. Encaminhar texto para stdin do subprocesso.
+1. Executar comandos de engines TTS one-shot por subprocesso local.
+2. Encaminhar texto para stdin do subprocesso e aguardar conclusão.
 3. Encerrar subprocessos ativos quando a narração for interrompida.
 
 Mapa de Relacionamentos do Script
 
-1. piper-engine.ts
+1. kokoro-engine.ts
    - Tipo: Dependência Direta
-   - Relação: Consome SubprocessRuntime para executar o comando Piper.
-   - Criticidade: Alta
-
-2. kokoro-engine.ts
-   - Tipo: Dependência Direta
-   - Relação: Consome SubprocessRuntime para executar o comando Kokoro.
+   - Relação: Consome SubprocessRuntime para executar o Kokoro (um processo por geração).
    - Criticidade: Alta
 
 Invariantes do Script
 
-1. O subprocesso deve ser encerrado ao chamar abort().
-2. Nunca deve haver mais de um subprocesso ativo por instância.
+1. Este runtime é exclusivo para engines one-shot (Kokoro). O Piper usa PersistentSubprocessRuntime.
+2. O subprocesso deve ser encerrado ao chamar abort().
+3. Nunca deve haver mais de um subprocesso ativo por instância.
 
 --- FIM ARQUITETURA DO SCRIPT ---
 */

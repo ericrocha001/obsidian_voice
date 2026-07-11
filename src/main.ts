@@ -57,7 +57,7 @@ import { stripFrontmatter } from "./utils/markdown";
 import { ObsidianVoiceSettingTab, ObsidianVoiceSettings, DEFAULT_SETTINGS } from "./settings";
 import { EditorHighlighter, highlightField } from "./editor-highlighter";
 import { initializeI18n, t } from "./i18n";
-import { TTSPipelineService, ChunkResult } from "./tts/pipeline-service";
+import { TTSPipelineService } from "./tts/pipeline-service";
 import { TTSEngineFactory } from "./tts/engine/engine-factory";
 import { ModelManagementService, LegacyMigration } from "./services/model/model-management-service";
 
@@ -313,9 +313,11 @@ export default class ObsidianVoicePlugin extends Plugin {
   }
 
   async onunload() {
-    this.audioPlayer.stop();
+    await this.audioPlayer.stopAndWait();
     this.queue.reset();
     await this.ttsPipeline.stop();
+    await this.ttsPipeline.cleanupAllSessions();
+    await this.ttsPipeline.cleanupOrphanedFiles();
     if (this.userScrollTimeout) {
       clearTimeout(this.userScrollTimeout);
       this.userScrollTimeout = null;
@@ -365,13 +367,29 @@ export default class ObsidianVoicePlugin extends Plugin {
   private async pararNarracaoSilenciosamente() {
     this.currentSessionId++;
     this.queue.reset();
-    this.audioPlayer.stop();
+    await this.audioPlayer.stopAndWait();
     await this.ttsPipeline.stop();
+    await this.ttsPipeline.cleanupAllSessions();
     this.unregisterScrollListeners();
     this.updatePlayerState("aguardando");
 
-    this.activeEditor = this.getActiveEditor();
-    if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
+    // Tenta limpar o highlighter da nota onde a narração começou,
+    // mesmo que o usuário tenha trocado de nota durante a narração.
+    // Se não encontrar (nota fechada ou nunca iniciada), faz fallback para o activeEditor.
+    let editorToClear: import("obsidian").Editor | null = null;
+    if (this.lastNarratedPath) {
+      editorToClear = this.getEditorForPath(this.lastNarratedPath);
+    }
+    if (!editorToClear) {
+      // Fallback seguro: só limpa o activeEditor se ele corresponder à nota narrada,
+      // ou se nunca houve narração (lastNarratedPath === null).
+      // Isso evita limpar highlights de notas diferentes em cenários de troca rápida.
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!this.lastNarratedPath || activeView?.file?.path === this.lastNarratedPath) {
+        editorToClear = this.getActiveEditor();
+      }
+    }
+    if (editorToClear) this.highlighter.clearHighlight(editorToClear);
     this.activeEditor = null;
   }
 
@@ -407,6 +425,7 @@ export default class ObsidianVoicePlugin extends Plugin {
   private onSpeedChange(speed: number) {
     this.audioPlayer.setPlaybackRate(speed);
     this.settings.playbackSpeed = speed;
+    this.ttsPipeline.setPlaybackRate(speed);
     this.saveSettings();
   }
 
@@ -489,8 +508,8 @@ export default class ObsidianVoicePlugin extends Plugin {
     this.lastNarratedPath = activeFile.path;
     console.log(`[Obsidian Voice] Narrando: ${activeFile.name}`);
 
-    await this.ttsPipeline.start();
-    this.playNextParagraph();
+    await this.ttsPipeline.start(this.currentSessionId);
+    await this.playNextParagraph();
   }
 
   private cleanMarkdown(text: string): string {
@@ -514,86 +533,135 @@ export default class ObsidianVoicePlugin extends Plugin {
     return true;
   }
 
+  private resetNarrationState(): void {
+    this.queue.reset();
+    this.updatePlayerState("aguardando");
+    this.activeEditor = this.getActiveEditor();
+    if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
+    this.activeEditor = null;
+  }
+
   private async playNextParagraph() {
     if (this.playerState === "pausado") return;
 
-    const sessionId = this.currentSessionId;
-    const chunk = await this.ttsPipeline.getNextChunk();
+    let iterations = 0;
+    // Limite de segurança para debug: previne travamento em cenários de bug
+    const MAX_ITERATIONS = 100;
 
-    if (this.currentSessionId !== sessionId) return;
+    while (iterations++ < MAX_ITERATIONS) {
+      const chunk = await this.ttsPipeline.getNextChunk();
 
-    if (chunk === null) {
-      this.queue.reset();
-      this.updatePlayerState("aguardando");
+      if (chunk === null) {
+        // Buffer vazio: a geração ainda pode estar em andamento no fillBuffer().
+        // Não assume fila encerrada — espera 100ms e tenta novamente.
+        await new Promise(resolve => setTimeout(resolve, 100));
+        continue;
+      }
+
+      if ('discarded' in chunk) {
+        console.log(`[Obsidian Voice] Chunk descartado (sessão ${chunk.sessionId}, iteração ${iterations})`);
+        continue;
+      }
+
+      if (chunk.error) {
+        this.resetNarrationState();
+        new Notice(t("notices.narration_error", { error: chunk.error }));
+        console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
+        try { if (fs.existsSync(chunk.absolutePath)) fs.unlinkSync(chunk.absolutePath); } catch (_) {}
+        return;
+      }
+
+      if (this.getPlayerState() === "pausado") {
+        const held = this.ttsPipeline.holdChunk(chunk);
+        if (!held) {
+          // Chunk descartado por mudança de sessão durante pausa: tenta o próximo.
+          console.log(`[Obsidian Voice] Chunk descartado durante pausa (sessão ${chunk.sessionId})`);
+          continue;
+        }
+        return;
+      }
+
+      this.currentParagraphText = chunk.text;
       this.activeEditor = this.getActiveEditor();
-      if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
-      this.activeEditor = null;
-      new Notice(t("notices.narration_finished"));
-      console.log("[Obsidian Voice] Fila encerrada.");
+      if (this.activeEditor) {
+        const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
+        this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
+      } else {
+        console.warn("[Obsidian Voice] activeEditor é null — highlight ignorado.");
+      }
+
+      console.log(`[Obsidian Voice] Reproduzindo chunk: ${chunk.resourcePath}`);
+      this.audioPlayer.playFile(chunk.resourcePath, chunk.absolutePath, () => {
+        this.playNextParagraph();
+      });
       return;
     }
 
-    if (chunk.error) {
-      this.queue.reset();
-      this.updatePlayerState("aguardando");
-      this.activeEditor = this.getActiveEditor();
-      if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
-      this.activeEditor = null;
-      new Notice(t("notices.narration_error", { error: chunk.error }));
-      console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
-      try { if (fs.existsSync(chunk.absolutePath)) fs.unlinkSync(chunk.absolutePath); } catch (_) {}
-      return;
-    }
-
-    if (this.getPlayerState() === "pausado") {
-      this.ttsPipeline.holdChunk(chunk);
-      return;
-    }
-
-    this.ttsPipeline.prefetch();
-
-    this.currentParagraphText = chunk.text;
-    this.activeEditor = this.getActiveEditor();
-    if (this.activeEditor) {
-      const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
-      this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
-    } else {
-      console.warn("[Obsidian Voice] activeEditor é null — highlight ignorado.");
-    }
-
-    console.log(`[Obsidian Voice] Reproduzindo chunk: ${chunk.resourcePath}`);
-    this.audioPlayer.playFile(chunk.resourcePath, chunk.absolutePath, () => {
-      this.playNextParagraph();
-    });
+    // Segurança: se o loop exceder o limite, reseta para evitar travamento
+    console.error(`[Obsidian Voice] Loop excedeu ${MAX_ITERATIONS} iterações — possível bug de sessão`);
+    this.resetNarrationState();
   }
 
+  private getEditorForPath(filePath: string): import("obsidian").Editor | null {
+    // Caminho rápido: view ativa é um MarkdownView com o arquivo correspondente
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView && activeView.file?.path === filePath) {
+      return activeView.editor;
+    }
+
+    // Fallback: procurar em todas as leaves
+    let editor: import("obsidian").Editor | null = null;
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      if (leaf.view instanceof MarkdownView && leaf.view.file?.path === filePath) {
+        editor = (leaf.view as MarkdownView).editor;
+      }
+    });
+    return editor;
+  }
+
+  /**
+   * INVARIANTE CRÍTICA: setCurrentIndex() DEVE ser chamado ANTES de start().
+   *
+   * Motivo: start() dispara fillBuffer() em background, que consome chunks
+   * da queue. Se a queue ainda estiver na posição antiga, o buffer será
+   * preenchido com chunks errados, causando áudio incorreto e loops infinitos.
+   */
   private async jumpToLine(lineNumber: number) {
     console.log(`[Obsidian Voice] Pulando para a linha: ${lineNumber}`);
+    const oldSessionId = this.currentSessionId;
     this.currentSessionId++;
-    this.audioPlayer.stop();
-    await this.ttsPipeline.cancelCurrentGeneration();
-    await this.ttsPipeline.resetPrefetch();
+    await this.audioPlayer.stopAndWait();
 
     const targetIndex = this.queue.getChunkIndexByLine(lineNumber);
     this.queue.setCurrentIndex(targetIndex);
 
+    await this.ttsPipeline.start(this.currentSessionId);
+    await this.ttsPipeline.cleanupSession(oldSessionId);
+
     this.updatePlayerState("tocando");
-    this.ttsPipeline.prefetch();
-    this.playNextParagraph();
+    await this.playNextParagraph();
   }
 
+  /**
+   * INVARIANTE CRÍTICA: setCurrentIndex() DEVE ser chamado ANTES de start().
+   *
+   * Motivo: start() dispara fillBuffer() em background, que consome chunks
+   * da queue. Se a queue ainda estiver na posição antiga, o buffer será
+   * preenchido com chunks errados, causando áudio incorreto e loops infinitos.
+   */
   private async jumpToChapter(chunkIndex: number) {
     console.log(`[Obsidian Voice] Pulando para o capítulo no chunk index: ${chunkIndex}`);
+    const oldSessionId = this.currentSessionId;
     this.currentSessionId++;
-    this.audioPlayer.stop();
-    await this.ttsPipeline.cancelCurrentGeneration();
-    await this.ttsPipeline.resetPrefetch();
+    await this.audioPlayer.stopAndWait();
 
     this.queue.setCurrentIndex(chunkIndex);
 
+    await this.ttsPipeline.start(this.currentSessionId);
+    await this.ttsPipeline.cleanupSession(oldSessionId);
+
     this.updatePlayerState("tocando");
-    this.ttsPipeline.prefetch();
-    this.playNextParagraph();
+    await this.playNextParagraph();
   }
 
   private async runPiperTest() {

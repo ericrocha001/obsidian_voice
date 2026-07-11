@@ -9,6 +9,7 @@ Responsabilidades do Script
 4. Filtrar apenas destaques (==texto==) quando o modo Audio-Resumo estiver ativo.
 5. Manter índice reverso para busca O(1) de chunks por texto.
 6. Compensar offset do frontmatter para mapear corretamente cliques do editor em chunks.
+7. Estimar a duração de áudio de um texto usando heurística baseada em caracteres.
 
 Mapa de Relacionamentos do Script
 
@@ -248,6 +249,17 @@ export class ObsidianVoiceQueue {
     this.currentIndex = 0;
     this.frontmatterLineOffset = 0;
     this.chunkIndex.clear();
+  }
+
+  /**
+   * Estima a duração de áudio de um texto em segundos.
+   * Heurística: ~150 caracteres = 1 segundo de áudio falado.
+   * Limitações: textos com muitos números, siglas ou pausas naturais
+   * podem ter duração diferente da estimativa. A imprecisão é aceitável
+   * pois o objetivo é apenas manter o buffer com margem suficiente.
+   */
+  estimateDuration(text: string): number {
+    return Math.ceil(text.length / 150);
   }
 
   getChapters(): ChapterInfo[] {

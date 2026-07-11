@@ -3177,25 +3177,25 @@ var require_utils = __commonJS({
       }
       mkdirSync3(folder);
     };
-    Utils.prototype.writeFileTo = function(path11, content, overwrite, attr) {
+    Utils.prototype.writeFileTo = function(path12, content, overwrite, attr) {
       const self = this;
-      if (self.fs.existsSync(path11)) {
+      if (self.fs.existsSync(path12)) {
         if (!overwrite) return false;
-        var stat = self.fs.statSync(path11);
+        var stat = self.fs.statSync(path12);
         if (stat.isDirectory()) {
           return false;
         }
       }
-      var folder = pth.dirname(path11);
+      var folder = pth.dirname(path12);
       if (!self.fs.existsSync(folder)) {
         self.makeDir(folder);
       }
       var fd;
       try {
-        fd = self.fs.openSync(path11, "w", 438);
+        fd = self.fs.openSync(path12, "w", 438);
       } catch (e) {
-        self.fs.chmodSync(path11, 438);
-        fd = self.fs.openSync(path11, "w", 438);
+        self.fs.chmodSync(path12, 438);
+        fd = self.fs.openSync(path12, "w", 438);
       }
       if (fd) {
         try {
@@ -3204,31 +3204,31 @@ var require_utils = __commonJS({
           self.fs.closeSync(fd);
         }
       }
-      self.fs.chmodSync(path11, attr || 438);
+      self.fs.chmodSync(path12, attr || 438);
       return true;
     };
-    Utils.prototype.writeFileToAsync = function(path11, content, overwrite, attr, callback) {
+    Utils.prototype.writeFileToAsync = function(path12, content, overwrite, attr, callback) {
       if (typeof attr === "function") {
         callback = attr;
         attr = void 0;
       }
       const self = this;
-      self.fs.exists(path11, function(exist) {
+      self.fs.exists(path12, function(exist) {
         if (exist && !overwrite) return callback(false);
-        self.fs.stat(path11, function(err, stat) {
+        self.fs.stat(path12, function(err, stat) {
           if (exist && stat.isDirectory()) {
             return callback(false);
           }
-          var folder = pth.dirname(path11);
+          var folder = pth.dirname(path12);
           self.fs.exists(folder, function(exists) {
             if (!exists) self.makeDir(folder);
-            self.fs.open(path11, "w", 438, function(err2, fd) {
+            self.fs.open(path12, "w", 438, function(err2, fd) {
               if (err2) {
-                self.fs.chmod(path11, 438, function() {
-                  self.fs.open(path11, "w", 438, function(err3, fd2) {
+                self.fs.chmod(path12, 438, function() {
+                  self.fs.open(path12, "w", 438, function(err3, fd2) {
                     self.fs.write(fd2, content, 0, content.length, 0, function() {
                       self.fs.close(fd2, function() {
-                        self.fs.chmod(path11, attr || 438, function() {
+                        self.fs.chmod(path12, attr || 438, function() {
                           callback(true);
                         });
                       });
@@ -3238,13 +3238,13 @@ var require_utils = __commonJS({
               } else if (fd) {
                 self.fs.write(fd, content, 0, content.length, 0, function() {
                   self.fs.close(fd, function() {
-                    self.fs.chmod(path11, attr || 438, function() {
+                    self.fs.chmod(path12, attr || 438, function() {
                       callback(true);
                     });
                   });
                 });
               } else {
-                self.fs.chmod(path11, attr || 438, function() {
+                self.fs.chmod(path12, attr || 438, function() {
                   callback(true);
                 });
               }
@@ -3253,7 +3253,7 @@ var require_utils = __commonJS({
         });
       });
     };
-    Utils.prototype.findFiles = function(path11) {
+    Utils.prototype.findFiles = function(path12) {
       const self = this;
       function findSync(dir, pattern, recursive) {
         if (typeof pattern === "boolean") {
@@ -3262,16 +3262,16 @@ var require_utils = __commonJS({
         }
         let files = [];
         self.fs.readdirSync(dir).forEach(function(file) {
-          const path12 = pth.join(dir, file);
-          const stat = self.fs.statSync(path12);
-          if (!pattern || pattern.test(path12)) {
-            files.push(pth.normalize(path12) + (stat.isDirectory() ? self.sep : ""));
+          const path13 = pth.join(dir, file);
+          const stat = self.fs.statSync(path13);
+          if (!pattern || pattern.test(path13)) {
+            files.push(pth.normalize(path13) + (stat.isDirectory() ? self.sep : ""));
           }
-          if (stat.isDirectory() && recursive) files = files.concat(findSync(path12, pattern, recursive));
+          if (stat.isDirectory() && recursive) files = files.concat(findSync(path13, pattern, recursive));
         });
         return files;
       }
-      return findSync(path11, void 0, true);
+      return findSync(path12, void 0, true);
     };
     Utils.prototype.findFilesAsync = function(dir, cb) {
       const self = this;
@@ -3326,14 +3326,14 @@ var require_utils = __commonJS({
           return "UNSUPPORTED (" + method + ")";
       }
     };
-    Utils.canonical = function(path11) {
-      if (!path11) return "";
-      const safeSuffix = pth.posix.normalize("/" + path11.split("\\").join("/"));
+    Utils.canonical = function(path12) {
+      if (!path12) return "";
+      const safeSuffix = pth.posix.normalize("/" + path12.split("\\").join("/"));
       return pth.join(".", safeSuffix);
     };
-    Utils.zipnamefix = function(path11) {
-      if (!path11) return "";
-      const safeSuffix = pth.posix.normalize("/" + path11.split("\\").join("/"));
+    Utils.zipnamefix = function(path12) {
+      if (!path12) return "";
+      const safeSuffix = pth.posix.normalize("/" + path12.split("\\").join("/"));
       return pth.posix.join(".", safeSuffix);
     };
     Utils.findLast = function(arr, callback) {
@@ -3350,9 +3350,9 @@ var require_utils = __commonJS({
       prefix = pth.resolve(pth.normalize(prefix));
       var parts = name.split("/");
       for (var i = 0, l = parts.length; i < l; i++) {
-        var path11 = pth.normalize(pth.join(prefix, parts.slice(i, l).join(pth.sep)));
-        if (path11.indexOf(prefix) === 0) {
-          return path11;
+        var path12 = pth.normalize(pth.join(prefix, parts.slice(i, l).join(pth.sep)));
+        if (path12.indexOf(prefix) === 0) {
+          return path12;
         }
       }
       return pth.normalize(pth.join(prefix, pth.basename(name)));
@@ -3393,8 +3393,8 @@ var require_fattr = __commonJS({
   "node_modules/adm-zip/util/fattr.js"(exports2, module2) {
     "use strict";
     var pth = require("path");
-    module2.exports = function(path11, { fs: fs13 }) {
-      var _path = path11 || "", _obj = newAttr(), _stat = null;
+    module2.exports = function(path12, { fs: fs14 }) {
+      var _path = path12 || "", _obj = newAttr(), _stat = null;
       function newAttr() {
         return {
           directory: false,
@@ -3405,8 +3405,8 @@ var require_fattr = __commonJS({
           atime: 0
         };
       }
-      if (_path && fs13.existsSync(_path)) {
-        _stat = fs13.statSync(_path);
+      if (_path && fs14.existsSync(_path)) {
+        _stat = fs14.statSync(_path);
         _obj.directory = _stat.isDirectory();
         _obj.mtime = _stat.mtime;
         _obj.atime = _stat.atime;
@@ -4794,8 +4794,8 @@ var require_adm_zip = __commonJS({
         return null;
       }
       function fixPath(zipPath) {
-        const { join: join9, normalize: normalize2, sep: sep2 } = pth.posix;
-        return join9(pth.isAbsolute(zipPath) ? "/" : ".", normalize2(sep2 + zipPath.split("\\").join(sep2) + sep2));
+        const { join: join10, normalize: normalize2, sep: sep2 } = pth.posix;
+        return join10(pth.isAbsolute(zipPath) ? "/" : ".", normalize2(sep2 + zipPath.split("\\").join(sep2) + sep2));
       }
       function filenameFilter(filterfn) {
         if (filterfn instanceof RegExp) {
@@ -5527,24 +5527,21 @@ __export(main_exports, {
   default: () => ObsidianVoicePlugin
 });
 module.exports = __toCommonJS(main_exports);
-var fs12 = __toESM(require("fs"));
-var os3 = __toESM(require("os"));
-var path10 = __toESM(require("path"));
+var fs13 = __toESM(require("fs"));
+var os4 = __toESM(require("os"));
+var path11 = __toESM(require("path"));
 var import_obsidian6 = require("obsidian");
 
 // src/audio-player.ts
-var fs = __toESM(require("fs"));
 var ObsidianAudioPlayer = class {
   constructor(vault, initialRate = 1) {
     this.audio = null;
-    this.currentChunk = null;
     this.playbackRate = 1;
     this.vault = vault;
     this.playbackRate = initialRate;
   }
   playFile(filePath, filename, onEnded) {
     this.stop();
-    this.currentChunk = filename;
     this.audio = new Audio(filePath);
     this.audio.playbackRate = this.playbackRate;
     const reapplyRate = () => {
@@ -5554,13 +5551,13 @@ var ObsidianAudioPlayer = class {
     this.audio.onended = () => {
       var _a;
       (_a = this.audio) == null ? void 0 : _a.removeEventListener("canplay", reapplyRate);
-      if (this.currentChunk) {
-        this.cleanupChunk(this.currentChunk);
-        this.currentChunk = null;
-      }
       onEnded();
     };
-    this.audio.play();
+    this.audio.play().catch((err) => {
+      if ((err == null ? void 0 : err.name) !== "AbortError") {
+        console.warn("[Obsidian Voice] Erro ao reproduzir \xE1udio:", err);
+      }
+    });
   }
   /** Retorna true se há um chunk de áudio ativo (tocando ou pausado). */
   isActive() {
@@ -5587,20 +5584,38 @@ var ObsidianAudioPlayer = class {
     this.audio.pause();
     this.audio.src = "";
     this.audio = null;
-    if (this.currentChunk) {
-      this.cleanupChunk(this.currentChunk);
-      this.currentChunk = null;
-    }
   }
-  async cleanupChunk(filename) {
-    try {
-      await fs.promises.unlink(filename);
-      console.log("[Obsidian Voice] Arquivo tempor\xE1rio removido:", filename);
-    } catch (e) {
-      if ((e == null ? void 0 : e.code) !== "ENOENT") {
-        console.warn("[Obsidian Voice] N\xE3o foi poss\xEDvel remover o chunk:", filename, e);
-      }
+  /**
+   * Para o áudio e aguarda a liberação completa do arquivo pelo sistema operacional,
+   * prevenindo erros do tipo EBUSY ao tentar deletar o arquivo no Windows em seguida.
+   * 
+   * O delay de 50ms após o evento 'pause' é necessário para prevenir erros EBUSY
+   * no Windows, onde o Chromium pode ainda estar segurando o file handle por alguns
+   * milissegundos após o pause. Caso o evento 'pause' não dispare em 100ms
+   * (timeout de segurança), a parada é forçada como fallback.
+   */
+  async stopAndWait() {
+    const audio = this.audio;
+    if (!audio || audio.paused || audio.ended) {
+      this.stop();
+      return;
     }
+    return new Promise((resolve4) => {
+      const onPause = () => {
+        audio.removeEventListener("pause", onPause);
+        setTimeout(() => {
+          this.stop();
+          resolve4();
+        }, 50);
+      };
+      audio.addEventListener("pause", onPause);
+      audio.pause();
+      setTimeout(() => {
+        audio.removeEventListener("pause", onPause);
+        this.stop();
+        resolve4();
+      }, 100);
+    });
   }
 };
 
@@ -5787,6 +5802,16 @@ var ObsidianVoiceQueue = class {
     this.currentIndex = 0;
     this.frontmatterLineOffset = 0;
     this.chunkIndex.clear();
+  }
+  /**
+   * Estima a duração de áudio de um texto em segundos.
+   * Heurística: ~150 caracteres = 1 segundo de áudio falado.
+   * Limitações: textos com muitos números, siglas ou pausas naturais
+   * podem ter duração diferente da estimativa. A imprecisão é aceitável
+   * pois o objetivo é apenas manter o buffer com margem suficiente.
+   */
+  estimateDuration(text) {
+    return Math.ceil(text.length / 150);
   }
   getChapters() {
     return this.chapters;
@@ -6627,7 +6652,7 @@ function getModelEntry(id) {
 
 // src/settings.ts
 var path = __toESM(require("path"));
-var fs2 = __toESM(require("fs"));
+var fs = __toESM(require("fs"));
 var fsp = __toESM(require("fs/promises"));
 var DEFAULT_SETTINGS = {
   piperPath: "",
@@ -6750,7 +6775,7 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
           this.display();
           return;
         }
-        const isValid = fs2.existsSync(piperPath) && fs2.statSync(piperPath).isFile();
+        const isValid = fs.existsSync(piperPath) && fs.statSync(piperPath).isFile();
         if (isValid) {
           this.plugin.settings.models.piper = {
             id: "piper",
@@ -6793,7 +6818,7 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
       return;
     }
     try {
-      if (!fs2.existsSync(piperPath) || !fs2.statSync(piperPath).isFile()) {
+      if (!fs.existsSync(piperPath) || !fs.statSync(piperPath).isFile()) {
         throw new Error("Caminho inv\xE1lido");
       }
       this.plugin.settings.models.piper = {
@@ -7048,7 +7073,7 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
     btn.textContent = t("buttons.removing");
     try {
       const voiceSubDir = path.join(piperDir, voice.key);
-      if (!fs2.existsSync(voiceSubDir)) {
+      if (!fs.existsSync(voiceSubDir)) {
         throw new Error(`Subpasta da voz n\xE3o encontrada: ${voiceSubDir}`);
       }
       await fsp.rm(voiceSubDir, { recursive: true, force: true });
@@ -7081,7 +7106,7 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
   isVoiceInstalled(voice, piperDir) {
     if (!piperDir) return false;
     const voiceSubDir = path.join(piperDir, voice.key);
-    if (!fs2.existsSync(voiceSubDir)) {
+    if (!fs.existsSync(voiceSubDir)) {
       return false;
     }
     const missingFiles = [];
@@ -7089,7 +7114,7 @@ var ObsidianVoiceSettingTab = class extends import_obsidian2.PluginSettingTab {
       const fileName = path.basename(rel);
       const filePath = path.join(voiceSubDir, fileName);
       try {
-        if (!fs2.existsSync(filePath)) {
+        if (!fs.existsSync(filePath)) {
           missingFiles.push(fileName);
         }
       } catch (e) {
@@ -7249,7 +7274,7 @@ var EditorHighlighter = class {
 // src/tts/pipeline-service.ts
 var fs3 = __toESM(require("fs"));
 var os = __toESM(require("os"));
-var path2 = __toESM(require("path"));
+var path3 = __toESM(require("path"));
 var import_obsidian3 = require("obsidian");
 
 // src/tts/circuit-breaker.ts
@@ -7284,72 +7309,374 @@ var CircuitBreaker = class {
   }
 };
 
+// src/tts/garbage-collector.ts
+var fs2 = __toESM(require("fs"));
+var path2 = __toESM(require("path"));
+var GarbageCollector = class {
+  constructor() {
+    this.sessions = /* @__PURE__ */ new Map();
+    this.sessionSizes = /* @__PURE__ */ new Map();
+    this.sessionOrder = /* @__PURE__ */ new Set();
+    this.cleaningPromises = /* @__PURE__ */ new Map();
+    // Track size in memory to avoid O(n) readdir and stat calls
+    this.totalSizeBytes = 0;
+    this.isCheckingSize = false;
+    this.generationCount = 0;
+  }
+  /**
+   * Registra um arquivo temporário associado a uma sessão específica.
+   */
+  registerFile(sessionId, absolutePath, fileSize = 0) {
+    if (!this.sessions.has(sessionId)) {
+      this.sessions.set(sessionId, []);
+      this.sessionOrder.add(sessionId);
+      this.sessionSizes.set(sessionId, 0);
+    }
+    this.sessions.get(sessionId).push(absolutePath);
+    this.sessionSizes.set(sessionId, this.sessionSizes.get(sessionId) + fileSize);
+    this.totalSizeBytes += fileSize;
+    this.generationCount++;
+  }
+  /**
+   * Verifica o limite de tamanho apenas a cada 10 arquivos gerados.
+   * Chamado de forma não-bloqueante pelo pipeline.
+   */
+  async maybeCheckSizeLimit(limitMB) {
+    if (this.generationCount % 10 === 0) {
+      await this.checkSizeLimit(limitMB);
+    }
+  }
+  /**
+   * Deleta todos os arquivos temporários de uma sessão específica.
+   */
+  async cleanupSession(sessionId) {
+    const existingPromise = this.cleaningPromises.get(sessionId);
+    if (existingPromise) {
+      await existingPromise;
+      return;
+    }
+    const cleanupPromise = this._doCleanupSession(sessionId);
+    this.cleaningPromises.set(sessionId, cleanupPromise);
+    try {
+      await cleanupPromise;
+    } finally {
+      this.cleaningPromises.delete(sessionId);
+    }
+  }
+  async _doCleanupSession(sessionId) {
+    try {
+      const files = this.sessions.get(sessionId);
+      if (files && files.length > 0) {
+        await this.deleteFiles(files);
+      }
+    } catch (error) {
+      console.error(`[Obsidian Voice GC] Erro ao deletar arquivos da sess\xE3o ${sessionId}:`, error);
+    } finally {
+      const sessionSize = this.sessionSizes.get(sessionId) || 0;
+      this.totalSizeBytes -= sessionSize;
+      if (this.totalSizeBytes < 0) {
+        console.warn(`[Obsidian Voice GC] totalSizeBytes ficou negativo (${this.totalSizeBytes}). Resetando para 0.`);
+        this.totalSizeBytes = 0;
+      }
+      this.sessions.delete(sessionId);
+      this.sessionSizes.delete(sessionId);
+      this.removeSessionFromOrder(sessionId);
+    }
+  }
+  /**
+   * Deleta todos os arquivos temporários de todas as sessões registradas.
+   */
+  async cleanupAllSessions() {
+    const allFiles = [];
+    for (const files of this.sessions.values()) {
+      allFiles.push(...files);
+    }
+    await this.deleteFiles(allFiles);
+    this.sessions.clear();
+    this.sessionSizes.clear();
+    this.sessionOrder.clear();
+    this.cleaningPromises.clear();
+    this.totalSizeBytes = 0;
+    this.generationCount = 0;
+  }
+  /**
+   * Verifica se o diretório de cache excedeu o limite em MB e limpa sessões antigas se necessário.
+   */
+  async checkSizeLimit(limitMB) {
+    if (this.isCheckingSize) {
+      return;
+    }
+    this.isCheckingSize = true;
+    try {
+      if (this.generationCount % 100 === 0) {
+        this.recalculateTotalSize();
+      }
+      const limitBytes = limitMB * 1024 * 1024;
+      if (this.totalSizeBytes <= limitBytes) {
+        return;
+      }
+      console.log(`[Obsidian Voice GC] Limite de cache excedido (${(this.totalSizeBytes / (1024 * 1024)).toFixed(2)} MB > ${limitMB} MB). Iniciando limpeza autom\xE1tica...`);
+      const oldestSessions = this.getOldestSessions();
+      for (const sessionId of oldestSessions) {
+        await this.cleanupSession(sessionId);
+        if (this.totalSizeBytes <= limitBytes) {
+          break;
+        }
+      }
+    } finally {
+      this.isCheckingSize = false;
+    }
+  }
+  recalculateTotalSize() {
+    let total = 0;
+    for (const size of this.sessionSizes.values()) {
+      total += size;
+    }
+    this.totalSizeBytes = total;
+  }
+  /**
+   * Limpa arquivos .wav órfãos do diretório de cache (não registrados no GC).
+   * 
+   * ATENÇÃO: Este método só deve ser chamado no onunload do plugin, quando o player
+   * já parou e não há arquivos em uso. Chamá-lo em outros momentos pode deletar
+   * arquivos que estão sendo tocados, causando erros de reprodução.
+   */
+  async cleanupOrphanedFiles(cacheDir) {
+    try {
+      const files = await fs2.promises.readdir(cacheDir);
+      const wavFiles = files.filter((f) => f.endsWith(".wav"));
+      for (const file of wavFiles) {
+        const filePath = path2.join(cacheDir, file);
+        try {
+          await fs2.promises.unlink(filePath);
+        } catch (e) {
+          if ((e == null ? void 0 : e.code) !== "ENOENT") {
+            console.warn(`[Obsidian Voice GC] Erro ao deletar arquivo \xF3rf\xE3o: ${filePath}`, e);
+          }
+        }
+      }
+      if (wavFiles.length > 0) {
+        console.log(`[Obsidian Voice GC] Limpeza de arquivos \xF3rf\xE3os conclu\xEDda: ${wavFiles.length} arquivos deletados.`);
+      }
+    } catch (_) {
+    }
+  }
+  /**
+   * Retorna o mapa atual de sessões e arquivos registrados.
+   */
+  getRegisteredFiles() {
+    return this.sessions;
+  }
+  async deleteFiles(files) {
+    let deletedCount = 0;
+    for (const file of files) {
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts) {
+        try {
+          await new Promise((resolve4) => setTimeout(resolve4, 0));
+          await fs2.promises.unlink(file);
+          deletedCount++;
+          break;
+        } catch (e) {
+          if ((e == null ? void 0 : e.code) === "EBUSY" && attempts < maxAttempts - 1) {
+            attempts++;
+            await new Promise((resolve4) => setTimeout(resolve4, 100));
+            continue;
+          }
+          if ((e == null ? void 0 : e.code) !== "ENOENT") {
+            console.warn(`[Obsidian Voice GC] Erro ao deletar arquivo: ${file}`, e);
+          }
+          break;
+        }
+      }
+    }
+    if (deletedCount > 0) {
+      console.log(`[Obsidian Voice GC] Limpeza conclu\xEDda: ${deletedCount} arquivos deletados.`);
+    }
+  }
+  getOldestSessions() {
+    return Array.from(this.sessionOrder);
+  }
+  removeSessionFromOrder(sessionId) {
+    this.sessionOrder.delete(sessionId);
+  }
+};
+
 // src/tts/pipeline-service.ts
-var TTSPipelineService = class {
+var _TTSPipelineService = class _TTSPipelineService {
   constructor(vault, queue, engine) {
     this.vault = vault;
     this.queue = queue;
     this.engine = engine;
-    this.nextChunkPromise = null;
     this.session = null;
     this.breaker = new CircuitBreaker();
+    this.currentSessionId = 0;
+    this.bufferedChunks = [];
+    this.bufferedDuration = 0;
+    this.currentPlaybackRate = 1;
+    this.isRunning = false;
+    this.garbageCollector = new GarbageCollector();
   }
   async validate() {
     return this.engine.validate();
   }
-  async start() {
-    await this.stop();
+  sleep(ms) {
+    return new Promise((resolve4) => setTimeout(resolve4, ms));
+  }
+  /**
+   * Inicia uma nova sessão de narração de forma não-bloqueante.
+   */
+  async start(sessionId) {
+    if (this.isRunning) {
+      await this.stop();
+    }
+    this.currentSessionId = sessionId;
     this.session = this.engine.createSession();
     await this.session.warmup();
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.isRunning = true;
+    void this.runContinuousGeneration();
   }
   async stop() {
+    this.isRunning = false;
     if (this.session) {
       this.session.abort();
       await this.session.dispose();
       this.session = null;
     }
-    await this.cleanupPrefetchedChunk();
+    this.bufferedChunks = [];
+    this.bufferedDuration = 0;
+    this.currentSessionId = 0;
+  }
+  async runContinuousGeneration() {
+    const sessionAtStart = this.currentSessionId;
+    while (this.isRunning && this.currentSessionId === sessionAtStart) {
+      if (!this.breaker.canExecute()) {
+        console.warn("[Obsidian Voice] Circuit Breaker aberto, pausando gera\xE7\xE3o");
+        await this.sleep(1e3);
+        continue;
+      }
+      const budget = this.calculateTimeBudget(this.currentPlaybackRate);
+      const chunksMin = this.calculateChunksMin(this.currentPlaybackRate);
+      const currentDuration = this.getBufferedDuration();
+      const currentChunks = this.bufferedChunks.length;
+      const isTimeSatisfied = currentDuration >= budget;
+      const isQuantitySatisfied = currentChunks >= chunksMin;
+      const isMaxReached = currentChunks >= _TTSPipelineService.MAX_BUFFERED_CHUNKS;
+      if (isTimeSatisfied && isQuantitySatisfied || isMaxReached) {
+        await this.sleep(100);
+        continue;
+      }
+      const chunk = await this.generateNextChunk();
+      if (chunk === null) {
+        break;
+      }
+      if (chunk.sessionId !== this.currentSessionId) {
+        this.garbageCollector.registerFile(chunk.sessionId, chunk.absolutePath);
+        break;
+      }
+      if (chunk.error) {
+        console.warn("[Obsidian Voice] Chunk com erro ignorado:", chunk.error);
+        continue;
+      }
+      this.bufferedChunks.push(chunk);
+      this.bufferedDuration += this.estimateDuration(chunk.text);
+      if (this.bufferedChunks.length % 5 === 0) {
+        console.log(`[Obsidian Voice] Buffer: ${this.bufferedChunks.length} chunks (min ${chunksMin}), ${this.bufferedDuration.toFixed(1)}s / ${budget.toFixed(1)}s alvo`);
+      }
+    }
+  }
+  consumeFromBuffer() {
+    var _a;
+    const chunk = (_a = this.bufferedChunks.shift()) != null ? _a : null;
+    if (chunk === null) return null;
+    this.bufferedDuration -= this.estimateDuration(chunk.text);
+    if (this.bufferedDuration < 0) this.bufferedDuration = 0;
+    if (chunk.sessionId !== this.currentSessionId) {
+      this.garbageCollector.registerFile(chunk.sessionId, chunk.absolutePath);
+      return { discarded: true, sessionId: this.currentSessionId };
+    }
+    return chunk;
   }
   async getNextChunk() {
-    if (!this.nextChunkPromise) this.nextChunkPromise = this.prefetchNextChunk();
-    const currentPromise = this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    return currentPromise;
+    if (this.bufferedChunks.length === 0) {
+      return null;
+    }
+    return this.consumeFromBuffer();
   }
   async cancelCurrentGeneration() {
+    this.isRunning = false;
     if (this.session) {
       this.session.abort();
     }
-    await this.cleanupPrefetchedChunk();
-  }
-  prefetch() {
-    this.nextChunkPromise = this.prefetchNextChunk();
+    this.bufferedChunks = [];
+    this.bufferedDuration = 0;
   }
   holdChunk(chunk) {
-    this.nextChunkPromise = Promise.resolve(chunk);
+    if (chunk.sessionId !== this.currentSessionId) {
+      return false;
+    }
+    const exists = this.bufferedChunks.some((c) => c.absolutePath === chunk.absolutePath);
+    if (!exists) {
+      this.bufferedChunks.unshift(chunk);
+      this.bufferedDuration += this.estimateDuration(chunk.text);
+      return true;
+    }
+    return false;
   }
   async resetPrefetch() {
-    await this.cleanupPrefetchedChunk();
+    this.bufferedChunks = [];
+    this.bufferedDuration = 0;
   }
   async runTest(text, outputFile) {
     if (!this.session) this.session = this.engine.createSession();
     await this.session.warmup();
     return this.generate(text, outputFile);
   }
-  async prefetchNextChunk() {
+  setPlaybackRate(speed) {
+    this.currentPlaybackRate = speed;
+  }
+  async cleanupSession(sessionId) {
+    await this.garbageCollector.cleanupSession(sessionId);
+  }
+  async cleanupAllSessions() {
+    await this.garbageCollector.cleanupAllSessions();
+  }
+  async cleanupOrphanedFiles() {
+    const cacheDir = path3.join(os.tmpdir(), "ObsidianVoiceCache");
+    await this.garbageCollector.cleanupOrphanedFiles(cacheDir);
+  }
+  calculateTimeBudget(speed) {
+    const safeSpeed = Math.max(0.1, speed);
+    return 10 + Math.pow(safeSpeed, 1.35) * 6;
+  }
+  calculateChunksMin(speed) {
+    const safeSpeed = Math.max(0.1, speed);
+    return Math.round(4 + safeSpeed * 2);
+  }
+  estimateDuration(text) {
+    return this.queue.estimateDuration(text);
+  }
+  getBufferedDuration() {
+    return this.bufferedDuration;
+  }
+  async generateNextChunk() {
     const chunk = this.queue.getNextChunk();
     if (chunk === null) return null;
-    const cacheDir = path2.join(os.tmpdir(), "ObsidianVoiceCache");
+    const sessionIdAtGenerationStart = this.currentSessionId;
+    const cacheDir = path3.join(os.tmpdir(), "ObsidianVoiceCache");
     await fs3.promises.mkdir(cacheDir, { recursive: true });
+    void this.garbageCollector.maybeCheckSizeLimit(500);
     const filename = `voice_chunk_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.wav`;
-    const absolutePath = path2.join(cacheDir, filename);
+    const absolutePath = path3.join(cacheDir, filename);
     try {
       const metadata = await this.generate(chunk.text, absolutePath);
-      return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata };
+      const fileSize = chunk.text.length * 4;
+      this.garbageCollector.registerFile(sessionIdAtGenerationStart, absolutePath, fileSize);
+      return { resourcePath: this.toResourcePath(absolutePath), absolutePath, filename, text: chunk.text, metadata, sessionId: sessionIdAtGenerationStart };
     } catch (error) {
       const message = (error == null ? void 0 : error.message) || String(error);
-      return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message };
+      return { resourcePath: "", absolutePath, filename, text: chunk.text, error: message, sessionId: sessionIdAtGenerationStart };
     }
   }
   async generate(text, outputFile) {
@@ -7367,59 +7694,215 @@ var TTSPipelineService = class {
   toResourcePath(absolutePath) {
     if (this.vault.adapter instanceof import_obsidian3.FileSystemAdapter) {
       const basePath = this.vault.adapter.getBasePath();
-      const relativePath = path2.relative(basePath, absolutePath);
+      const relativePath = path3.relative(basePath, absolutePath);
       return this.vault.adapter.getResourcePath(relativePath);
     }
     return `app://local/${absolutePath.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1%3A")}`;
   }
-  async cleanupPrefetchedChunk() {
-    if (!this.nextChunkPromise) return;
-    const chunk = await this.nextChunkPromise;
-    this.nextChunkPromise = null;
-    if (chunk == null ? void 0 : chunk.absolutePath) {
+};
+_TTSPipelineService.MAX_BUFFERED_CHUNKS = 12;
+_TTSPipelineService.CHARS_PER_SECOND = 150;
+var TTSPipelineService = _TTSPipelineService;
+
+// src/tts/engine/piper-engine.ts
+var fs5 = __toESM(require("fs"));
+var os2 = __toESM(require("os"));
+var path4 = __toESM(require("path"));
+
+// src/tts/runtime/persistent-subprocess-runtime.ts
+var fs4 = __toESM(require("fs"));
+var import_child_process = require("child_process");
+var PersistentSubprocessRuntime = class {
+  constructor() {
+    this.child = null;
+    this.stdinClosed = false;
+  }
+  /**
+   * Inicia o subprocesso Piper com os argumentos configurados.
+   * Deve ser chamado uma única vez por sessão (no warmup).
+   *
+   * INVARIANT: Se já houver um processo ativo, lança erro para evitar duplicidade.
+   */
+  start(options) {
+    var _a, _b;
+    if (this.child) {
+      throw new Error("[PersistentSubprocessRuntime] Processo j\xE1 est\xE1 ativo. Chame stop() antes.");
+    }
+    this.stdinClosed = false;
+    const child = (0, import_child_process.spawn)(options.executablePath, options.args, {
+      cwd: options.cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+      // WARNING: windowsHide evita janela de console no Windows
+      windowsHide: true
+    });
+    this.child = child;
+    (_a = child.stderr) == null ? void 0 : _a.on("data", (data) => {
+      const msg = data.toString().trim();
+      if (msg) console.log(`[Piper] ${msg}`);
+    });
+    child.on("error", (err) => {
+      console.error(`[PersistentSubprocessRuntime] Erro no processo Piper: ${err.message}`);
+      this.child = null;
+    });
+    child.on("exit", (code, signal) => {
+      console.log(`[PersistentSubprocessRuntime] Piper encerrado (code=${code}, signal=${signal})`);
+      this.child = null;
+    });
+    (_b = child.stdout) == null ? void 0 : _b.resume();
+  }
+  /**
+   * Gera um chunk de áudio enviando texto via stdin em formato JSON.
+   *
+   * O Piper com --json-input aceita por linha: {"text":"...","output_file":"..."}
+   * Aguarda o arquivo de saída aparecer no disco com polling, pois o Piper
+   * escreve de forma síncrona no output_file antes de processar o próximo JSON.
+   *
+   * @param text  Texto a ser sintetizado.
+   * @param outputPath  Caminho absoluto do arquivo WAV de saída.
+   * @param signal  AbortSignal opcional para cancelar a espera do arquivo.
+   * @param timeoutMs  Timeout máximo de espera pelo arquivo (padrão: 30s).
+   */
+  async generate(text, outputPath, signal, timeoutMs = 3e4) {
+    if (!this.isAlive()) {
+      throw new Error("[PersistentSubprocessRuntime] Processo Piper n\xE3o est\xE1 ativo.");
+    }
+    try {
+      await fs4.promises.unlink(outputPath);
+    } catch (err) {
+      if (err.code !== "ENOENT" && err.code !== "EBUSY") {
+        throw err;
+      }
+    }
+    const payload = JSON.stringify({ text, output_file: outputPath }) + "\n";
+    await new Promise((resolve4, reject) => {
+      var _a;
+      if (!((_a = this.child) == null ? void 0 : _a.stdin) || this.stdinClosed) {
+        return reject(new Error("[PersistentSubprocessRuntime] stdin n\xE3o dispon\xEDvel."));
+      }
+      const written = this.child.stdin.write(payload, "utf-8", (err) => {
+        if (err) reject(new Error(`[PersistentSubprocessRuntime] Erro ao escrever no stdin: ${err.message}`));
+        else resolve4();
+      });
+      if (!written) {
+        this.child.stdin.once("drain", resolve4);
+      }
+    });
+    await this.waitForFile(outputPath, signal, timeoutMs);
+  }
+  /**
+   * Cancela a geração atual abortando a espera do arquivo.
+   * Disparado pelo abort() da sessão.
+   * O cancelamento é orquestrado exclusivamente pela PiperEngineSession
+   * via injeção do AbortSignal no generate(). Este método é mantido como
+   * interface pública para a sessão disparar o abort no runtime.
+   */
+  abortCurrentGeneration() {
+  }
+  /**
+   * Verifica se o subprocesso está ativo e vivo.
+   */
+  isAlive() {
+    return this.child !== null && !this.stdinClosed;
+  }
+  /**
+   * Encerra o subprocesso graciosamente.
+   * 1. Fecha stdin (envia EOF) → Piper termina ao acabar a fila interna.
+   * 2. Aguarda até 5s para o processo sair.
+   * 3. Se não sair, força com SIGTERM e depois SIGKILL.
+   */
+  async stop() {
+    var _a;
+    const child = this.child;
+    if (!child) return;
+    this.stdinClosed = true;
+    try {
+      (_a = child.stdin) == null ? void 0 : _a.end();
+    } catch (_) {
+    }
+    const exited = await this.waitForExit(child, 5e3);
+    if (!exited) {
+      console.warn("[PersistentSubprocessRuntime] Timeout graciod \u2014 for\xE7ando SIGTERM.");
       try {
-        await fs3.promises.unlink(chunk.absolutePath);
-      } catch (e) {
-        if ((e == null ? void 0 : e.code) !== "ENOENT") {
-          console.warn("[Obsidian Voice] N\xE3o foi poss\xEDvel remover o chunk prefetch:", chunk.absolutePath, e);
+        child.kill("SIGTERM");
+      } catch (_) {
+      }
+      const exitedAfterTerm = await this.waitForExit(child, 2e3);
+      if (!exitedAfterTerm) {
+        console.warn("[PersistentSubprocessRuntime] SIGTERM ignorado \u2014 for\xE7ando SIGKILL.");
+        try {
+          child.kill("SIGKILL");
+        } catch (_) {
         }
       }
     }
-  }
-};
-
-// src/tts/engine/piper-engine.ts
-var fs4 = __toESM(require("fs"));
-var path3 = __toESM(require("path"));
-
-// src/tts/runtime/subprocess-runtime.ts
-var import_child_process = require("child_process");
-var SubprocessRuntime = class {
-  constructor() {
     this.child = null;
+    console.log("[Obsidian Voice] Subprocesso Piper encerrado no unload.");
   }
-  run(request) {
-    return new Promise((resolve4, reject) => {
-      const child = (0, import_child_process.exec)(request.command, request.cwd ? { cwd: request.cwd } : {}, (error, _stdout, stderr) => {
-        this.child = null;
-        if (error) {
-          reject(new Error(error.message));
+  /**
+   * Aguarda o arquivo aparecer no disco com polling não-bloqueante.
+   *
+   * Usa setTimeout(..., 0) em vez de setImmediate porque o ambiente
+   * Electron do Obsidian (renderer) não expõe setImmediate globalmente.
+   * setTimeout(..., 0) é o fallback universal e cede o event loop
+   * o suficiente para processar AbortSignal e outras I/Os.
+   *
+   * Usa fs.promises.stat para não bloquear a thread principal da UI.
+   *
+   * Para garantir que o arquivo foi completamente escrito (e não apenas
+   * o header de 44 bytes), implementa verificação de "tamanho estável":
+   * mede o tamanho, espera 50ms, mede novamente. Se o tamanho não mudou,
+   * o Piper fechou o file handle e o arquivo está completo.
+   *
+   * Falha com timeout se o arquivo não aparecer dentro do prazo.
+   * Falha imediatamente se o AbortSignal for disparado.
+   */
+  async waitForFile(filePath, signal, timeoutMs = 3e4) {
+    const start = Date.now();
+    let previousSize = 0;
+    while (true) {
+      if (signal == null ? void 0 : signal.aborted) {
+        throw new Error("[PersistentSubprocessRuntime] Gera\xE7\xE3o cancelada via abort().");
+      }
+      if (!this.child) {
+        throw new Error("[PersistentSubprocessRuntime] Processo Piper morreu durante gera\xE7\xE3o.");
+      }
+      if (Date.now() - start > timeoutMs) {
+        throw new Error(`[PersistentSubprocessRuntime] Timeout aguardando arquivo WAV: ${filePath}`);
+      }
+      try {
+        const stat = await fs4.promises.stat(filePath);
+        if (stat.size >= 44 && stat.size === previousSize) {
           return;
         }
-        resolve4();
-      });
-      this.child = child;
-      if (child.stdin) {
-        child.stdin.on("error", (e) => console.warn(`Erro no stdin do subprocesso TTS: ${e.message}`));
-        child.stdin.write(request.input, "utf-8");
-        child.stdin.end();
+        if (stat.size >= 44) {
+          previousSize = stat.size;
+        }
+      } catch (err) {
+        if (err.code !== "ENOENT") {
+          throw err;
+        }
       }
-    });
+      await new Promise((resolve4) => setTimeout(resolve4, 0));
+    }
   }
-  abort() {
-    if (!this.child) return;
-    this.child.kill();
-    this.child = null;
+  /**
+   * Aguarda o processo encerrar dentro do timeout.
+   * @returns true se encerrou, false se expirou o timeout.
+   */
+  waitForExit(child, timeoutMs) {
+    return new Promise((resolve4) => {
+      if (child.exitCode !== null) {
+        resolve4(true);
+        return;
+      }
+      const timer = setTimeout(() => {
+        resolve4(false);
+      }, timeoutMs);
+      child.once("exit", () => {
+        clearTimeout(timer);
+        resolve4(true);
+      });
+    });
   }
 };
 
@@ -7447,8 +7930,8 @@ var PiperEngine = class {
     const { piperPath, piperInstallRoot } = this.options;
     const resolvedModel = this.resolveModelPath();
     const isPiperCommand = this.isCommand(piperPath);
-    const piperExists = !!piperPath && (isPiperCommand || fs4.existsSync(this.resolvePiperPath()));
-    const modelExists = !!resolvedModel && fs4.existsSync(resolvedModel);
+    const piperExists = !!piperPath && (isPiperCommand || fs5.existsSync(this.resolvePiperPath()));
+    const modelExists = !!resolvedModel && fs5.existsSync(resolvedModel);
     if (!piperExists || !modelExists) {
       const error = "Piper executable or voice model is missing.";
       this.health = { state: "broken", lastValidation: Date.now(), lastError: error };
@@ -7458,35 +7941,41 @@ var PiperEngine = class {
     return { ok: true };
   }
   createSession() {
-    return new PiperEngineSession(this, new SubprocessRuntime());
+    return new PiperEngineSession(this, new PersistentSubprocessRuntime());
   }
-  buildCommand(outputFile) {
+  /**
+   * Monta os argumentos de linha de comando para o Piper no modo persistente.
+   * --json-input: habilita leitura de texto via stdin em formato JSON linha a linha.
+   * Cada linha JSON especifica seu próprio output_file, sem necessidade de arg global.
+   */
+  buildSpawnArgs() {
     const resolvedPiper = this.resolvePiperPath();
     const resolvedModel = this.resolveModelPath();
     return {
-      command: `"${resolvedPiper}" --model "${resolvedModel}" --output_file "${outputFile}"`,
+      executablePath: resolvedPiper,
+      args: ["--model", resolvedModel, "--json-input"],
       cwd: this.options.basePath
     };
   }
   resolvePiperPath() {
     const { piperPath, basePath } = this.options;
-    if (this.isCommand(piperPath) || path3.isAbsolute(piperPath) || !basePath) return piperPath;
-    return path3.resolve(basePath, piperPath);
+    if (this.isCommand(piperPath) || path4.isAbsolute(piperPath) || !basePath) return piperPath;
+    return path4.resolve(basePath, piperPath);
   }
   resolveModelPath() {
     const { piperInstallRoot, selectedVoice } = this.options;
     if (!selectedVoice || !piperInstallRoot) return "";
     const voiceFile = selectedVoice.endsWith(".onnx") ? selectedVoice : `${selectedVoice}.onnx`;
-    const subfolderPath = path3.join(piperInstallRoot, selectedVoice, voiceFile);
-    if (fs4.existsSync(subfolderPath)) return subfolderPath;
-    const directPath = path3.join(piperInstallRoot, voiceFile);
-    if (fs4.existsSync(directPath)) return directPath;
+    const subfolderPath = path4.join(piperInstallRoot, selectedVoice, voiceFile);
+    if (fs5.existsSync(subfolderPath)) return subfolderPath;
+    const directPath = path4.join(piperInstallRoot, voiceFile);
+    if (fs5.existsSync(directPath)) return directPath;
     let currentDir = piperInstallRoot;
     for (let i = 0; i < 3; i++) {
-      const parentDir = path3.dirname(currentDir);
+      const parentDir = path4.dirname(currentDir);
       if (parentDir === currentDir) break;
-      const candidatePath = path3.join(parentDir, voiceFile);
-      if (fs4.existsSync(candidatePath)) return candidatePath;
+      const candidatePath = path4.join(parentDir, voiceFile);
+      if (fs5.existsSync(candidatePath)) return candidatePath;
       currentDir = parentDir;
     }
     return subfolderPath;
@@ -7499,13 +7988,52 @@ var PiperEngineSession = class {
   constructor(engine, runtime) {
     this.engine = engine;
     this.runtime = runtime;
+    // Flag para sinalizar abort() sem matar o processo (apenas cancela a espera do arquivo)
+    this.aborted = false;
+    // AbortController para cancelar a geração atual via AbortSignal no runtime
+    this.abortController = null;
   }
+  /**
+   * Inicia o subprocesso Piper persistente com o modelo carregado em RAM.
+   * Em vez de um sleep fixo de 500ms, envia "ping" como palavra de validação
+   * para garantir que o modelo carregou e o processo está pronto.
+   *
+   * Usamos "ping" em vez de string vazia porque a maioria dos modelos ONNX
+   * do Piper rejeita textos vazios ou sem fonemas pronunciáveis, retornando
+   * erro ou simplesmente não gerando saída.
+   */
   async warmup() {
+    const { executablePath, args, cwd } = this.engine.buildSpawnArgs();
+    this.runtime.start({ executablePath, args, cwd });
+    const pingPath = path4.join(
+      os2.tmpdir(),
+      `piper_warmup_${Date.now()}.wav`
+    );
+    try {
+      await this.runtime.generate("ping", pingPath, void 0, 1e4);
+    } catch (err) {
+      throw new Error(`[PiperEngine] Subprocesso Piper falhou na inicializa\xE7\xE3o. Verifique o modelo e o execut\xE1vel. ${err}`);
+    } finally {
+      try {
+        await fs5.promises.unlink(pingPath);
+      } catch (_) {
+      }
+    }
+    if (!this.runtime.isAlive()) {
+      throw new Error("[PiperEngine] Subprocesso Piper falhou na inicializa\xE7\xE3o. Verifique o modelo e o execut\xE1vel.");
+    }
   }
   async generate(request) {
+    this.aborted = false;
+    this.abortController = new AbortController();
     const startedAt = Date.now();
-    const { command, cwd } = this.engine.buildCommand(request.outputFile);
-    await this.runtime.run({ command, cwd, input: request.text });
+    if (!this.runtime.isAlive()) {
+      throw new Error("[PiperEngine] Subprocesso Piper n\xE3o est\xE1 ativo. O warmup() foi chamado?");
+    }
+    if (this.aborted) {
+      throw new Error("[PiperEngine] Gera\xE7\xE3o cancelada via abort().");
+    }
+    await this.runtime.generate(request.text, request.outputFile, this.abortController.signal);
     return {
       filePath: request.outputFile,
       generationMs: Date.now() - startedAt,
@@ -7513,17 +8041,65 @@ var PiperEngineSession = class {
       cached: false
     };
   }
+  /**
+   * Sinaliza cancelamento da geração atual.
+   * Dispara o AbortController para interromper imediatamente o waitForFile,
+   * evitando vazamento de CPU enquanto o polling continua.
+   * NÃO encerra o subprocesso — isso é responsabilidade exclusiva de dispose().
+   */
   abort() {
-    this.runtime.abort();
+    this.aborted = true;
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+    this.runtime.abortCurrentGeneration();
   }
-  dispose() {
-    this.abort();
+  /**
+   * Encerra o subprocesso Piper graciosamente e libera recursos.
+   * Deve ser chamado pelo pipeline no stop() da sessão.
+   */
+  async dispose() {
+    await this.runtime.stop();
   }
 };
 
 // src/tts/engine/kokoro-engine.ts
-var fs5 = __toESM(require("fs"));
-var path4 = __toESM(require("path"));
+var fs6 = __toESM(require("fs"));
+var path5 = __toESM(require("path"));
+
+// src/tts/runtime/subprocess-runtime.ts
+var import_child_process2 = require("child_process");
+var SubprocessRuntime = class {
+  constructor() {
+    this.child = null;
+  }
+  run(request) {
+    return new Promise((resolve4, reject) => {
+      const child = (0, import_child_process2.exec)(request.command, request.cwd ? { cwd: request.cwd } : {}, (error, _stdout, stderr) => {
+        this.child = null;
+        if (error) {
+          reject(new Error(error.message));
+          return;
+        }
+        resolve4();
+      });
+      this.child = child;
+      if (child.stdin) {
+        child.stdin.on("error", (e) => console.warn(`Erro no stdin do subprocesso TTS: ${e.message}`));
+        child.stdin.write(request.input, "utf-8");
+        child.stdin.end();
+      }
+    });
+  }
+  abort() {
+    if (!this.child) return;
+    this.child.kill();
+    this.child = null;
+  }
+};
+
+// src/tts/engine/kokoro-engine.ts
 var KokoroEngine = class {
   constructor(options) {
     this.options = options;
@@ -7545,11 +8121,11 @@ var KokoroEngine = class {
   }
   async validate() {
     const { kokoroPath, selectedVoice } = this.options;
-    const kokoroExists = !!kokoroPath && fs5.existsSync(this.resolveKokoroPath());
+    const kokoroExists = !!kokoroPath && fs6.existsSync(this.resolveKokoroPath());
     let modelExists = false;
     if (selectedVoice) {
       const voicePath = this.resolveVoicePath(selectedVoice);
-      modelExists = fs5.existsSync(voicePath);
+      modelExists = fs6.existsSync(voicePath);
     }
     if (!kokoroExists || !modelExists) {
       const error = "Kokoro executable or voice model is missing.";
@@ -7571,14 +8147,14 @@ var KokoroEngine = class {
   }
   resolveKokoroPath() {
     const { kokoroPath, basePath } = this.options;
-    if (path4.isAbsolute(kokoroPath) || !basePath) return kokoroPath;
-    return path4.resolve(basePath, kokoroPath);
+    if (path5.isAbsolute(kokoroPath) || !basePath) return kokoroPath;
+    return path5.resolve(basePath, kokoroPath);
   }
   resolveVoicePath(voice) {
     const { kokoroPath, basePath } = this.options;
     if (!voice || !kokoroPath) return "";
-    const dir = path4.dirname(this.resolveKokoroPath());
-    return path4.join(dir, "voices", voice);
+    const dir = path5.dirname(this.resolveKokoroPath());
+    return path5.join(dir, "voices", voice);
   }
   getSelectedVoice() {
     return this.options.selectedVoice;
@@ -7636,11 +8212,11 @@ var TTSEngineFactory = class {
 };
 
 // src/services/model/model-management-service.ts
-var fs11 = __toESM(require("fs"));
+var fs12 = __toESM(require("fs"));
 var fsp3 = __toESM(require("fs/promises"));
-var path9 = __toESM(require("path"));
-var os2 = __toESM(require("os"));
-var import_child_process3 = require("child_process");
+var path10 = __toESM(require("path"));
+var os3 = __toESM(require("os"));
+var import_child_process4 = require("child_process");
 var import_util = require("util");
 var import_obsidian5 = require("obsidian");
 
@@ -7779,8 +8355,8 @@ var ManifestService = class {
 };
 
 // src/services/model/resource-guard.ts
-var import_child_process2 = require("child_process");
-var fs6 = __toESM(require("fs"));
+var import_child_process3 = require("child_process");
+var fs7 = __toESM(require("fs"));
 var TIMEOUT_MS = 3e3;
 function execWithTimeout(command, cwd) {
   return new Promise((resolve4, reject) => {
@@ -7789,7 +8365,7 @@ function execWithTimeout(command, cwd) {
       controller.abort();
       reject(new Error(`Comando excedeu o timeout de ${TIMEOUT_MS}ms: ${command}`));
     }, TIMEOUT_MS);
-    (0, import_child_process2.exec)(command, { cwd, signal: controller.signal }, (error, stdout) => {
+    (0, import_child_process3.exec)(command, { cwd, signal: controller.signal }, (error, stdout) => {
       clearTimeout(timer);
       if (error) {
         reject(error);
@@ -7800,7 +8376,7 @@ function execWithTimeout(command, cwd) {
   });
 }
 async function getDiskFreeBytes(vaultPath) {
-  const safeCwd = await fs6.promises.access(vaultPath).then(() => vaultPath).catch(() => process.cwd()) || process.cwd();
+  const safeCwd = await fs7.promises.access(vaultPath).then(() => vaultPath).catch(() => process.cwd()) || process.cwd();
   if (process.platform === "win32") {
     const output2 = await execWithTimeout(
       'powershell -Command "(Get-Item -Path .).PSDrive.Free"',
@@ -7864,9 +8440,9 @@ var ResourceGuard = class {
 // src/services/model/download-manager.ts
 var https = __toESM(require("https"));
 var http = __toESM(require("http"));
-var fs7 = __toESM(require("fs"));
+var fs8 = __toESM(require("fs"));
 var crypto2 = __toESM(require("crypto"));
-var path5 = __toESM(require("path"));
+var path6 = __toESM(require("path"));
 var import_events = require("events");
 var MAX_REDIRECTS = 5;
 var MAX_RETRIES = 3;
@@ -7876,7 +8452,7 @@ function sleep(ms) {
 }
 function getFileSize(filePath) {
   try {
-    return fs7.statSync(filePath).size;
+    return fs8.statSync(filePath).size;
   } catch (e) {
     return 0;
   }
@@ -7933,16 +8509,16 @@ function resolveResponse(url, rangeStart, signal, redirectsLeft) {
 }
 async function attemptDownload(url, partPath, signal, onProgress) {
   var _a;
-  await fs7.promises.mkdir(path5.dirname(partPath), { recursive: true });
+  await fs8.promises.mkdir(path6.dirname(partPath), { recursive: true });
   const existingBytes = getFileSize(partPath);
   const response = await resolveResponse(url, existingBytes, signal, MAX_REDIRECTS);
   const { statusCode, headers } = response;
   const isResume = statusCode === 206 && existingBytes > 0;
   if (!isResume && existingBytes > 0) {
-    await fs7.promises.unlink(partPath).catch(() => {
+    await fs8.promises.unlink(partPath).catch(() => {
     });
   }
-  const writeStream = fs7.createWriteStream(partPath, { flags: isResume ? "a" : "w" });
+  const writeStream = fs8.createWriteStream(partPath, { flags: isResume ? "a" : "w" });
   const contentLength = parseInt((_a = headers["content-length"]) != null ? _a : "0", 10);
   const totalBytes = isResume ? existingBytes + contentLength : contentLength;
   let downloadedBytes = isResume ? existingBytes : 0;
@@ -7964,7 +8540,7 @@ async function attemptDownload(url, partPath, signal, onProgress) {
 function computeSha256(filePath) {
   return new Promise((resolve4, reject) => {
     const hash = crypto2.createHash("sha256");
-    const stream = fs7.createReadStream(filePath);
+    const stream = fs8.createReadStream(filePath);
     stream.on("data", (chunk) => hash.update(Buffer.from(chunk)));
     stream.on("end", () => resolve4(hash.digest("hex")));
     stream.on("error", reject);
@@ -7973,7 +8549,7 @@ function computeSha256(filePath) {
 function computeMd5(filePath) {
   return new Promise((resolve4, reject) => {
     const hash = crypto2.createHash("md5");
-    const stream = fs7.createReadStream(filePath);
+    const stream = fs8.createReadStream(filePath);
     stream.on("data", (chunk) => hash.update(Buffer.from(chunk)));
     stream.on("end", () => resolve4(hash.digest("hex")));
     stream.on("error", reject);
@@ -8013,7 +8589,7 @@ var DownloadManager = class extends import_events.EventEmitter {
       console.log("[DownloadManager] Download conclu\xEDdo. Verificando integridade SHA-256...");
       const actualSha256 = await computeSha256(partPath);
       if (actualSha256 !== expectedSha256) {
-        await fs7.promises.unlink(partPath).catch(() => {
+        await fs8.promises.unlink(partPath).catch(() => {
         });
         throw new Error(
           `[DownloadManager] Falha de integridade SHA-256: esperado ${expectedSha256}, obtido ${actualSha256}. Arquivo corrompido removido.`
@@ -8024,38 +8600,38 @@ var DownloadManager = class extends import_events.EventEmitter {
       console.log("[DownloadManager] Download conclu\xEDdo. Verificando integridade MD5...");
       const actualMd5 = await computeMd5(partPath);
       if (actualMd5 !== expectedMd5) {
-        await fs7.promises.unlink(partPath).catch(() => {
+        await fs8.promises.unlink(partPath).catch(() => {
         });
         throw new Error(
           `[DownloadManager] Falha de integridade MD5: esperado ${expectedMd5}, obtido ${actualMd5}. Arquivo corrompido removido.`
         );
       }
     }
-    await fs7.promises.rename(partPath, destPath);
+    await fs8.promises.rename(partPath, destPath);
     console.log(`[DownloadManager] Arquivo verificado e salvo em: ${destPath}`);
   }
 };
 
 // src/services/model/model-installer.ts
-var fs10 = __toESM(require("fs"));
+var fs11 = __toESM(require("fs"));
 var fsp2 = __toESM(require("fs/promises"));
-var path8 = __toESM(require("path"));
+var path9 = __toESM(require("path"));
 
 // src/services/model/archive-manager.ts
-var path6 = __toESM(require("path"));
-var fs8 = __toESM(require("fs"));
+var path7 = __toESM(require("path"));
+var fs9 = __toESM(require("fs"));
 var zlib = __toESM(require("zlib"));
 var tar = __toESM(require_tar_stream());
 var AdmZip = require_adm_zip();
 function isPathSafe(destFolder, filePathInArchive) {
-  const resolved = path6.resolve(destFolder, filePathInArchive);
-  const normalizedDest = path6.normalize(destFolder) + path6.sep;
-  const normalizedResolved = path6.normalize(resolved);
+  const resolved = path7.resolve(destFolder, filePathInArchive);
+  const normalizedDest = path7.normalize(destFolder) + path7.sep;
+  const normalizedResolved = path7.normalize(resolved);
   return normalizedResolved.startsWith(normalizedDest);
 }
 var ArchiveManager = class {
   async extract(archivePath, destFolder) {
-    const ext = path6.extname(archivePath).toLowerCase();
+    const ext = path7.extname(archivePath).toLowerCase();
     if (ext === ".zip") {
       await this.extractZip(archivePath, destFolder);
     } else if (ext === ".gz" || ext === ".tgz") {
@@ -8072,9 +8648,9 @@ var ArchiveManager = class {
       if (!isPathSafe(destFolder, entry.entryName)) {
         throw new Error("Zip Slip detectado: tentativa de escrita fora do diret\xF3rio destino.");
       }
-      const targetPath = path6.resolve(destFolder, entry.entryName);
-      fs8.mkdirSync(path6.dirname(targetPath), { recursive: true });
-      fs8.writeFileSync(targetPath, entry.getData());
+      const targetPath = path7.resolve(destFolder, entry.entryName);
+      fs9.mkdirSync(path7.dirname(targetPath), { recursive: true });
+      fs9.writeFileSync(targetPath, entry.getData());
     }
   }
   async extractTarGz(archivePath, destFolder) {
@@ -8094,9 +8670,9 @@ var ArchiveManager = class {
           next();
           return;
         }
-        const targetPath = path6.resolve(destFolder, entryName);
-        fs8.mkdirSync(path6.dirname(targetPath), { recursive: true });
-        const writeStream = fs8.createWriteStream(targetPath);
+        const targetPath = path7.resolve(destFolder, entryName);
+        fs9.mkdirSync(path7.dirname(targetPath), { recursive: true });
+        const writeStream = fs9.createWriteStream(targetPath);
         stream.pipe(writeStream);
         writeStream.on("finish", next);
         writeStream.on("error", (err) => {
@@ -8112,7 +8688,7 @@ var ArchiveManager = class {
         }
       });
       extract2.on("error", (err) => reject(err));
-      fs8.createReadStream(archivePath).pipe(zlib.createGunzip()).pipe(extract2);
+      fs9.createReadStream(archivePath).pipe(zlib.createGunzip()).pipe(extract2);
     });
   }
   isPathSafe(destFolder, filePathInArchive) {
@@ -8121,30 +8697,30 @@ var ArchiveManager = class {
 };
 
 // src/services/model/staging-manager.ts
-var path7 = __toESM(require("path"));
-var fs9 = __toESM(require("fs/promises"));
+var path8 = __toESM(require("path"));
+var fs10 = __toESM(require("fs/promises"));
 var StagingManager = class {
   constructor(stagingRoot) {
     this.stagingRoot = stagingRoot;
   }
   async prepareStaging(modelId) {
-    const stagingDir = path7.join(this.stagingRoot, ".staging", `${modelId}-temp`);
-    await fs9.mkdir(stagingDir, { recursive: true });
-    const entries = await fs9.readdir(stagingDir);
+    const stagingDir = path8.join(this.stagingRoot, ".staging", `${modelId}-temp`);
+    await fs10.mkdir(stagingDir, { recursive: true });
+    const entries = await fs10.readdir(stagingDir);
     await Promise.all(
       entries.map(
-        (entry) => fs9.rm(path7.join(stagingDir, entry), { recursive: true, force: true })
+        (entry) => fs10.rm(path8.join(stagingDir, entry), { recursive: true, force: true })
       )
     );
     return stagingDir;
   }
   async promoteStaging(stagingDir, destDir) {
-    await fs9.rm(destDir, { recursive: true, force: true });
-    await fs9.mkdir(path7.dirname(destDir), { recursive: true });
-    await fs9.rename(stagingDir, destDir);
+    await fs10.rm(destDir, { recursive: true, force: true });
+    await fs10.mkdir(path8.dirname(destDir), { recursive: true });
+    await fs10.rename(stagingDir, destDir);
   }
   async cleanupStaging(stagingDir) {
-    await fs9.rm(stagingDir, { recursive: true, force: true });
+    await fs10.rm(stagingDir, { recursive: true, force: true });
   }
 };
 
@@ -8231,7 +8807,7 @@ async function findExecutableInDir(dir) {
     try {
       const entries = await fsp2.readdir(currentDir, { withFileTypes: true });
       for (const entry of entries) {
-        const fullPath = path8.join(currentDir, entry.name);
+        const fullPath = path9.join(currentDir, entry.name);
         if (entry.isDirectory()) {
           const found = await walk(fullPath);
           if (found) return found;
@@ -8304,14 +8880,14 @@ var ModelInstaller = class {
     }
     machine.transitionTo("REMOVING" /* REMOVING */);
     try {
-      const rootExists = fs10.existsSync(installRoot);
+      const rootExists = fs11.existsSync(installRoot);
       if (!rootExists) {
         machine.transitionTo("NOT_INSTALLED" /* NOT_INSTALLED */);
         (_b = (_a = this.callbacks).onRemoved) == null ? void 0 : _b.call(_a, modelId);
         return true;
       }
       await fsp2.rm(installRoot, { recursive: true, force: true });
-      const stillExists = fs10.existsSync(installRoot);
+      const stillExists = fs11.existsSync(installRoot);
       if (stillExists) {
         machine.transitionTo("FAILED" /* FAILED */);
         throw new Error(`Falha ao remover diret\xF3rio: ${installRoot}`);
@@ -8328,7 +8904,7 @@ var ModelInstaller = class {
 
 // src/services/model/model-management-service.ts
 var MANIFEST_URL = "https://raw.githubusercontent.com/ericrocha001/obsidian_voice/main/manifest-models.json";
-var execAsync = (0, import_util.promisify)(import_child_process3.exec);
+var execAsync = (0, import_util.promisify)(import_child_process4.exec);
 var LegacyMigration = class {
   /**
    * Detecta se os metadados estão no formato legado (absolutePath como executável).
@@ -8347,7 +8923,7 @@ var LegacyMigration = class {
     }
     const legacyPath = metadata.absolutePath;
     if (!legacyPath) return null;
-    const installRoot = path9.dirname(legacyPath);
+    const installRoot = path10.dirname(legacyPath);
     const migrated = {
       id: metadata.id,
       activeVersion: metadata.activeVersion,
@@ -8364,7 +8940,7 @@ var ModelManagementService = class {
     this.voicesCache = null;
     this.basePath = basePath;
     this.settingsRef = settingsRef;
-    const stagingRoot = path9.join(os2.tmpdir(), "obsidian-voice-staging");
+    const stagingRoot = path10.join(os3.tmpdir(), "obsidian-voice-staging");
     this.manifestService = new ManifestService(MANIFEST_URL);
     this.resourceGuard = new ResourceGuard(basePath);
     this.downloadManager = new DownloadManager();
@@ -8386,18 +8962,18 @@ var ModelManagementService = class {
   }
   getPiperInstallRoot() {
     if (process.platform === "win32") {
-      return path9.join(os2.homedir(), "AppData", "Roaming", "obsidian-voice", "bin", "piper");
+      return path10.join(os3.homedir(), "AppData", "Roaming", "obsidian-voice", "bin", "piper");
     } else if (process.platform === "darwin") {
-      return path9.join(os2.homedir(), "Library", "Application Support", "obsidian-voice", "bin", "piper");
+      return path10.join(os3.homedir(), "Library", "Application Support", "obsidian-voice", "bin", "piper");
     } else {
-      return path9.join(os2.homedir(), ".local", "share", "obsidian-voice", "bin", "piper");
+      return path10.join(os3.homedir(), ".local", "share", "obsidian-voice", "bin", "piper");
     }
   }
   isInstalled(modelId) {
     const metadata = this.settingsRef.models[modelId];
     if (!metadata) return false;
     try {
-      return fs11.existsSync(metadata.installedRootPath);
+      return fs12.existsSync(metadata.installedRootPath);
     } catch (e) {
       return false;
     }
@@ -8435,11 +9011,11 @@ var ModelManagementService = class {
   getPiperRoot() {
     const metadata = this.settingsRef.models.piper;
     if (!(metadata == null ? void 0 : metadata.executablePath)) return "";
-    return path9.dirname(metadata.executablePath);
+    return path10.dirname(metadata.executablePath);
   }
   async install(modelId, onStateChange, onProgress) {
     const metadata = this.settingsRef.models[modelId];
-    if (metadata && metadata.installedRootPath && !fs11.existsSync(metadata.installedRootPath)) {
+    if (metadata && metadata.installedRootPath && !fs12.existsSync(metadata.installedRootPath)) {
       delete this.settingsRef.models[modelId];
       await this.settingsRef.saveSettings();
     }
@@ -8479,9 +9055,9 @@ var ModelManagementService = class {
     }
     machine.transitionTo("DOWNLOADING" /* DOWNLOADING */);
     onStateChange("DOWNLOADING" /* DOWNLOADING */);
-    const tmpDir = path9.join(os2.tmpdir(), "obsidian-voice-downloads");
+    const tmpDir = path10.join(os3.tmpdir(), "obsidian-voice-downloads");
     const archiveName = `${modelId}-${platformKey}.zip`;
-    const archivePath = path9.join(tmpDir, archiveName);
+    const archivePath = path10.join(tmpDir, archiveName);
     const onDownloadProgress = onProgress ? (progress) => onProgress(progress.percent) : null;
     if (onDownloadProgress) {
       this.downloadManager.on("progress", onDownloadProgress);
@@ -8497,7 +9073,7 @@ var ModelManagementService = class {
         this.downloadManager.off("progress", onDownloadProgress);
       }
     }
-    const destDir = modelId === "piper" ? this.getPiperInstallRoot() : path9.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", modelId);
+    const destDir = modelId === "piper" ? this.getPiperInstallRoot() : path10.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", modelId);
     await this.installer.install(modelId, archivePath, destDir, manifest.version);
   }
   async installVoice(voice, onProgress) {
@@ -8505,15 +9081,15 @@ var ModelManagementService = class {
     if (!basePiperDir) {
       throw new Error("Piper n\xE3o est\xE1 instalado.");
     }
-    const voiceSubDir = path9.join(basePiperDir, voice.key);
+    const voiceSubDir = path10.join(basePiperDir, voice.key);
     await fsp3.mkdir(voiceSubDir, { recursive: true });
     const base = "https://huggingface.co/rhasspy/piper-voices/resolve/main/";
     const totalBytes = Object.values(voice.files).reduce((sum, meta) => sum + meta.size_bytes, 0);
     let downloadedBytes = 0;
     const tasks = [];
     for (const [rel, meta] of Object.entries(voice.files)) {
-      const fileName = path9.basename(rel);
-      const dest = path9.join(voiceSubDir, fileName);
+      const fileName = path10.basename(rel);
+      const dest = path10.join(voiceSubDir, fileName);
       tasks.push({ url: base + rel, dest, md5: meta.md5_digest, sizeBytes: meta.size_bytes });
     }
     for (const task of tasks) {
@@ -8548,15 +9124,15 @@ var ModelManagementService = class {
     return true;
   }
   async migratePiperFromVault() {
-    const oldBinDir = path9.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", "piper");
+    const oldBinDir = path10.join(this.basePath, ".obsidian", "plugins", "obsidian-voice", "bin", "piper");
     const newBinDir = this.getPiperInstallRoot();
-    if (!fs11.existsSync(oldBinDir)) return false;
-    if (fs11.existsSync(newBinDir)) return false;
+    if (!fs12.existsSync(oldBinDir)) return false;
+    if (fs12.existsSync(newBinDir)) return false;
     await fsp3.mkdir(newBinDir, { recursive: true });
     const entries = await fsp3.readdir(oldBinDir, { withFileTypes: true });
     for (const entry of entries) {
-      const src = path9.join(oldBinDir, entry.name);
-      const dest = path9.join(newBinDir, entry.name);
+      const src = path10.join(oldBinDir, entry.name);
+      const dest = path10.join(newBinDir, entry.name);
       await fsp3.rename(src, dest);
     }
     const executablePath = this.findExecutable(newBinDir);
@@ -8577,10 +9153,10 @@ var ModelManagementService = class {
   findExecutable(dir) {
     const candidates = process.platform === "win32" ? ["piper.exe", "piper"] : ["piper"];
     try {
-      const entries = fs11.readdirSync(dir, { withFileTypes: true });
+      const entries = fs12.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         if (!entry.isDirectory() && candidates.includes(entry.name)) {
-          return path9.join(dir, entry.name);
+          return path10.join(dir, entry.name);
         }
       }
     } catch (e) {
@@ -8601,18 +9177,18 @@ var ModelManagementService = class {
     let migratedCount = 0;
     for (const voice of this.voicesCache || []) {
       const allFilesExist = Object.keys(voice.files).every((rel) => {
-        const fileName = path9.basename(rel);
-        const filePath = path9.join(basePiperDir, fileName);
-        return fs11.existsSync(filePath);
+        const fileName = path10.basename(rel);
+        const filePath = path10.join(basePiperDir, fileName);
+        return fs12.existsSync(filePath);
       });
       if (!allFilesExist) continue;
-      const voiceSubDir = path9.join(basePiperDir, voice.key);
+      const voiceSubDir = path10.join(basePiperDir, voice.key);
       await fsp3.mkdir(voiceSubDir, { recursive: true });
       for (const rel of Object.keys(voice.files)) {
-        const fileName = path9.basename(rel);
-        const src = path9.join(basePiperDir, fileName);
-        const dest = path9.join(voiceSubDir, fileName);
-        if (fs11.existsSync(src)) {
+        const fileName = path10.basename(rel);
+        const src = path10.join(basePiperDir, fileName);
+        const dest = path10.join(voiceSubDir, fileName);
+        if (fs12.existsSync(src)) {
           await fsp3.copyFile(src, dest);
         }
       }
@@ -8622,9 +9198,9 @@ var ModelManagementService = class {
     if (migratedCount > 0) {
       for (const entry of entries) {
         if (!entry.isDirectory()) {
-          const ext = path9.extname(entry.name).toLowerCase();
+          const ext = path10.extname(entry.name).toLowerCase();
           if (ext === ".onnx" || ext === ".json") {
-            const filePath = path9.join(basePiperDir, entry.name);
+            const filePath = path10.join(basePiperDir, entry.name);
             await fsp3.unlink(filePath).catch(() => {
             });
           }
@@ -8878,9 +9454,11 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     this.app.setting.openTabById(this.manifest.id);
   }
   async onunload() {
-    this.audioPlayer.stop();
+    await this.audioPlayer.stopAndWait();
     this.queue.reset();
     await this.ttsPipeline.stop();
+    await this.ttsPipeline.cleanupAllSessions();
+    await this.ttsPipeline.cleanupOrphanedFiles();
     if (this.userScrollTimeout) {
       clearTimeout(this.userScrollTimeout);
       this.userScrollTimeout = null;
@@ -8918,14 +9496,25 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     console.log("[Obsidian Voice] Narra\xE7\xE3o interrompida pelo usu\xE1rio.");
   }
   async pararNarracaoSilenciosamente() {
+    var _a;
     this.currentSessionId++;
     this.queue.reset();
-    this.audioPlayer.stop();
+    await this.audioPlayer.stopAndWait();
     await this.ttsPipeline.stop();
+    await this.ttsPipeline.cleanupAllSessions();
     this.unregisterScrollListeners();
     this.updatePlayerState("aguardando");
-    this.activeEditor = this.getActiveEditor();
-    if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
+    let editorToClear = null;
+    if (this.lastNarratedPath) {
+      editorToClear = this.getEditorForPath(this.lastNarratedPath);
+    }
+    if (!editorToClear) {
+      const activeView = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
+      if (!this.lastNarratedPath || ((_a = activeView == null ? void 0 : activeView.file) == null ? void 0 : _a.path) === this.lastNarratedPath) {
+        editorToClear = this.getActiveEditor();
+      }
+    }
+    if (editorToClear) this.highlighter.clearHighlight(editorToClear);
     this.activeEditor = null;
   }
   onResumoToggle(active) {
@@ -8956,6 +9545,7 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
   onSpeedChange(speed) {
     this.audioPlayer.setPlaybackRate(speed);
     this.settings.playbackSpeed = speed;
+    this.ttsPipeline.setPlaybackRate(speed);
     this.saveSettings();
   }
   async onEngineChange(engineId) {
@@ -9025,8 +9615,8 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     new import_obsidian6.Notice(mesmaNote ? t("notices.restarting") : t("notices.starting_narration"));
     this.lastNarratedPath = activeFile.path;
     console.log(`[Obsidian Voice] Narrando: ${activeFile.name}`);
-    await this.ttsPipeline.start();
-    this.playNextParagraph();
+    await this.ttsPipeline.start(this.currentSessionId);
+    await this.playNextParagraph();
   }
   cleanMarkdown(text) {
     const cleaned = stripFrontmatter(text).replace(/```[\s\S]*?```/g, "").replace(/(?<![#\S])#[^\s#][^\s]*/g, "").replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, "$2").replace(/\[\[([^\]]+)\]\]/g, "$1").replace(/==(.*?)==/g, "$1").trim();
@@ -9041,89 +9631,127 @@ var ObsidianVoicePlugin = class extends import_obsidian6.Plugin {
     }
     return true;
   }
+  resetNarrationState() {
+    this.queue.reset();
+    this.updatePlayerState("aguardando");
+    this.activeEditor = this.getActiveEditor();
+    if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
+    this.activeEditor = null;
+  }
   async playNextParagraph() {
     if (this.playerState === "pausado") return;
-    const sessionId = this.currentSessionId;
-    const chunk = await this.ttsPipeline.getNextChunk();
-    if (this.currentSessionId !== sessionId) return;
-    if (chunk === null) {
-      this.queue.reset();
-      this.updatePlayerState("aguardando");
-      this.activeEditor = this.getActiveEditor();
-      if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
-      this.activeEditor = null;
-      new import_obsidian6.Notice(t("notices.narration_finished"));
-      console.log("[Obsidian Voice] Fila encerrada.");
-      return;
-    }
-    if (chunk.error) {
-      this.queue.reset();
-      this.updatePlayerState("aguardando");
-      this.activeEditor = this.getActiveEditor();
-      if (this.activeEditor) this.highlighter.clearHighlight(this.activeEditor);
-      this.activeEditor = null;
-      new import_obsidian6.Notice(t("notices.narration_error", { error: chunk.error }));
-      console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
-      try {
-        if (fs12.existsSync(chunk.absolutePath)) fs12.unlinkSync(chunk.absolutePath);
-      } catch (_) {
+    let iterations = 0;
+    const MAX_ITERATIONS = 100;
+    while (iterations++ < MAX_ITERATIONS) {
+      const chunk = await this.ttsPipeline.getNextChunk();
+      if (chunk === null) {
+        await new Promise((resolve4) => setTimeout(resolve4, 100));
+        continue;
       }
+      if ("discarded" in chunk) {
+        console.log(`[Obsidian Voice] Chunk descartado (sess\xE3o ${chunk.sessionId}, itera\xE7\xE3o ${iterations})`);
+        continue;
+      }
+      if (chunk.error) {
+        this.resetNarrationState();
+        new import_obsidian6.Notice(t("notices.narration_error", { error: chunk.error }));
+        console.error("[Obsidian Voice] Erro no chunk:", chunk.error);
+        try {
+          if (fs13.existsSync(chunk.absolutePath)) fs13.unlinkSync(chunk.absolutePath);
+        } catch (_) {
+        }
+        return;
+      }
+      if (this.getPlayerState() === "pausado") {
+        const held = this.ttsPipeline.holdChunk(chunk);
+        if (!held) {
+          console.log(`[Obsidian Voice] Chunk descartado durante pausa (sess\xE3o ${chunk.sessionId})`);
+          continue;
+        }
+        return;
+      }
+      this.currentParagraphText = chunk.text;
+      this.activeEditor = this.getActiveEditor();
+      if (this.activeEditor) {
+        const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
+        this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
+      } else {
+        console.warn("[Obsidian Voice] activeEditor \xE9 null \u2014 highlight ignorado.");
+      }
+      console.log(`[Obsidian Voice] Reproduzindo chunk: ${chunk.resourcePath}`);
+      this.audioPlayer.playFile(chunk.resourcePath, chunk.absolutePath, () => {
+        this.playNextParagraph();
+      });
       return;
     }
-    if (this.getPlayerState() === "pausado") {
-      this.ttsPipeline.holdChunk(chunk);
-      return;
-    }
-    this.ttsPipeline.prefetch();
-    this.currentParagraphText = chunk.text;
-    this.activeEditor = this.getActiveEditor();
-    if (this.activeEditor) {
-      const scrollEnabled = this.settings.enableTeleprompterMode && !this.isUserScrolling;
-      this.highlighter.highlightParagraph(this.activeEditor, chunk.text, scrollEnabled);
-    } else {
-      console.warn("[Obsidian Voice] activeEditor \xE9 null \u2014 highlight ignorado.");
-    }
-    console.log(`[Obsidian Voice] Reproduzindo chunk: ${chunk.resourcePath}`);
-    this.audioPlayer.playFile(chunk.resourcePath, chunk.absolutePath, () => {
-      this.playNextParagraph();
-    });
+    console.error(`[Obsidian Voice] Loop excedeu ${MAX_ITERATIONS} itera\xE7\xF5es \u2014 poss\xEDvel bug de sess\xE3o`);
+    this.resetNarrationState();
   }
+  getEditorForPath(filePath) {
+    var _a;
+    const activeView = this.app.workspace.getActiveViewOfType(import_obsidian6.MarkdownView);
+    if (activeView && ((_a = activeView.file) == null ? void 0 : _a.path) === filePath) {
+      return activeView.editor;
+    }
+    let editor = null;
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      var _a2;
+      if (leaf.view instanceof import_obsidian6.MarkdownView && ((_a2 = leaf.view.file) == null ? void 0 : _a2.path) === filePath) {
+        editor = leaf.view.editor;
+      }
+    });
+    return editor;
+  }
+  /**
+   * INVARIANTE CRÍTICA: setCurrentIndex() DEVE ser chamado ANTES de start().
+   *
+   * Motivo: start() dispara fillBuffer() em background, que consome chunks
+   * da queue. Se a queue ainda estiver na posição antiga, o buffer será
+   * preenchido com chunks errados, causando áudio incorreto e loops infinitos.
+   */
   async jumpToLine(lineNumber) {
     console.log(`[Obsidian Voice] Pulando para a linha: ${lineNumber}`);
+    const oldSessionId = this.currentSessionId;
     this.currentSessionId++;
-    this.audioPlayer.stop();
-    await this.ttsPipeline.cancelCurrentGeneration();
-    await this.ttsPipeline.resetPrefetch();
+    await this.audioPlayer.stopAndWait();
     const targetIndex = this.queue.getChunkIndexByLine(lineNumber);
     this.queue.setCurrentIndex(targetIndex);
+    await this.ttsPipeline.start(this.currentSessionId);
+    await this.ttsPipeline.cleanupSession(oldSessionId);
     this.updatePlayerState("tocando");
-    this.ttsPipeline.prefetch();
-    this.playNextParagraph();
+    await this.playNextParagraph();
   }
+  /**
+   * INVARIANTE CRÍTICA: setCurrentIndex() DEVE ser chamado ANTES de start().
+   *
+   * Motivo: start() dispara fillBuffer() em background, que consome chunks
+   * da queue. Se a queue ainda estiver na posição antiga, o buffer será
+   * preenchido com chunks errados, causando áudio incorreto e loops infinitos.
+   */
   async jumpToChapter(chunkIndex) {
     console.log(`[Obsidian Voice] Pulando para o cap\xEDtulo no chunk index: ${chunkIndex}`);
+    const oldSessionId = this.currentSessionId;
     this.currentSessionId++;
-    this.audioPlayer.stop();
-    await this.ttsPipeline.cancelCurrentGeneration();
-    await this.ttsPipeline.resetPrefetch();
+    await this.audioPlayer.stopAndWait();
     this.queue.setCurrentIndex(chunkIndex);
+    await this.ttsPipeline.start(this.currentSessionId);
+    await this.ttsPipeline.cleanupSession(oldSessionId);
     this.updatePlayerState("tocando");
-    this.ttsPipeline.prefetch();
-    this.playNextParagraph();
+    await this.playNextParagraph();
   }
   async runPiperTest() {
     const valido = await this.validarConfiguracoes();
     if (!valido) return;
     const texto = "Teste de \xE1udio do Obsidian Voice";
     new import_obsidian6.Notice(t("notices.generating_audio"));
-    const cacheDir = path10.join(os3.tmpdir(), "ObsidianVoiceCache");
-    if (!fs12.existsSync(cacheDir)) fs12.mkdirSync(cacheDir, { recursive: true });
-    const testFile = path10.join(cacheDir, "teste.wav");
+    const cacheDir = path11.join(os4.tmpdir(), "ObsidianVoiceCache");
+    if (!fs13.existsSync(cacheDir)) fs13.mkdirSync(cacheDir, { recursive: true });
+    const testFile = path11.join(cacheDir, "teste.wav");
     try {
       await this.ttsPipeline.runTest(texto, testFile);
       new import_obsidian6.Notice(t("notices.audio_generated"));
       try {
-        if (fs12.existsSync(testFile)) fs12.unlinkSync(testFile);
+        if (fs13.existsSync(testFile)) fs13.unlinkSync(testFile);
       } catch (_) {
       }
     } catch (error) {
