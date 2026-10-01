@@ -1,17 +1,3 @@
----
-aliases: []
-tags: [IDE/antigravity, IDE/antigravity/rules/rule, programação, software, software/engenharia_de_software, software/engenharia_de_software/arquitetura_de_software, software/mecanismo_software, software/resiliencia_software, software/segurança_software, software/software_agentivo, software/software_erro]
-title: AGENTS
-source:
-  - https://chatgpt.com/g/g-p-6981cf9c38988191932b596154a84f94-google-antigravity/c/69cac95e-f804-8328-995e-f5c0f2ce1526
-author:
-  - Eric Rocha
-project:
-connections:
-date created: 2026-03-30 15:53
-date modified: 2026-06-16 00:22
----
-
 # AGENTS
 
 ## Blindagem Arquitetural
@@ -94,15 +80,13 @@ Sempre que o script for modificado, refatorado ou tiver seu comportamento altera
 1. revisar a seção "Responsabilidades do Script";
 2. atualizar, adicionar ou remover responsabilidades quando necessário;
 3. garantir que a lista reflita exatamente o estado atual do arquivo.
-  
+
 A lista de responsabilidades nunca deve ficar desatualizada em relação ao código.
 
 ### Princípio Arquitetural Aplicado
 
 Todo arquivo deve representar **uma unidade clara de responsabilidade dentro do sistema**.
 Se o propósito do arquivo não puder ser explicado rapidamente na lista inicial, o design do script deve ser reconsiderado.
-
--------------------------
 
 ## Código Limpo E Enxuto
 
